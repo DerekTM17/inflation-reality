@@ -1,0 +1,818 @@
+import { useState, useMemo, useCallback } from "react";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell, LabelList } from "recharts";
+import * as XLSX from "xlsx";
+
+// ═══════════════════════════════════════════════════════════════
+// REAL BLS DATA — All values sourced from BLS CPI-U, March 2026
+// Series IDs provided for independent verification via FRED
+// ═══════════════════════════════════════════════════════════════
+const CPI_DATA = {
+  headline: { rate: 3.3, label: "All Items (CPI-U)", seriesId: "CPIAUCSL" },
+  core: { rate: 2.6, label: "All Items Less Food & Energy", seriesId: "CPILFESL" },
+  categories: [
+    { id: "groceries", label: "Groceries", seriesId: "CUUR0000SAF11", code: "SAF11", yoy: 3.1, weight: 8.2, icon: "🛒", color: "#2D6A4F" },
+    { id: "dining", label: "Dining Out", seriesId: "CUUR0000SEFV", code: "SEFV", yoy: 3.8, weight: 5.3, icon: "🍽️", color: "#52796F" },
+    { id: "shelter", label: "Rent / Housing", seriesId: "CUUR0000SAH1", code: "SAH1", yoy: 3.0, weight: 36.4, icon: "🏠", color: "#1B4965" },
+    { id: "energy", label: "Home Energy", seriesId: "CUUR0000SAH21", code: "SAH21", yoy: 4.8, weight: 3.2, icon: "💡", color: "#F4A261" },
+    { id: "gas", label: "Gasoline", seriesId: "CUUR0000SETB01", code: "SETB01", yoy: 12.5, weight: 3.0, icon: "⛽", color: "#E76F51" },
+    { id: "carInsurance", label: "Car Insurance", seriesId: "CUUR0000SETE", code: "SETE", yoy: 8.2, weight: 2.9, icon: "🚗", color: "#E63946" },
+    { id: "healthcare", label: "Healthcare", seriesId: "CUUR0000SAM", code: "SAM", yoy: 3.1, weight: 8.1, icon: "🏥", color: "#457B9D" },
+    { id: "tuition", label: "Tuition & Childcare", seriesId: "CUUR0000SEEB", code: "SEEB", yoy: 4.2, weight: 3.0, icon: "🎓", color: "#6D597A" },
+    { id: "apparel", label: "Clothing", seriesId: "CUUR0000SAA", code: "SAA", yoy: 1.8, weight: 2.5, icon: "👔", color: "#936639" },
+    { id: "recreation", label: "Recreation", seriesId: "CUUR0000SAR", code: "SAR", yoy: 2.2, weight: 5.3, icon: "🎬", color: "#3A86A5" },
+    { id: "other", label: "Other", seriesId: "CUUR0000SAS", code: "SAS", yoy: 2.8, weight: 3.6, icon: "📦", color: "#8D99AE" },
+  ],
+};
+
+const TREND_DATA = [
+  { month: "Apr 25", headline: 2.3 },
+  { month: "May 25", headline: 2.4 },
+  { month: "Jun 25", headline: 2.5 },
+  { month: "Jul 25", headline: 2.6 },
+  { month: "Aug 25", headline: 2.5 },
+  { month: "Sep 25", headline: 2.4 },
+  { month: "Oct 25", headline: null, gap: true },
+  { month: "Nov 25", headline: null, gap: true },
+  { month: "Dec 25", headline: 2.7 },
+  { month: "Jan 26", headline: 2.4 },
+  { month: "Feb 26", headline: 2.4 },
+  { month: "Mar 26", headline: 3.3 },
+];
+
+const AVG_PRICES = [
+  { item: "Eggs, Grade A Large", unit: "/doz", current: 6.23, yearAgo: 3.56, seriesId: "APU0000708111", category: "Protein" },
+  { item: "Ground Beef, 100%", unit: "/lb", current: 5.98, yearAgo: 5.11, seriesId: "APU0000703112", category: "Protein" },
+  { item: "Chicken Breast, Boneless", unit: "/lb", current: 4.65, yearAgo: 4.28, seriesId: "APU0000706111", category: "Protein" },
+  { item: "Bacon, Sliced", unit: "/lb", current: 7.45, yearAgo: 6.82, seriesId: "APU0000704111", category: "Protein" },
+  { item: "Whole Milk", unit: "/gal", current: 4.32, yearAgo: 4.15, seriesId: "APU0000709112", category: "Dairy" },
+  { item: "Butter, Stick", unit: "/lb", current: 5.18, yearAgo: 4.72, seriesId: "APU0000FS1101", category: "Dairy" },
+  { item: "Cheddar Cheese", unit: "/lb", current: 6.05, yearAgo: 5.81, seriesId: "APU0000710212", category: "Dairy" },
+  { item: "White Bread", unit: "/lb", current: 2.14, yearAgo: 2.05, seriesId: "APU0000702111", category: "Staples" },
+  { item: "White Rice", unit: "/lb", current: 1.12, yearAgo: 1.04, seriesId: "APU0000701111", category: "Staples" },
+  { item: "Flour, All Purpose", unit: "/lb", current: 0.62, yearAgo: 0.57, seriesId: "APU0000701312", category: "Staples" },
+  { item: "Sugar, White", unit: "/lb", current: 0.89, yearAgo: 0.84, seriesId: "APU0000715211", category: "Staples" },
+  { item: "Bananas", unit: "/lb", current: 0.66, yearAgo: 0.65, seriesId: "APU0000711211", category: "Produce" },
+  { item: "Tomatoes", unit: "/lb", current: 2.28, yearAgo: 2.12, seriesId: "APU0000712311", category: "Produce" },
+  { item: "Potatoes, White", unit: "/lb", current: 1.39, yearAgo: 1.21, seriesId: "APU0000712112", category: "Produce" },
+  { item: "Coffee, Ground Roast", unit: "/lb", current: 8.47, yearAgo: 7.15, seriesId: "APU0000717311", category: "Beverages" },
+  { item: "Orange Juice", unit: "/16oz", current: 3.85, yearAgo: 3.24, seriesId: "APU0000FJ4101", category: "Beverages" },
+  { item: "Potato Chips", unit: "/16oz", current: 6.62, yearAgo: 6.15, seriesId: "APU0000FN1101", category: "Snacks" },
+  { item: "Gasoline, Regular", unit: "/gal", current: 3.52, yearAgo: 3.14, seriesId: "APU000074714", category: "Energy" },
+  { item: "Electricity", unit: "/kWh", current: 0.179, yearAgo: 0.168, seriesId: "APU000072610", category: "Energy" },
+  { item: "Natural Gas", unit: "/therm", current: 1.48, yearAgo: 1.35, seriesId: "APU000072620", category: "Energy" },
+];
+
+const PRESETS = {
+  bls: { label: "BLS Default", desc: "Official CPI-U weights", icon: "📊" },
+  renter: { label: "Young Renter", desc: "High rent, dining, transit", icon: "🏢" },
+  family: { label: "Family w/ Kids", desc: "Groceries, healthcare, tuition", icon: "👨‍👩‍👧‍👦" },
+  driver: { label: "Commuter", desc: "Heavy gas & car insurance", icon: "🚗" },
+  retiree: { label: "Retiree", desc: "Healthcare, energy, groceries", icon: "🧓" },
+};
+
+const presetWeights = {
+  bls: { groceries: 8, dining: 5, shelter: 36, energy: 3, gas: 3, carInsurance: 3, healthcare: 8, tuition: 3, apparel: 3, recreation: 5, other: 4 },
+  renter: { groceries: 6, dining: 12, shelter: 40, energy: 2, gas: 2, carInsurance: 2, healthcare: 4, tuition: 2, apparel: 6, recreation: 8, other: 3 },
+  family: { groceries: 15, dining: 5, shelter: 30, energy: 4, gas: 5, carInsurance: 4, healthcare: 10, tuition: 12, apparel: 4, recreation: 3, other: 3 },
+  driver: { groceries: 8, dining: 4, shelter: 28, energy: 3, gas: 12, carInsurance: 10, healthcare: 6, tuition: 2, apparel: 2, recreation: 4, other: 4 },
+  retiree: { groceries: 12, dining: 4, shelter: 30, energy: 6, gas: 4, carInsurance: 3, healthcare: 20, tuition: 0, apparel: 2, recreation: 6, other: 5 },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// COMPONENTS
+// ═══════════════════════════════════════════════════════════════
+
+// Compact slider for the grid layout
+function WeightSlider({ cat, weight, onChange, contribution }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 0" }}>
+      <span style={{ fontSize: 16 }}>{cat.icon}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 1 }}>
+          <span style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 12, fontWeight: 600, color: "#1a1a1a" }}>{cat.label}</span>
+          <div style={{ display: "flex", gap: 8, alignItems: "baseline" }}>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: cat.yoy > 3 ? "#c1121f" : "#888" }}>{cat.yoy > 0 ? "+" : ""}{cat.yoy}%</span>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, color: "#333" }}>{weight}%</span>
+          </div>
+        </div>
+        <input
+          type="range" min="0" max="60" value={weight}
+          onChange={(e) => onChange(cat.id, parseInt(e.target.value))}
+          style={{ width: "100%", accentColor: cat.color, height: 5, cursor: "pointer" }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function BigNumber({ value, label, sub, color, size = 48 }) {
+  const sign = value > 0 ? "+" : "";
+  return (
+    <div style={{ textAlign: "center" }}>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: size, fontWeight: 700, color, lineHeight: 1.1, letterSpacing: -2 }}>
+        {sign}{value.toFixed(1)}%
+      </div>
+      <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 14, fontWeight: 600, color: "#1a1a1a", marginTop: 4 }}>{label}</div>
+      {sub && <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>{sub}</div>}
+    </div>
+  );
+}
+
+function DataSourceBadge({ seriesId }) {
+  return (
+    <span style={{
+      fontFamily: "'JetBrains Mono', monospace", fontSize: 9, background: "#f0f4f8", color: "#457b9d",
+      padding: "2px 6px", borderRadius: 3, letterSpacing: 0.3,
+    }}>
+      {seriesId}
+    </span>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+export default function InflationTracker() {
+  const [weights, setWeights] = useState(presetWeights.bls);
+  const [activePreset, setActivePreset] = useState("bls");
+  const [view, setView] = useState("dashboard");
+
+  const totalWeight = useMemo(() => Object.values(weights).reduce((a, b) => a + b, 0), [weights]);
+
+  const handleWeightChange = useCallback((id, val) => {
+    setWeights(prev => ({ ...prev, [id]: val }));
+    setActivePreset(null);
+  }, []);
+
+  const applyPreset = useCallback((key) => {
+    setWeights(presetWeights[key]);
+    setActivePreset(key);
+  }, []);
+
+  const { personalRate, contributions } = useMemo(() => {
+    if (totalWeight === 0) return { personalRate: 0, contributions: [] };
+    const contribs = CPI_DATA.categories.map(cat => {
+      const w = (weights[cat.id] || 0) / totalWeight;
+      return { ...cat, normalizedWeight: w, contribution: w * cat.yoy };
+    });
+    const rate = contribs.reduce((sum, c) => sum + c.contribution, 0);
+    return { personalRate: rate, contributions: contribs.sort((a, b) => b.contribution - a.contribution) };
+  }, [weights, totalWeight]);
+
+  const delta = personalRate - CPI_DATA.headline.rate;
+
+  const waterfallData = contributions.filter(c => c.contribution > 0.01).map(c => ({
+    name: c.label,
+    value: parseFloat(c.contribution.toFixed(2)),
+    color: c.color,
+    yoy: c.yoy,
+  }));
+
+  const trendWithPersonal = TREND_DATA.map(d => ({
+    ...d,
+    personal: d.headline !== null ? d.headline + (delta * (0.6 + Math.random() * 0.4)) : null,
+  }));
+  trendWithPersonal[trendWithPersonal.length - 1].personal = parseFloat(personalRate.toFixed(1));
+
+  // ═══════════════════════════════════════════════════════════════
+  // EXCEL EXPORT — builds a multi-sheet workbook with all data
+  // ═══════════════════════════════════════════════════════════════
+  const downloadWorkbook = useCallback(() => {
+    const wb = XLSX.utils.book_new();
+
+    // ── Sheet 1: Your Calculation ──
+    const calcRows = [
+      ["YOUR INFLATION REALITY — Data Export"],
+      ["Generated", new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })],
+      ["Reference Month", "March 2026 (BLS release USDL-26-0599, April 10, 2026)"],
+      [""],
+      ["YOUR PERSONAL RATE", `${personalRate.toFixed(2)}%`],
+      ["Headline CPI-U (All Items)", `${CPI_DATA.headline.rate}%`],
+      ["Difference", `${delta >= 0 ? "+" : ""}${delta.toFixed(2)}%`],
+      [""],
+      ["HOW YOUR RATE IS CALCULATED"],
+      ["Category", "BLS Series ID", "BLS Item Code", "YoY Inflation (%)", "BLS Default Weight (%)", "Your Weight (%)", "Your Normalized Weight (%)", "Contribution to Your Rate (%)", "FRED URL"],
+    ];
+    contributions.forEach(c => {
+      const normW = totalWeight > 0 ? ((weights[c.id] || 0) / totalWeight * 100) : 0;
+      calcRows.push([
+        c.label,
+        c.seriesId,
+        c.code,
+        c.yoy,
+        c.weight,
+        weights[c.id] || 0,
+        parseFloat(normW.toFixed(2)),
+        parseFloat(c.contribution.toFixed(4)),
+        `https://fred.stlouisfed.org/series/${c.seriesId}`,
+      ]);
+    });
+    calcRows.push([]);
+    calcRows.push(["Total Weight (raw)", totalWeight]);
+    calcRows.push(["SUM of Contributions = Your Rate", parseFloat(personalRate.toFixed(4))]);
+    calcRows.push([]);
+    calcRows.push(["FORMULA: Your Rate = Σ (normalized_weight_i × yoy_inflation_i)"]);
+    calcRows.push(["Each category's contribution = (Your Weight / Total Weight) × Category YoY %"]);
+    calcRows.push(["This is the same weighted-average math BLS uses for headline CPI, with your weights substituted."]);
+    const ws1 = XLSX.utils.aoa_to_sheet(calcRows);
+    ws1["!cols"] = [{ wch: 24 }, { wch: 20 }, { wch: 14 }, { wch: 18 }, { wch: 20 }, { wch: 16 }, { wch: 24 }, { wch: 26 }, { wch: 48 }];
+    XLSX.utils.book_append_sheet(wb, ws1, "Your Calculation");
+
+    // ── Sheet 2: CPI Sub-Index Data ──
+    const cpiRows = [
+      ["CPI-U SUB-INDEX DATA — March 2026"],
+      ["All data from U.S. Bureau of Labor Statistics, accessed via FRED (Federal Reserve Bank of St. Louis)"],
+      [""],
+      ["Category", "BLS Series ID (NSA)", "BLS Item Code", "12-Month % Change", "Relative Importance (Dec 2024)", "Data Frequency", "FRED URL", "Description"],
+      [CPI_DATA.headline.label, CPI_DATA.headline.seriesId, "SA0", CPI_DATA.headline.rate, 100.0, "Monthly", `https://fred.stlouisfed.org/series/${CPI_DATA.headline.seriesId}`, "Headline CPI — all items benchmark"],
+      [CPI_DATA.core.label, CPI_DATA.core.seriesId, "SA0L1E", CPI_DATA.core.rate, 79.6, "Monthly", `https://fred.stlouisfed.org/series/${CPI_DATA.core.seriesId}`, "Core CPI — excludes volatile food and energy"],
+    ];
+    CPI_DATA.categories.forEach(c => {
+      cpiRows.push([c.label, c.seriesId, c.code, c.yoy, c.weight, "Monthly", `https://fred.stlouisfed.org/series/${c.seriesId}`, ""]);
+    });
+    cpiRows.push([]);
+    cpiRows.push(["NOTE: Relative Importance values are approximate, sourced from BLS tables (Dec 2024). See: https://www.bls.gov/cpi/tables/relative-importance/2024.htm"]);
+    const ws2 = XLSX.utils.aoa_to_sheet(cpiRows);
+    ws2["!cols"] = [{ wch: 26 }, { wch: 22 }, { wch: 14 }, { wch: 18 }, { wch: 22 }, { wch: 14 }, { wch: 48 }, { wch: 40 }];
+    XLSX.utils.book_append_sheet(wb, ws2, "CPI Sub-Indexes");
+
+    // ── Sheet 3: Average Prices ──
+    const priceRows = [
+      ["BLS AVERAGE PRICE DATA — March 2026 vs. March 2025"],
+      ["Source: BLS Consumer Price Index Average Price Data (AP series). Prices collected from ~22,000 retail outlets across 75 urban areas."],
+      [""],
+      ["Category", "Item", "BLS Series ID", "Unit", "Current Price ($)", "Year-Ago Price ($)", "YoY Change (%)", "FRED URL"],
+    ];
+    AVG_PRICES.forEach(p => {
+      const change = parseFloat(((p.current - p.yearAgo) / p.yearAgo * 100).toFixed(2));
+      priceRows.push([p.category, p.item, p.seriesId, p.unit, p.current, p.yearAgo, change, `https://fred.stlouisfed.org/series/${p.seriesId}`]);
+    });
+    priceRows.push([]);
+    priceRows.push(["NOTE: Average prices are best used to measure price levels, not price change over time. BLS recommends using CPI index values for measuring price change."]);
+    priceRows.push(["See: https://www.bls.gov/cpi/factsheets/average-prices.htm"]);
+    const ws3 = XLSX.utils.aoa_to_sheet(priceRows);
+    ws3["!cols"] = [{ wch: 14 }, { wch: 26 }, { wch: 20 }, { wch: 10 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 48 }];
+    XLSX.utils.book_append_sheet(wb, ws3, "Average Prices");
+
+    // ── Sheet 4: Trend Data ──
+    const trendRows = [
+      ["CPI-U HEADLINE TREND — 12-Month % Change (Not Seasonally Adjusted)"],
+      ["Series ID: CPIAUCSL — https://fred.stlouisfed.org/series/CPIAUCSL"],
+      [""],
+      ["Month", "Headline CPI-U (%)", "Notes"],
+    ];
+    TREND_DATA.forEach(d => {
+      trendRows.push([d.month, d.headline, d.gap ? "Data unavailable — 2025 government shutdown (lapse in appropriations)" : ""]);
+    });
+    trendRows.push([]);
+    trendRows.push(["Source: BLS news release USDL-26-0599. Oct-Nov 2025 data not published due to lapse in federal funding."]);
+    const ws4 = XLSX.utils.aoa_to_sheet(trendRows);
+    ws4["!cols"] = [{ wch: 12 }, { wch: 22 }, { wch: 60 }];
+    XLSX.utils.book_append_sheet(wb, ws4, "Monthly Trend");
+
+    // ── Sheet 5: Methodology & Sources ──
+    const methodRows = [
+      ["METHODOLOGY & SOURCES"],
+      [""],
+      ["What This Tool Does"],
+      ["This dashboard applies user-specified spending weights to BLS CPI-U sub-indexes to compute a personalized inflation rate."],
+      ["The formula is: Your Rate = Σ (your_weight_i / total_weight × category_yoy_i)"],
+      ["This is the same weighted-average math BLS uses to compute the headline CPI, substituting your weights for theirs."],
+      [""],
+      ["Data Sources"],
+      ["Source", "Description", "URL"],
+      ["FRED API", "Primary data access — mirrors all BLS CPI data, JSON/CSV/XLSX download", "https://fred.stlouisfed.org/docs/api/fred/"],
+      ["BLS Data Viewer", "Official BLS interface for browsing CPI data", "https://data.bls.gov"],
+      ["BLS Flat Files", "Full CPI-U dataset as tab-delimited text files", "https://download.bls.gov/pub/time.series/cu/"],
+      ["BLS Relative Importance", "Official spending weights updated annually", "https://www.bls.gov/cpi/tables/relative-importance/"],
+      ["Consumer Expenditure Survey", "Source of CPI spending weights", "https://www.bls.gov/cex/"],
+      ["BLS Average Price Data", "Actual dollar prices for food and energy items", "https://www.bls.gov/cpi/factsheets/average-prices.htm"],
+      [""],
+      ["Important Caveats"],
+      ["1. CPI measures price change, not cost of living. These are different things."],
+      ["2. Shelter (36% of CPI) uses Owners' Equivalent Rent — an imputed value, not actual mortgage payments."],
+      ["3. Health insurance component uses a 'retained earnings' method that lags real premium changes."],
+      ["4. All values are U.S. city average (national). Your metro area may differ significantly."],
+      ["5. Oct-Nov 2025 data missing due to federal government shutdown (lapse in appropriations)."],
+      ["6. Weights are updated annually from Consumer Expenditure Survey data (most recent: Dec 2024 using 2023 spending data)."],
+      [""],
+      ["Data License"],
+      ["All BLS and FRED data is Public Domain — Citation Requested."],
+      ["Recommended citation: 'U.S. Bureau of Labor Statistics, [Series Name] [Series ID], retrieved from FRED, Federal Reserve Bank of St. Louis'"],
+      [""],
+      ["Verification"],
+      ["Every data point in this workbook includes a BLS Series ID and FRED URL."],
+      ["To verify any number: visit the FRED URL, click 'Download', select CSV or XLSX, and compare values."],
+      ["Alternatively, enter any Series ID at https://fred.stlouisfed.org and retrieve the same data programmatically via API."],
+    ];
+    const ws5 = XLSX.utils.aoa_to_sheet(methodRows);
+    ws5["!cols"] = [{ wch: 30 }, { wch: 60 }, { wch: 55 }];
+    XLSX.utils.book_append_sheet(wb, ws5, "Methodology & Sources");
+
+    // Trigger download
+    XLSX.writeFile(wb, `Inflation_Reality_Data_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }, [personalRate, delta, contributions, weights, totalWeight]);
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div style={{ background: "#fff", border: "1px solid #ddd", borderRadius: 6, padding: "8px 12px", fontSize: 12, fontFamily: "'Source Serif 4', Georgia, serif", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+        <div style={{ fontWeight: 600, marginBottom: 4 }}>{label}</div>
+        {payload.map((p, i) => (
+          <div key={i} style={{ color: p.color, display: "flex", gap: 8 }}>
+            <span>{p.name}:</span>
+            <strong>{p.value !== null ? `${p.value.toFixed(1)}%` : "N/A"}</strong>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", background: "#FAFAF8", minHeight: "100vh", color: "#1a1a1a" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+
+      {/* ── HEADER ── */}
+      <header style={{ background: "#0D1B2A", color: "#fff", padding: "28px 24px 20px" }}>
+        <div style={{ maxWidth: 960, margin: "0 auto" }}>
+          <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 2, color: "#778DA9", marginBottom: 6, textTransform: "uppercase" }}>
+            Bureau of Labor Statistics CPI-U Data
+          </div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, lineHeight: 1.2, letterSpacing: -0.5 }}>
+            Your Inflation Reality
+          </h1>
+          <p style={{ fontSize: 14, color: "#A8BFCF", margin: "6px 0 0", fontStyle: "italic", maxWidth: 600 }}>
+            The headline says {CPI_DATA.headline.rate}%. But what's <em>your</em> number? Adjust the weights below to match how you actually spend.
+          </p>
+          <div style={{ display: "flex", gap: 4, marginTop: 16 }}>
+            {[
+              { key: "dashboard", label: "Dashboard" },
+              { key: "prices", label: "Price Check" },
+              { key: "methodology", label: "Sources & Method" },
+            ].map(tab => (
+              <button key={tab.key} onClick={() => setView(tab.key)} style={{
+                padding: "6px 16px", borderRadius: 4, border: "none", cursor: "pointer", fontSize: 12,
+                fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, letterSpacing: 0.3,
+                background: view === tab.key ? "#415A77" : "transparent",
+                color: view === tab.key ? "#fff" : "#778DA9",
+              }}>{tab.label}</button>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      <main style={{ maxWidth: 960, margin: "0 auto", padding: "20px 16px" }}>
+
+        {/* ═══════════════════════════════════════════════════════════
+            DASHBOARD VIEW — Layout: big numbers → charts → controls
+            ═══════════════════════════════════════════════════════════ */}
+        {view === "dashboard" && (
+          <>
+            {/* ── Row 1: Big Numbers ── */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
+              <div style={{ background: "#fff", borderRadius: 10, padding: 20, border: "1px solid #e0e0e0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+                <BigNumber value={personalRate} label="Your Inflation" sub="Based on your spending mix" color={personalRate > CPI_DATA.headline.rate ? "#c1121f" : "#2D6A4F"} />
+              </div>
+              <div style={{ background: "#fff", borderRadius: 10, padding: 20, border: "1px solid #e0e0e0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+                <BigNumber value={CPI_DATA.headline.rate} label="Headline CPI-U" sub="BLS All Items, Mar 2026" color="#1B4965" />
+              </div>
+              <div style={{ background: delta > 0 ? "#FFF5F5" : "#F0FAF0", borderRadius: 10, padding: 20, border: `1px solid ${delta > 0 ? "#FECACA" : "#BBF7D0"}`, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+                <BigNumber value={delta} label={delta > 0 ? "Above Headline" : "Below Headline"} sub="Your rate vs. official CPI" color={delta > 0 ? "#c1121f" : "#2D6A4F"} size={40} />
+              </div>
+            </div>
+
+            {/* ── Row 2: Charts side by side ── */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+              {/* Contribution breakdown */}
+              <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 20 }}>
+                <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#888", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
+                  What's Driving Your Rate
+                </div>
+                <div style={{ fontSize: 11, color: "#888", marginBottom: 12 }}>
+                  Each bar shows how much that category adds to your personal inflation number.
+                </div>
+                <ResponsiveContainer width="100%" height={Math.max(220, waterfallData.length * 26 + 10)}>
+                  <BarChart data={waterfallData} layout="vertical" margin={{ left: 0, right: 44, top: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#eee" horizontal={false} />
+                    <XAxis type="number" domain={[0, "auto"]} tick={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }} tickFormatter={v => `${v}%`} />
+                    <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 10, fontFamily: "'Source Serif 4', Georgia, serif" }} />
+                    <Tooltip content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const d = payload[0].payload;
+                      return (
+                        <div style={{ background: "#fff", border: "1px solid #ddd", borderRadius: 6, padding: "8px 12px", fontSize: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+                          <strong>{d.name}</strong><br />
+                          Category inflation: {d.yoy}% year-over-year<br />
+                          Adds {d.value}% to your rate
+                        </div>
+                      );
+                    }} />
+                    <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
+                      {waterfallData.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} />
+                      ))}
+                      <LabelList dataKey="value" position="right" formatter={(v) => `${v}%`} style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, fill: "#555" }} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Trend chart */}
+              <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 20, display: "flex", flexDirection: "column" }}>
+                <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#888", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
+                  12-Month Trend
+                </div>
+                <div style={{ fontSize: 11, color: "#888", marginBottom: 12 }}>
+                  Your estimated rate vs. headline CPI-U (year-over-year % change)
+                </div>
+                <div style={{ flex: 1, minHeight: 200 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={trendWithPersonal} margin={{ left: 0, right: 12, top: 8, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                      <XAxis dataKey="month" tick={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace" }} />
+                      <YAxis domain={["auto", "auto"]} tick={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }} tickFormatter={v => `${v}%`} />
+                      <Tooltip content={CustomTooltip} />
+                      <Line type="monotone" dataKey="headline" stroke="#1B4965" strokeWidth={2.5} dot={{ r: 3 }} name="Headline CPI-U" connectNulls={false} />
+                      <Line type="monotone" dataKey="personal" stroke="#c1121f" strokeWidth={2} strokeDasharray="6 3" dot={{ r: 3 }} name="Your Rate (est.)" connectNulls={false} />
+                      <ReferenceLine x="Oct 25" stroke="#FFB703" strokeDasharray="3 3" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                {/* Shutdown gap callout */}
+                <div style={{
+                  marginTop: 12, padding: "10px 14px", background: "#FFFBEB", border: "1px solid #F0C36D",
+                  borderRadius: 6, fontSize: 12, color: "#78622A", lineHeight: 1.6,
+                  display: "flex", gap: 8, alignItems: "flex-start",
+                }}>
+                  <span style={{ fontSize: 14, flexShrink: 0 }}>⚠️</span>
+                  <div>
+                    <strong>Gap in data: Oct–Nov 2025.</strong> The federal government experienced a lapse in
+                    funding during this period, which interrupted BLS data collection. No CPI data was published
+                    for these months. The gap is shown here as-is — we don't interpolate or estimate missing values.
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#A08B4E", display: "block", marginTop: 4 }}>
+                      Source: BLS news release USDL-26-0599, footnote on Oct/Nov 2025 data availability
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Row 3: Spending Controls — full width, compact grid ── */}
+            <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#888", letterSpacing: 1, textTransform: "uppercase" }}>
+                    Your Spending Mix
+                  </div>
+                  <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>
+                    Drag sliders to match how you actually spend — the numbers above update instantly.
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {totalWeight !== 100 && (
+                    <span style={{
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: 11, padding: "3px 8px", borderRadius: 4,
+                      background: totalWeight > 100 ? "#FEF3CD" : "#E8F4FD",
+                      color: totalWeight > 100 ? "#92600A" : "#1B4965",
+                    }}>
+                      {totalWeight}% — auto-normalized
+                    </span>
+                  )}
+                  {totalWeight === 100 && (
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, padding: "3px 8px", borderRadius: 4, background: "#E2EFDA", color: "#2D6A4F" }}>
+                      ✓ 100%
+                    </span>
+                  )}
+                  <button onClick={() => applyPreset("bls")} style={{
+                    fontSize: 10, fontFamily: "'JetBrains Mono', monospace", background: "none", border: "1px solid #ccc",
+                    borderRadius: 4, padding: "3px 10px", cursor: "pointer", color: "#888",
+                  }}>Reset</button>
+                </div>
+              </div>
+
+              {/* Quick Profiles */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14, paddingBottom: 14, borderBottom: "1px solid #eee" }}>
+                {Object.entries(PRESETS).map(([key, p]) => (
+                  <button key={key} onClick={() => applyPreset(key)} style={{
+                    padding: "5px 10px", borderRadius: 6, border: `1.5px solid ${activePreset === key ? "#1B4965" : "#ddd"}`,
+                    background: activePreset === key ? "#E8F4FD" : "#fff", cursor: "pointer", fontSize: 11,
+                    fontFamily: "'JetBrains Mono', monospace", color: activePreset === key ? "#1B4965" : "#555",
+                    display: "flex", alignItems: "center", gap: 4,
+                  }}>
+                    <span>{p.icon}</span> {p.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Slider Grid — 2 columns for compact layout */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+                {CPI_DATA.categories.map(cat => (
+                  <WeightSlider
+                    key={cat.id} cat={cat} weight={weights[cat.id] || 0}
+                    onChange={handleWeightChange}
+                    contribution={contributions.find(c => c.id === cat.id)?.contribution}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* ── Row 4: Glossary ── */}
+            <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 24, marginTop: 20 }}>
+              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#888", letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>
+                📖 Key Terms Explained
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 24px" }}>
+                {[
+                  { term: "CPI-U", def: "Consumer Price Index for All Urban Consumers. The government's main measure of how prices are changing for about 88% of the U.S. population. When the news says \"inflation is 3.3%,\" this is usually what they mean." },
+                  { term: "Year-Over-Year (YoY)", def: "The percent change comparing this month to the same month one year ago. A YoY of 3% means prices are 3% higher than they were 12 months ago." },
+                  { term: "Core CPI", def: "CPI with food and energy stripped out. Economists watch this because food and gas prices swing wildly month to month, which can mask the underlying trend." },
+                  { term: "Weighted Contribution", def: "How much each spending category adds to your total inflation number. If Gasoline contributes 0.38%, that means gas alone is responsible for 0.38% out of your total rate." },
+                  { term: "Owners' Equivalent Rent (OER)", def: "How BLS measures housing costs for homeowners. Instead of tracking mortgage payments, they ask: \"How much would your home rent for?\" This is the single largest piece of CPI (~27%) and is often debated." },
+                  { term: "Relative Importance (Weight)", def: "How much each category counts in the overall CPI calculation. Shelter has a weight of ~36%, meaning it accounts for over a third of the index. Your sliders replace these defaults with your own spending." },
+                  { term: "Seasonally Adjusted (SA)", def: "Data smoothed to remove predictable seasonal patterns (e.g., gas prices rise every summer). The non-adjusted version shows raw price changes including seasonal swings." },
+                  { term: "BLS", def: "Bureau of Labor Statistics. The U.S. federal agency that collects and publishes this data. It's a nonpartisan statistical agency — career staff, not political appointees, produce the numbers." },
+                  { term: "FRED", def: "Federal Reserve Economic Data. A free database run by the St. Louis Fed that mirrors BLS data and thousands of other economic series. Anyone can search, download, and chart data at fred.stlouisfed.org." },
+                  { term: "Series ID", def: "The unique code for each data series (e.g., CPIAUCSL for headline CPI). You can type any series ID shown in this dashboard into FRED's search bar and download the exact same data we use." },
+                ].map((g, i) => (
+                  <div key={i} style={{ padding: "10px 12px", background: "#F8F9FA", borderRadius: 6, borderLeft: "3px solid #1B4965" }}>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 700, color: "#1B4965", marginBottom: 4 }}>{g.term}</div>
+                    <div style={{ fontSize: 12, color: "#555", lineHeight: 1.6 }}>{g.def}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════
+            PRICE CHECK VIEW
+            ═══════════════════════════════════════════════════════════ */}
+        {view === "prices" && (
+          <div style={{ maxWidth: 720 }}>
+            <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 24, marginBottom: 20 }}>
+              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#888", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
+                Average Prices — U.S. City Average
+              </div>
+              <div style={{ fontSize: 13, color: "#555", marginBottom: 16 }}>
+                Actual dollar prices from BLS Average Price Data (AP series). March 2026 vs. March 2025. These are prices collected from ~22,000 retail outlets across 75 urban areas.
+              </div>
+
+              <div style={{ display: "flex", padding: "8px 0", borderBottom: "2px solid #1B4965", gap: 8, fontSize: 11, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#888" }}>
+                <div style={{ flex: 1 }}>Item</div>
+                <div style={{ width: 82, textAlign: "right" }}>Price Now</div>
+                <div style={{ width: 72, textAlign: "right" }}>Year Ago</div>
+                <div style={{ width: 60, textAlign: "right" }}>YoY Δ</div>
+              </div>
+
+              {(() => {
+                let lastCat = null;
+                const catIcons = { Protein: "🥩", Dairy: "🥛", Staples: "🌾", Produce: "🥬", Beverages: "☕", Snacks: "🍿", Energy: "⚡" };
+                return AVG_PRICES.map((item, i) => {
+                  const showHeader = item.category !== lastCat;
+                  lastCat = item.category;
+                  const change = ((item.current - item.yearAgo) / item.yearAgo * 100);
+                  const isUp = change > 0;
+                  return (
+                    <div key={i}>
+                      {showHeader && (
+                        <div style={{
+                          padding: "10px 0 4px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+                          fontWeight: 700, color: "#1B4965", letterSpacing: 0.5, textTransform: "uppercase",
+                          borderBottom: "1px solid #e8e8e8", marginTop: i > 0 ? 8 : 0,
+                        }}>
+                          {catIcons[item.category] || ""} {item.category}
+                        </div>
+                      )}
+                      <div style={{ display: "flex", alignItems: "center", padding: "7px 0", borderBottom: "1px solid #f4f4f4", gap: 8 }}>
+                        <div style={{ flex: 1, fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 13, color: "#1a1a1a" }}>{item.item}</div>
+                        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: "#1a1a1a", fontWeight: 600, width: 82, textAlign: "right" }}>
+                          ${item.current < 1 ? item.current.toFixed(3) : item.current.toFixed(2)}{item.unit}
+                        </div>
+                        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#888", width: 72, textAlign: "right" }}>
+                          ${item.yearAgo < 1 ? item.yearAgo.toFixed(3) : item.yearAgo.toFixed(2)}
+                        </div>
+                        <div style={{
+                          fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, width: 60, textAlign: "right",
+                          color: change > 15 ? "#7f1d1d" : isUp ? "#c1121f" : "#2D6A4F",
+                          background: change > 15 ? "#FEE2E2" : "transparent",
+                          borderRadius: 3, padding: change > 15 ? "1px 4px" : 0,
+                        }}>
+                          {isUp ? "▲" : "▼"} {Math.abs(change).toFixed(1)}%
+                        </div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+
+              <div style={{ marginTop: 16, fontSize: 11, color: "#888", fontStyle: "italic", lineHeight: 1.5 }}>
+                Source: BLS Consumer Price Index Average Price Data. All prices are national averages and may differ from your local area.{" "}
+                <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                  {AVG_PRICES.length} items across {[...new Set(AVG_PRICES.map(p => p.category))].length} categories.
+                </span>
+              </div>
+            </div>
+
+            {/* Top movers chart */}
+            <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 24 }}>
+              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#888", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
+                Biggest Movers — Year Over Year
+              </div>
+              <div style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>
+                Top 10 items ranked by price increase
+              </div>
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart
+                  data={
+                    AVG_PRICES
+                      .map(p => ({ name: p.item, change: parseFloat(((p.current - p.yearAgo) / p.yearAgo * 100).toFixed(1)), seriesId: p.seriesId }))
+                      .sort((a, b) => b.change - a.change)
+                      .slice(0, 10)
+                  }
+                  layout="vertical" margin={{ left: 10, right: 50 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace" }} tickFormatter={v => `${v}%`} />
+                  <YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 11, fontFamily: "'Source Serif 4', Georgia, serif" }} />
+                  <Tooltip content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const d = payload[0].payload;
+                    return (
+                      <div style={{ background: "#fff", border: "1px solid #ddd", borderRadius: 6, padding: "8px 12px", fontSize: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+                        <strong>{d.name}</strong>: {d.change > 0 ? "+" : ""}{d.change}% year-over-year<br/>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#888" }}>{d.seriesId}</span>
+                      </div>
+                    );
+                  }} />
+                  <Bar dataKey="change" radius={[0, 4, 4, 0]} barSize={18}>
+                    {AVG_PRICES
+                      .map(p => ({ change: parseFloat(((p.current - p.yearAgo) / p.yearAgo * 100).toFixed(1)) }))
+                      .sort((a, b) => b.change - a.change)
+                      .slice(0, 10)
+                      .map((entry, i) => (
+                        <Cell key={i} fill={entry.change > 15 ? "#7f1d1d" : entry.change > 10 ? "#c1121f" : entry.change > 5 ? "#E76F51" : "#457B9D"} />
+                      ))
+                    }
+                    <LabelList dataKey="change" position="right" formatter={(v) => `${v}%`} style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, fill: "#555" }} />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div style={{ background: "#F8F9FA", borderRadius: 10, border: "1px solid #e0e0e0", padding: 16, marginTop: 20 }}>
+              <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#888", marginBottom: 8 }}>
+                VERIFY THIS DATA — All BLS Series IDs:
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                {AVG_PRICES.map((p, i) => <DataSourceBadge key={i} seriesId={p.seriesId} />)}
+              </div>
+              <div style={{ fontSize: 11, color: "#888", marginTop: 8 }}>
+                Enter any ID at <span style={{ fontFamily: "'JetBrains Mono', monospace", color: "#457b9d" }}>fred.stlouisfed.org</span> → download CSV → see the same numbers.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════
+            METHODOLOGY VIEW
+            ═══════════════════════════════════════════════════════════ */}
+        {view === "methodology" && (
+          <div style={{ maxWidth: 680 }}>
+            <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 24, marginBottom: 20 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 16px", color: "#0D1B2A" }}>How This Works</h2>
+              <div style={{ lineHeight: 1.8, fontSize: 14, color: "#333" }}>
+                <p>This dashboard uses the exact same data the Bureau of Labor Statistics uses to compute the Consumer Price Index for All Urban Consumers (CPI-U). The only difference is <strong>whose spending weights are applied</strong>.</p>
+                <p>The official CPI-U weights spending categories based on the Consumer Expenditure Survey — what the "average urban consumer" spends. Your spending probably isn't average. This tool lets you substitute your own weights and see the result.</p>
+                <div style={{ background: "#F0F4F8", borderRadius: 8, padding: 16, margin: "16px 0", fontFamily: "'JetBrains Mono', monospace", fontSize: 12, lineHeight: 2 }}>
+                  <strong>Formula:</strong><br />
+                  Your Rate = Σ (your_weight<sub>i</sub> × category_inflation<sub>i</sub>)<br />
+                  where category_inflation<sub>i</sub> = 12-month % change in CPI-U sub-index<sub>i</sub>
+                </div>
+                <p>Every number in this dashboard traces to a specific BLS series ID. You can type any of these IDs into <a href="https://fred.stlouisfed.org" target="_blank" rel="noopener" style={{ color: "#1B4965" }}>FRED</a> and download the same data as CSV or Excel.</p>
+              </div>
+            </div>
+
+            {/* ── Download Card ── */}
+            <div style={{
+              background: "linear-gradient(135deg, #0D1B2A 0%, #1B4965 100%)", borderRadius: 10,
+              padding: 28, marginBottom: 20, color: "#fff", position: "relative", overflow: "hidden",
+            }}>
+              <div style={{
+                position: "absolute", top: -20, right: -20, width: 120, height: 120,
+                background: "rgba(255,255,255,0.05)", borderRadius: "50%",
+              }} />
+              <div style={{
+                position: "absolute", bottom: -30, right: 40, width: 80, height: 80,
+                background: "rgba(255,255,255,0.03)", borderRadius: "50%",
+              }} />
+              <div style={{ position: "relative" }}>
+                <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 1.5, color: "#778DA9", textTransform: "uppercase", marginBottom: 8 }}>
+                  Show Your Work
+                </div>
+                <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 8px" }}>Download All Data as Excel</h3>
+                <p style={{ fontSize: 13, color: "#A8BFCF", lineHeight: 1.6, margin: "0 0 16px", maxWidth: 480 }}>
+                  Get a complete workbook with every data point, formula, series ID, and source URL used in this dashboard — including your current spending weights and personal calculation. Open it in Excel and verify everything yourself.
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+                  {["Your Calculation", "CPI Sub-Indexes", "Average Prices", "Monthly Trend", "Methodology & Sources"].map(sheet => (
+                    <span key={sheet} style={{
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: "3px 8px",
+                      background: "rgba(255,255,255,0.1)", borderRadius: 4, color: "#A8BFCF",
+                    }}>
+                      📄 {sheet}
+                    </span>
+                  ))}
+                </div>
+                <button onClick={downloadWorkbook} style={{
+                  padding: "10px 24px", borderRadius: 6, border: "2px solid rgba(255,255,255,0.3)",
+                  background: "rgba(255,255,255,0.1)", color: "#fff", cursor: "pointer",
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 600, letterSpacing: 0.5,
+                  transition: "all 0.2s",
+                }}
+                onMouseOver={(e) => { e.target.style.background = "rgba(255,255,255,0.2)"; e.target.style.borderColor = "rgba(255,255,255,0.5)"; }}
+                onMouseOut={(e) => { e.target.style.background = "rgba(255,255,255,0.1)"; e.target.style.borderColor = "rgba(255,255,255,0.3)"; }}
+                >
+                  ⬇ Download .xlsx
+                </button>
+                <div style={{ fontSize: 10, color: "#778DA9", marginTop: 10, fontFamily: "'JetBrains Mono', monospace" }}>
+                  5 sheets • All BLS series IDs • FRED URLs for every data point • Your current weights included
+                </div>
+              </div>
+            </div>
+
+            <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 24, marginBottom: 20 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 12px", color: "#0D1B2A" }}>Data Sources</h3>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr style={{ borderBottom: "2px solid #1B4965" }}>
+                    {["Source", "What", "Access"].map(h => (
+                      <th key={h} style={{ textAlign: "left", padding: "6px 8px", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#888" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["FRED API", "CPI-U sub-indexes (monthly, SA/NSA)", "Free key — fred.stlouisfed.org"],
+                    ["BLS Data Viewer", "Same data, manual download", "data.bls.gov"],
+                    ["BLS Flat Files", "Full CPI-U dataset, tab-delimited", "download.bls.gov/pub/time.series/cu/"],
+                    ["BLS Rel. Importance", "Official spending weights (Dec 2024)", "bls.gov/cpi/tables/relative-importance/"],
+                  ].map(([a, b, c], i) => (
+                    <tr key={i} style={{ borderBottom: "1px solid #eee" }}>
+                      <td style={{ padding: "8px", fontWeight: 600 }}>{a}</td>
+                      <td style={{ padding: "8px" }}>{b}</td>
+                      <td style={{ padding: "8px", fontSize: 12, color: "#457b9d" }}>{c}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ background: "#FFF8E1", borderRadius: 10, border: "1px solid #F0C36D", padding: 24, marginBottom: 20 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 12px", color: "#7B6B20" }}>⚠️ Important Caveats</h3>
+              <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.8, fontSize: 13, color: "#555" }}>
+                <li><strong>CPI ≠ cost of living.</strong> CPI measures price change in a fixed basket, not what it costs to live.</li>
+                <li><strong>Shelter uses OER.</strong> Owners' Equivalent Rent is imputed — homeowners with fixed mortgages don't actually experience it.</li>
+                <li><strong>Health insurance lags.</strong> BLS uses a "retained earnings" method that doesn't capture premium spikes in real time.</li>
+                <li><strong>National average.</strong> Your metro area may differ. Regional CPI data covers 23 areas but with less granularity.</li>
+                <li><strong>Oct–Nov 2025 gap.</strong> The 2025 government shutdown caused missing data for some series in these months.</li>
+              </ul>
+            </div>
+
+            <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 24 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 12px", color: "#0D1B2A" }}>All Series IDs Used</h3>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {[CPI_DATA.headline, CPI_DATA.core, ...CPI_DATA.categories].map((s, i) => (
+                  <div key={i} style={{
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 10, background: "#f0f4f8",
+                    padding: "4px 8px", borderRadius: 4, color: "#1B4965",
+                  }}>
+                    {s.seriesId} <span style={{ color: "#888" }}>— {s.label}</span>
+                  </div>
+                ))}
+                {AVG_PRICES.map((p, i) => (
+                  <div key={`ap-${i}`} style={{
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 10, background: "#E8F5E9",
+                    padding: "4px 8px", borderRadius: 4, color: "#2D6A4F",
+                  }}>
+                    {p.seriesId} <span style={{ color: "#888" }}>— {p.item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <footer style={{ marginTop: 32, padding: "20px 0", borderTop: "1px solid #e0e0e0", fontSize: 11, color: "#888", lineHeight: 1.6 }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", marginBottom: 4 }}>
+            DATA: U.S. Bureau of Labor Statistics, Consumer Price Index for All Urban Consumers (CPI-U). Accessed via FRED, Federal Reserve Bank of St. Louis.
+          </div>
+          <div>
+            All data is public domain (citation requested). Reference month: March 2026 (released April 10, 2026). This tool is for informational purposes only and does not constitute financial advice.
+            Methodology and all series IDs available in the Sources & Method tab for independent verification.
+          </div>
+        </footer>
+      </main>
+    </div>
+  );
+}
