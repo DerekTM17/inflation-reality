@@ -26,11 +26,11 @@ export const CATEGORIES = [
   { id: "shelter",      label: "Rent / Housing",      seriesId: "CUUR0000SAH1",   code: "SAH1",   weight: 36.4, icon: "🏠", color: "#1B4965" },
   { id: "energy",       label: "Home Energy",         seriesId: "CUUR0000SAH21",  code: "SAH21",  weight: 3.2, icon: "💡", color: "#F4A261" },
   { id: "gas",          label: "Gasoline",            seriesId: "CUUR0000SETB01", code: "SETB01", weight: 3.0, icon: "⛽", color: "#E76F51" },
-  { id: "carInsurance", label: "Car Insurance",       seriesId: "CUUR0000SETE",   code: "SETE",   weight: 2.9, icon: "🚗", color: "#E63946" },
-  { id: "healthcare",   label: "Healthcare",          seriesId: "CUUR0000SAM",    code: "SAM",    weight: 8.1, icon: "🏥", color: "#457B9D" },
+  // FRED does not mirror the CPI motor-vehicle-insurance NSA series, so Car Insurance was dropped (2026-07-10).
+  { id: "healthcare",   label: "Healthcare",          seriesId: "CPIMEDNS",       code: "SAM",    weight: 8.1, icon: "🏥", color: "#457B9D" },
   { id: "tuition",      label: "Tuition & Childcare", seriesId: "CUUR0000SEEB",   code: "SEEB",   weight: 3.0, icon: "🎓", color: "#6D597A" },
-  { id: "apparel",      label: "Clothing",            seriesId: "CUUR0000SAA",    code: "SAA",    weight: 2.5, icon: "👔", color: "#936639" },
-  { id: "recreation",   label: "Recreation",          seriesId: "CUUR0000SAR",    code: "SAR",    weight: 5.3, icon: "🎬", color: "#3A86A5" },
+  { id: "apparel",      label: "Clothing",            seriesId: "CPIAPPNS",       code: "SAA",    weight: 2.5, icon: "👔", color: "#936639" },
+  { id: "recreation",   label: "Recreation",          seriesId: "CPIRECNS",       code: "SAR",    weight: 5.3, icon: "🎬", color: "#3A86A5" },
   { id: "other",        label: "Other",               seriesId: "CUUR0000SAS",    code: "SAS",    weight: 3.6, icon: "📦", color: "#8D99AE" },
 ];
 

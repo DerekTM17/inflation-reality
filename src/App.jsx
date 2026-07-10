@@ -14,11 +14,11 @@ const PRESETS = {
 };
 
 const presetWeights = {
-  bls: { groceries: 8, dining: 5, shelter: 36, energy: 3, gas: 3, carInsurance: 3, healthcare: 8, tuition: 3, apparel: 3, recreation: 5, other: 4 },
-  renter: { groceries: 6, dining: 12, shelter: 40, energy: 2, gas: 2, carInsurance: 2, healthcare: 4, tuition: 2, apparel: 6, recreation: 8, other: 3 },
-  family: { groceries: 15, dining: 5, shelter: 30, energy: 4, gas: 5, carInsurance: 4, healthcare: 10, tuition: 12, apparel: 4, recreation: 3, other: 3 },
-  driver: { groceries: 8, dining: 4, shelter: 28, energy: 3, gas: 12, carInsurance: 10, healthcare: 6, tuition: 2, apparel: 2, recreation: 4, other: 4 },
-  retiree: { groceries: 12, dining: 4, shelter: 30, energy: 6, gas: 4, carInsurance: 3, healthcare: 20, tuition: 0, apparel: 2, recreation: 6, other: 5 },
+  bls: { groceries: 8, dining: 5, shelter: 36, energy: 3, gas: 3, healthcare: 8, tuition: 3, apparel: 3, recreation: 5, other: 4 },
+  renter: { groceries: 6, dining: 12, shelter: 40, energy: 2, gas: 2, healthcare: 4, tuition: 2, apparel: 6, recreation: 8, other: 3 },
+  family: { groceries: 15, dining: 5, shelter: 30, energy: 4, gas: 5, healthcare: 10, tuition: 12, apparel: 4, recreation: 3, other: 3 },
+  driver: { groceries: 8, dining: 4, shelter: 28, energy: 3, gas: 12, healthcare: 6, tuition: 2, apparel: 2, recreation: 4, other: 4 },
+  retiree: { groceries: 12, dining: 4, shelter: 30, energy: 6, gas: 4, healthcare: 20, tuition: 0, apparel: 2, recreation: 6, other: 5 },
 };
 
 // ═══════════════════════════════════════════════════════════════
