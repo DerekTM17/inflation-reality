@@ -331,6 +331,22 @@ export default function InflationTracker() {
               </div>
               <div style={{ background: "#fff", borderRadius: 10, padding: 20, border: "1px solid #e0e0e0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
                 <BigNumber value={data.headline.yoy} label="Headline CPI-U" sub={`BLS All Items, ${data.referenceMonthLabel}`} color="#1B4965" />
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #f0f0f0", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#666", lineHeight: 1.7 }}>
+                  <div>
+                    Headline{" "}
+                    <strong style={{ color: (data.headline.mom ?? 0) >= 0 ? "#c1121f" : "#2D6A4F" }}>
+                      {(data.headline.mom ?? 0) >= 0 ? "+" : ""}{data.headline.mom ?? "—"}%
+                    </strong>{" "}
+                    MoM · {data.headline.momAnnualized ?? "—"}% annualized
+                  </div>
+                  <div>
+                    Core{" "}
+                    <strong style={{ color: (data.core.mom ?? 0) >= 0 ? "#c1121f" : "#2D6A4F" }}>
+                      {(data.core.mom ?? 0) >= 0 ? "+" : ""}{data.core.mom ?? "—"}%
+                    </strong>{" "}
+                    MoM · {data.core.momAnnualized ?? "—"}% annualized
+                  </div>
+                </div>
               </div>
               <div style={{ background: delta > 0 ? "#FFF5F5" : "#F0FAF0", borderRadius: 10, padding: 20, border: `1px solid ${delta > 0 ? "#FECACA" : "#BBF7D0"}`, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
                 <BigNumber value={delta} label={delta > 0 ? "Above Headline" : "Below Headline"} sub="Your rate vs. official CPI" color={delta > 0 ? "#c1121f" : "#2D6A4F"} size={40} />
