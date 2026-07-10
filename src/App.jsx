@@ -82,7 +82,17 @@ export default function InflationTracker() {
     let cancelled = false;
     fetch(`${import.meta.env.BASE_URL}cpi.json`)
       .then(r => (r.ok ? r.json() : Promise.reject(new Error(`cpi.json HTTP ${r.status}`))))
-      .then(json => { if (!cancelled) setDynamic(json); })
+      .then(json => {
+        if (cancelled) return;
+        const isPlausible = json !== null && typeof json === "object"
+          && Array.isArray(json.trend)
+          && json.categories !== null && typeof json.categories === "object" && !Array.isArray(json.categories);
+        if (!isPlausible) {
+          console.warn("Using bundled fallback data: cpi.json payload failed shape check (missing/invalid trend or categories)");
+          return;
+        }
+        setDynamic(json);
+      })
       .catch(err => { console.warn("Using bundled fallback data:", err.message); });
     return () => { cancelled = true; };
   }, []);
@@ -113,7 +123,7 @@ export default function InflationTracker() {
     });
     const rate = contribs.reduce((sum, c) => sum + c.contribution, 0);
     return { personalRate: rate, contributions: contribs.sort((a, b) => b.contribution - a.contribution) };
-  }, [weights, totalWeight]);
+  }, [weights, totalWeight, data]);
 
   const delta = personalRate - data.headline.yoy;
 
@@ -128,7 +138,9 @@ export default function InflationTracker() {
     ...d,
     personal: d.headline !== null ? d.headline + (delta * (0.6 + Math.random() * 0.4)) : null,
   }));
-  trendWithPersonal[trendWithPersonal.length - 1].personal = parseFloat(personalRate.toFixed(1));
+  if (trendWithPersonal.length > 0) {
+    trendWithPersonal[trendWithPersonal.length - 1].personal = parseFloat(personalRate.toFixed(1));
+  }
 
   // ═══════════════════════════════════════════════════════════════
   // EXCEL EXPORT — builds a multi-sheet workbook with all data
@@ -213,7 +225,7 @@ export default function InflationTracker() {
     // ── Sheet 4: Trend Data ──
     const trendRows = [
       ["CPI-U HEADLINE TREND — 12-Month % Change (Not Seasonally Adjusted)"],
-      ["Series ID: CPIAUCSL — https://fred.stlouisfed.org/series/CPIAUCSL"],
+      ["Series ID: CPIAUCNS — https://fred.stlouisfed.org/series/CPIAUCNS"],
       [""],
       ["Month", "Headline CPI-U (%)", "Notes"],
     ];
@@ -267,7 +279,7 @@ export default function InflationTracker() {
 
     // Trigger download
     XLSX.writeFile(wb, `Inflation_Reality_Data_${new Date().toISOString().slice(0, 10)}.xlsx`);
-  }, [personalRate, delta, contributions, weights, totalWeight]);
+  }, [personalRate, delta, contributions, weights, totalWeight, data]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
