@@ -110,6 +110,13 @@ function formatUpdated(iso) {
   }
 }
 
+// Year-over-year % change between two price levels. Returns null when it can't be
+// computed (missing level or a zero base), so callers render "—" instead of NaN/∞.
+function pctChange(current, yearAgo) {
+  if (current == null || yearAgo == null || yearAgo === 0) return null;
+  return (current - yearAgo) / yearAgo * 100;
+}
+
 function DataSourceBadge({ seriesId }) {
   return (
     <span style={{
@@ -191,6 +198,10 @@ export default function InflationTracker() {
     trendWithPersonal[trendWithPersonal.length - 1].personal = parseFloat(personalRate.toFixed(1));
   }
 
+  // Months in the current trailing-12 window that FRED had no data for. Drives the
+  // gap markers and callout below so they track the live data instead of a fixed date.
+  const gapMonths = data.trend.filter(d => d.gap).map(d => d.month);
+
   // ═══════════════════════════════════════════════════════════════
   // EXCEL EXPORT — builds a multi-sheet workbook with all data
   // ═══════════════════════════════════════════════════════════════
@@ -204,8 +215,12 @@ export default function InflationTracker() {
       ["Reference Month", data.referenceMonthLabel], ["Data fetched", data.generatedAt],
       [""],
       ["YOUR PERSONAL RATE", `${personalRate.toFixed(2)}%`],
-      ["Headline CPI-U (All Items)", `${data.headline.yoy}%`],
+      ["Headline CPI-U (All Items, YoY)", `${data.headline.yoy}%`],
       ["Difference", `${delta >= 0 ? "+" : ""}${delta.toFixed(2)}%`],
+      [""],
+      ["Headline MoM (1-month, seasonally adj.)", data.headline.mom == null ? "—" : `${data.headline.mom >= 0 ? "+" : ""}${data.headline.mom}% (${data.headline.momAnnualized}% annualized)`],
+      ["Core CPI-U (YoY)", data.core.yoy == null ? "—" : `${data.core.yoy}%`],
+      ["Core MoM (1-month, seasonally adj.)", data.core.mom == null ? "—" : `${data.core.mom >= 0 ? "+" : ""}${data.core.mom}% (${data.core.momAnnualized}% annualized)`],
       [""],
       ["HOW YOUR RATE IS CALCULATED"],
       ["Category", "BLS Series ID", "BLS Item Code", "YoY Inflation (%)", "BLS Default Weight (%)", "Your Weight (%)", "Your Normalized Weight (%)", "Contribution to Your Rate (%)", "FRED URL"],
@@ -261,7 +276,8 @@ export default function InflationTracker() {
       ["Category", "Item", "BLS Series ID", "Unit", "Current Price ($)", "Year-Ago Price ($)", "YoY Change (%)", "FRED URL"],
     ];
     data.avgPrices.forEach(p => {
-      const change = parseFloat(((p.current - p.yearAgo) / p.yearAgo * 100).toFixed(2));
+      const pct = pctChange(p.current, p.yearAgo);
+      const change = pct == null ? null : parseFloat(pct.toFixed(2));
       priceRows.push([p.category, p.item, p.seriesId, p.unit, p.current, p.yearAgo, change, `https://fred.stlouisfed.org/series/${p.seriesId}`]);
     });
     priceRows.push([]);
@@ -274,7 +290,7 @@ export default function InflationTracker() {
     // ── Sheet 4: Trend Data ──
     const trendRows = [
       ["CPI-U HEADLINE TREND — 12-Month % Change (Not Seasonally Adjusted)"],
-      ["Series ID: CPIAUCNS — https://fred.stlouisfed.org/series/CPIAUCNS"],
+      [`Series ID: ${data.headline.seriesId} — https://fred.stlouisfed.org/series/${data.headline.seriesId}`],
       [""],
       ["Month", "Headline CPI-U (%)", "Notes"],
     ];
@@ -508,26 +524,32 @@ export default function InflationTracker() {
                       <Tooltip content={CustomTooltip} />
                       <Line type="monotone" dataKey="headline" stroke="#1B4965" strokeWidth={2.5} dot={{ r: 3 }} name="Headline CPI-U" connectNulls={false} />
                       <Line type="monotone" dataKey="personal" stroke="#c1121f" strokeWidth={2} strokeDasharray="6 3" dot={{ r: 3 }} name="Your Rate (est.)" connectNulls={false} />
-                      <ReferenceLine x="Oct 25" stroke="#FFB703" strokeDasharray="3 3" />
+                      {gapMonths.map(m => (
+                        <ReferenceLine key={m} x={m} stroke="#FFB703" strokeDasharray="3 3" />
+                      ))}
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
-                {/* Shutdown gap callout */}
-                <div style={{
-                  marginTop: 12, padding: "10px 14px", background: "#FFFBEB", border: "1px solid #F0C36D",
-                  borderRadius: 6, fontSize: 12, color: "#78622A", lineHeight: 1.6,
-                  display: "flex", gap: 8, alignItems: "flex-start",
-                }}>
-                  <span style={{ fontSize: 14, flexShrink: 0 }}>⚠️</span>
-                  <div>
-                    <strong>Gap in data: Oct–Nov 2025.</strong> The federal government experienced a lapse in
-                    funding during this period, which interrupted BLS data collection. No CPI data was published
-                    for these months. The gap is shown here as-is — we don't interpolate or estimate missing values.
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#A08B4E", display: "block", marginTop: 4 }}>
-                      Source: BLS via FRED. Gaps indicate months with no published data.
-                    </span>
+                {/* Data-gap callout — only shown when the live trend window actually
+                    contains a month FRED had no data for. */}
+                {gapMonths.length > 0 && (
+                  <div style={{
+                    marginTop: 12, padding: "10px 14px", background: "#FFFBEB", border: "1px solid #F0C36D",
+                    borderRadius: 6, fontSize: 12, color: "#78622A", lineHeight: 1.6,
+                    display: "flex", gap: 8, alignItems: "flex-start",
+                  }}>
+                    <span style={{ fontSize: 14, flexShrink: 0 }}>⚠️</span>
+                    <div>
+                      <strong>Gap in data: {gapMonths.join(", ")}.</strong> No CPI figures were published for
+                      {gapMonths.length > 1 ? " these months" : " this month"}, so the line breaks rather than
+                      guessing a value — we don't interpolate. (Missing months usually mean a data-collection
+                      interruption, such as the 2025 government-funding lapse.)
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#A08B4E", display: "block", marginTop: 4 }}>
+                        Source: BLS via FRED. Gaps indicate months with no published data.
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -650,8 +672,9 @@ export default function InflationTracker() {
                 return data.avgPrices.map((item, i) => {
                   const showHeader = item.category !== lastCat;
                   lastCat = item.category;
-                  const change = ((item.current - item.yearAgo) / item.yearAgo * 100);
-                  const isUp = change > 0;
+                  const change = pctChange(item.current, item.yearAgo);
+                  const isUp = change != null && change > 0;
+                  const hot = change != null && change > 15;
                   return (
                     <div key={i}>
                       {showHeader && (
@@ -666,18 +689,18 @@ export default function InflationTracker() {
                       <div style={{ display: "flex", alignItems: "center", padding: "7px 0", borderBottom: "1px solid #f4f4f4", gap: 8 }}>
                         <div style={{ flex: 1, fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 13, color: "#1a1a1a" }}>{item.item}</div>
                         <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: "#1a1a1a", fontWeight: 600, width: 82, textAlign: "right" }}>
-                          ${item.current < 1 ? item.current.toFixed(3) : item.current.toFixed(2)}{item.unit}
+                          {item.current == null ? "—" : `$${item.current < 1 ? item.current.toFixed(3) : item.current.toFixed(2)}${item.unit}`}
                         </div>
                         <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: "#888", width: 72, textAlign: "right" }}>
-                          ${item.yearAgo < 1 ? item.yearAgo.toFixed(3) : item.yearAgo.toFixed(2)}
+                          {item.yearAgo == null ? "—" : `$${item.yearAgo < 1 ? item.yearAgo.toFixed(3) : item.yearAgo.toFixed(2)}`}
                         </div>
                         <div style={{
                           fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, width: 60, textAlign: "right",
-                          color: change > 15 ? "#7f1d1d" : isUp ? "#c1121f" : "#2D6A4F",
-                          background: change > 15 ? "#FEE2E2" : "transparent",
-                          borderRadius: 3, padding: change > 15 ? "1px 4px" : 0,
+                          color: hot ? "#7f1d1d" : change == null ? "#888" : isUp ? "#c1121f" : "#2D6A4F",
+                          background: hot ? "#FEE2E2" : "transparent",
+                          borderRadius: 3, padding: hot ? "1px 4px" : 0,
                         }}>
-                          {isUp ? "▲" : "▼"} {Math.abs(change).toFixed(1)}%
+                          {change == null ? "—" : `${isUp ? "▲" : "▼"} ${Math.abs(change).toFixed(1)}%`}
                         </div>
                       </div>
                     </div>
@@ -705,7 +728,9 @@ export default function InflationTracker() {
                 <BarChart
                   data={
                     data.avgPrices
-                      .map(p => ({ name: p.item, change: parseFloat(((p.current - p.yearAgo) / p.yearAgo * 100).toFixed(1)), seriesId: p.seriesId }))
+                      .map(p => ({ name: p.item, change: pctChange(p.current, p.yearAgo), seriesId: p.seriesId }))
+                      .filter(p => p.change != null)
+                      .map(p => ({ ...p, change: parseFloat(p.change.toFixed(1)) }))
                       .sort((a, b) => b.change - a.change)
                       .slice(0, 10)
                   }
