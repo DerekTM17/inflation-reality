@@ -5,6 +5,15 @@ BLS CPI-U data — headline vs. core inflation, category breakdowns, average
 prices, and trends — with charts powered by Recharts and Excel export via
 the `xlsx` library.
 
+## Data
+
+CPI numbers are fetched from the [FRED API](https://fred.stlouisfed.org/) at build
+time by `scripts/fetch-fred.mjs` and written to `public/cpi.json`. The app loads that
+file at runtime and falls back to `src/data/fallback.json` if it is unavailable.
+YoY figures use NSA series (e.g. `CPIAUCNS`); MoM figures use seasonally-adjusted
+series (e.g. `CPIAUCSL`). A GitHub Actions schedule refreshes the data on the 13th
+and 16th of each month. Set the `FRED_API_KEY` repo secret to enable fetching.
+
 ## Development
 
 ```bash
