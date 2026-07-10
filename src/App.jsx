@@ -9,7 +9,7 @@ const PRESETS = {
   bls: { label: "BLS Default", desc: "Official CPI-U weights", icon: "📊" },
   renter: { label: "Young Renter", desc: "High rent, dining, transit", icon: "🏢" },
   family: { label: "Family w/ Kids", desc: "Groceries, healthcare, tuition", icon: "👨‍👩‍👧‍👦" },
-  driver: { label: "Commuter", desc: "Heavy gas & car insurance", icon: "🚗" },
+  driver: { label: "Commuter", desc: "Heavy gas & long commutes", icon: "🚗" },
   retiree: { label: "Retiree", desc: "Healthcare, energy, groceries", icon: "🧓" },
 };
 
