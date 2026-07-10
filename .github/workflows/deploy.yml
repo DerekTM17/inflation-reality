@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # BLS releases CPI mid-month; run on the 13th and 16th (14:00 UTC) to catch
+    # the release plus any immediate revision. cpi.json refreshes on each run.
+    - cron: "0 14 13 * *"
+    - cron: "0 14 16 * *"
 
 permissions:
   contents: write
@@ -23,6 +28,14 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Fetch FRED data
+        run: node scripts/fetch-fred.mjs
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
 
       - name: Build
         run: npm run build
