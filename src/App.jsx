@@ -1,66 +1,9 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell, LabelList } from "recharts";
 import * as XLSX from "xlsx";
-
-// ═══════════════════════════════════════════════════════════════
-// REAL BLS DATA — All values sourced from BLS CPI-U, March 2026
-// Series IDs provided for independent verification via FRED
-// ═══════════════════════════════════════════════════════════════
-const CPI_DATA = {
-  headline: { rate: 3.3, label: "All Items (CPI-U)", seriesId: "CPIAUCSL" },
-  core: { rate: 2.6, label: "All Items Less Food & Energy", seriesId: "CPILFESL" },
-  categories: [
-    { id: "groceries", label: "Groceries", seriesId: "CUUR0000SAF11", code: "SAF11", yoy: 3.1, weight: 8.2, icon: "🛒", color: "#2D6A4F" },
-    { id: "dining", label: "Dining Out", seriesId: "CUUR0000SEFV", code: "SEFV", yoy: 3.8, weight: 5.3, icon: "🍽️", color: "#52796F" },
-    { id: "shelter", label: "Rent / Housing", seriesId: "CUUR0000SAH1", code: "SAH1", yoy: 3.0, weight: 36.4, icon: "🏠", color: "#1B4965" },
-    { id: "energy", label: "Home Energy", seriesId: "CUUR0000SAH21", code: "SAH21", yoy: 4.8, weight: 3.2, icon: "💡", color: "#F4A261" },
-    { id: "gas", label: "Gasoline", seriesId: "CUUR0000SETB01", code: "SETB01", yoy: 12.5, weight: 3.0, icon: "⛽", color: "#E76F51" },
-    { id: "carInsurance", label: "Car Insurance", seriesId: "CUUR0000SETE", code: "SETE", yoy: 8.2, weight: 2.9, icon: "🚗", color: "#E63946" },
-    { id: "healthcare", label: "Healthcare", seriesId: "CUUR0000SAM", code: "SAM", yoy: 3.1, weight: 8.1, icon: "🏥", color: "#457B9D" },
-    { id: "tuition", label: "Tuition & Childcare", seriesId: "CUUR0000SEEB", code: "SEEB", yoy: 4.2, weight: 3.0, icon: "🎓", color: "#6D597A" },
-    { id: "apparel", label: "Clothing", seriesId: "CUUR0000SAA", code: "SAA", yoy: 1.8, weight: 2.5, icon: "👔", color: "#936639" },
-    { id: "recreation", label: "Recreation", seriesId: "CUUR0000SAR", code: "SAR", yoy: 2.2, weight: 5.3, icon: "🎬", color: "#3A86A5" },
-    { id: "other", label: "Other", seriesId: "CUUR0000SAS", code: "SAS", yoy: 2.8, weight: 3.6, icon: "📦", color: "#8D99AE" },
-  ],
-};
-
-const TREND_DATA = [
-  { month: "Apr 25", headline: 2.3 },
-  { month: "May 25", headline: 2.4 },
-  { month: "Jun 25", headline: 2.5 },
-  { month: "Jul 25", headline: 2.6 },
-  { month: "Aug 25", headline: 2.5 },
-  { month: "Sep 25", headline: 2.4 },
-  { month: "Oct 25", headline: null, gap: true },
-  { month: "Nov 25", headline: null, gap: true },
-  { month: "Dec 25", headline: 2.7 },
-  { month: "Jan 26", headline: 2.4 },
-  { month: "Feb 26", headline: 2.4 },
-  { month: "Mar 26", headline: 3.3 },
-];
-
-const AVG_PRICES = [
-  { item: "Eggs, Grade A Large", unit: "/doz", current: 6.23, yearAgo: 3.56, seriesId: "APU0000708111", category: "Protein" },
-  { item: "Ground Beef, 100%", unit: "/lb", current: 5.98, yearAgo: 5.11, seriesId: "APU0000703112", category: "Protein" },
-  { item: "Chicken Breast, Boneless", unit: "/lb", current: 4.65, yearAgo: 4.28, seriesId: "APU0000706111", category: "Protein" },
-  { item: "Bacon, Sliced", unit: "/lb", current: 7.45, yearAgo: 6.82, seriesId: "APU0000704111", category: "Protein" },
-  { item: "Whole Milk", unit: "/gal", current: 4.32, yearAgo: 4.15, seriesId: "APU0000709112", category: "Dairy" },
-  { item: "Butter, Stick", unit: "/lb", current: 5.18, yearAgo: 4.72, seriesId: "APU0000FS1101", category: "Dairy" },
-  { item: "Cheddar Cheese", unit: "/lb", current: 6.05, yearAgo: 5.81, seriesId: "APU0000710212", category: "Dairy" },
-  { item: "White Bread", unit: "/lb", current: 2.14, yearAgo: 2.05, seriesId: "APU0000702111", category: "Staples" },
-  { item: "White Rice", unit: "/lb", current: 1.12, yearAgo: 1.04, seriesId: "APU0000701111", category: "Staples" },
-  { item: "Flour, All Purpose", unit: "/lb", current: 0.62, yearAgo: 0.57, seriesId: "APU0000701312", category: "Staples" },
-  { item: "Sugar, White", unit: "/lb", current: 0.89, yearAgo: 0.84, seriesId: "APU0000715211", category: "Staples" },
-  { item: "Bananas", unit: "/lb", current: 0.66, yearAgo: 0.65, seriesId: "APU0000711211", category: "Produce" },
-  { item: "Tomatoes", unit: "/lb", current: 2.28, yearAgo: 2.12, seriesId: "APU0000712311", category: "Produce" },
-  { item: "Potatoes, White", unit: "/lb", current: 1.39, yearAgo: 1.21, seriesId: "APU0000712112", category: "Produce" },
-  { item: "Coffee, Ground Roast", unit: "/lb", current: 8.47, yearAgo: 7.15, seriesId: "APU0000717311", category: "Beverages" },
-  { item: "Orange Juice", unit: "/16oz", current: 3.85, yearAgo: 3.24, seriesId: "APU0000FJ4101", category: "Beverages" },
-  { item: "Potato Chips", unit: "/16oz", current: 6.62, yearAgo: 6.15, seriesId: "APU0000FN1101", category: "Snacks" },
-  { item: "Gasoline, Regular", unit: "/gal", current: 3.52, yearAgo: 3.14, seriesId: "APU000074714", category: "Energy" },
-  { item: "Electricity", unit: "/kWh", current: 0.179, yearAgo: 0.168, seriesId: "APU000072610", category: "Energy" },
-  { item: "Natural Gas", unit: "/therm", current: 1.48, yearAgo: 1.35, seriesId: "APU000072620", category: "Energy" },
-];
+import * as catalog from "./data/catalog.js";
+import { buildViewData } from "./data/merge.js";
+import fallbackDynamic from "./data/fallback.json";
 
 const PRESETS = {
   bls: { label: "BLS Default", desc: "Official CPI-U weights", icon: "📊" },
@@ -133,6 +76,19 @@ function DataSourceBadge({ seriesId }) {
 // MAIN DASHBOARD
 // ═══════════════════════════════════════════════════════════════
 export default function InflationTracker() {
+  const [dynamic, setDynamic] = useState(fallbackDynamic);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${import.meta.env.BASE_URL}cpi.json`)
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(`cpi.json HTTP ${r.status}`))))
+      .then(json => { if (!cancelled) setDynamic(json); })
+      .catch(err => { console.warn("Using bundled fallback data:", err.message); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const data = useMemo(() => buildViewData(catalog, dynamic), [dynamic]);
+
   const [weights, setWeights] = useState(presetWeights.bls);
   const [activePreset, setActivePreset] = useState("bls");
   const [view, setView] = useState("dashboard");
@@ -151,7 +107,7 @@ export default function InflationTracker() {
 
   const { personalRate, contributions } = useMemo(() => {
     if (totalWeight === 0) return { personalRate: 0, contributions: [] };
-    const contribs = CPI_DATA.categories.map(cat => {
+    const contribs = data.categories.map(cat => {
       const w = (weights[cat.id] || 0) / totalWeight;
       return { ...cat, normalizedWeight: w, contribution: w * cat.yoy };
     });
@@ -159,7 +115,7 @@ export default function InflationTracker() {
     return { personalRate: rate, contributions: contribs.sort((a, b) => b.contribution - a.contribution) };
   }, [weights, totalWeight]);
 
-  const delta = personalRate - CPI_DATA.headline.rate;
+  const delta = personalRate - data.headline.yoy;
 
   const waterfallData = contributions.filter(c => c.contribution > 0.01).map(c => ({
     name: c.label,
@@ -168,7 +124,7 @@ export default function InflationTracker() {
     yoy: c.yoy,
   }));
 
-  const trendWithPersonal = TREND_DATA.map(d => ({
+  const trendWithPersonal = data.trend.map(d => ({
     ...d,
     personal: d.headline !== null ? d.headline + (delta * (0.6 + Math.random() * 0.4)) : null,
   }));
@@ -184,10 +140,10 @@ export default function InflationTracker() {
     const calcRows = [
       ["YOUR INFLATION REALITY — Data Export"],
       ["Generated", new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })],
-      ["Reference Month", "March 2026 (BLS release USDL-26-0599, April 10, 2026)"],
+      ["Reference Month", data.referenceMonthLabel], ["Data fetched", data.generatedAt],
       [""],
       ["YOUR PERSONAL RATE", `${personalRate.toFixed(2)}%`],
-      ["Headline CPI-U (All Items)", `${CPI_DATA.headline.rate}%`],
+      ["Headline CPI-U (All Items)", `${data.headline.yoy}%`],
       ["Difference", `${delta >= 0 ? "+" : ""}${delta.toFixed(2)}%`],
       [""],
       ["HOW YOUR RATE IS CALCULATED"],
@@ -220,14 +176,14 @@ export default function InflationTracker() {
 
     // ── Sheet 2: CPI Sub-Index Data ──
     const cpiRows = [
-      ["CPI-U SUB-INDEX DATA — March 2026"],
+      [`CPI-U SUB-INDEX DATA — ${data.referenceMonthLabel}`],
       ["All data from U.S. Bureau of Labor Statistics, accessed via FRED (Federal Reserve Bank of St. Louis)"],
       [""],
       ["Category", "BLS Series ID (NSA)", "BLS Item Code", "12-Month % Change", "Relative Importance (Dec 2024)", "Data Frequency", "FRED URL", "Description"],
-      [CPI_DATA.headline.label, CPI_DATA.headline.seriesId, "SA0", CPI_DATA.headline.rate, 100.0, "Monthly", `https://fred.stlouisfed.org/series/${CPI_DATA.headline.seriesId}`, "Headline CPI — all items benchmark"],
-      [CPI_DATA.core.label, CPI_DATA.core.seriesId, "SA0L1E", CPI_DATA.core.rate, 79.6, "Monthly", `https://fred.stlouisfed.org/series/${CPI_DATA.core.seriesId}`, "Core CPI — excludes volatile food and energy"],
+      [data.headline.label, data.headline.seriesId, data.headline.code, data.headline.yoy, data.headline.relImportance, "Monthly", `https://fred.stlouisfed.org/series/${data.headline.seriesId}`, "Headline CPI — all items benchmark"],
+      [data.core.label, data.core.seriesId, data.core.code, data.core.yoy, data.core.relImportance, "Monthly", `https://fred.stlouisfed.org/series/${data.core.seriesId}`, "Core CPI — excludes volatile food and energy"],
     ];
-    CPI_DATA.categories.forEach(c => {
+    data.categories.forEach(c => {
       cpiRows.push([c.label, c.seriesId, c.code, c.yoy, c.weight, "Monthly", `https://fred.stlouisfed.org/series/${c.seriesId}`, ""]);
     });
     cpiRows.push([]);
@@ -238,12 +194,12 @@ export default function InflationTracker() {
 
     // ── Sheet 3: Average Prices ──
     const priceRows = [
-      ["BLS AVERAGE PRICE DATA — March 2026 vs. March 2025"],
+      [`BLS AVERAGE PRICE DATA — ${data.referenceMonthLabel} vs. one year prior`],
       ["Source: BLS Consumer Price Index Average Price Data (AP series). Prices collected from ~22,000 retail outlets across 75 urban areas."],
       [""],
       ["Category", "Item", "BLS Series ID", "Unit", "Current Price ($)", "Year-Ago Price ($)", "YoY Change (%)", "FRED URL"],
     ];
-    AVG_PRICES.forEach(p => {
+    data.avgPrices.forEach(p => {
       const change = parseFloat(((p.current - p.yearAgo) / p.yearAgo * 100).toFixed(2));
       priceRows.push([p.category, p.item, p.seriesId, p.unit, p.current, p.yearAgo, change, `https://fred.stlouisfed.org/series/${p.seriesId}`]);
     });
@@ -261,11 +217,11 @@ export default function InflationTracker() {
       [""],
       ["Month", "Headline CPI-U (%)", "Notes"],
     ];
-    TREND_DATA.forEach(d => {
-      trendRows.push([d.month, d.headline, d.gap ? "Data unavailable — 2025 government shutdown (lapse in appropriations)" : ""]);
+    data.trend.forEach(d => {
+      trendRows.push([d.month, d.headline, d.gap ? "Data unavailable — not published by BLS" : ""]);
     });
     trendRows.push([]);
-    trendRows.push(["Source: BLS news release USDL-26-0599. Oct-Nov 2025 data not published due to lapse in federal funding."]);
+    trendRows.push(["Source: BLS via FRED. Blank months indicate periods where BLS did not publish data."]);
     const ws4 = XLSX.utils.aoa_to_sheet(trendRows);
     ws4["!cols"] = [{ wch: 12 }, { wch: 22 }, { wch: 60 }];
     XLSX.utils.book_append_sheet(wb, ws4, "Monthly Trend");
@@ -342,7 +298,7 @@ export default function InflationTracker() {
             Your Inflation Reality
           </h1>
           <p style={{ fontSize: 14, color: "#A8BFCF", margin: "6px 0 0", fontStyle: "italic", maxWidth: 600 }}>
-            The headline says {CPI_DATA.headline.rate}%. But what's <em>your</em> number? Adjust the weights below to match how you actually spend.
+            The headline says {data.headline.yoy}%. But what's <em>your</em> number? Adjust the weights below to match how you actually spend.
           </p>
           <div style={{ display: "flex", gap: 4, marginTop: 16 }}>
             {[
@@ -371,10 +327,10 @@ export default function InflationTracker() {
             {/* ── Row 1: Big Numbers ── */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
               <div style={{ background: "#fff", borderRadius: 10, padding: 20, border: "1px solid #e0e0e0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-                <BigNumber value={personalRate} label="Your Inflation" sub="Based on your spending mix" color={personalRate > CPI_DATA.headline.rate ? "#c1121f" : "#2D6A4F"} />
+                <BigNumber value={personalRate} label="Your Inflation" sub="Based on your spending mix" color={personalRate > data.headline.yoy ? "#c1121f" : "#2D6A4F"} />
               </div>
               <div style={{ background: "#fff", borderRadius: 10, padding: 20, border: "1px solid #e0e0e0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-                <BigNumber value={CPI_DATA.headline.rate} label="Headline CPI-U" sub="BLS All Items, Mar 2026" color="#1B4965" />
+                <BigNumber value={data.headline.yoy} label="Headline CPI-U" sub={`BLS All Items, ${data.referenceMonthLabel}`} color="#1B4965" />
               </div>
               <div style={{ background: delta > 0 ? "#FFF5F5" : "#F0FAF0", borderRadius: 10, padding: 20, border: `1px solid ${delta > 0 ? "#FECACA" : "#BBF7D0"}`, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
                 <BigNumber value={delta} label={delta > 0 ? "Above Headline" : "Below Headline"} sub="Your rate vs. official CPI" color={delta > 0 ? "#c1121f" : "#2D6A4F"} size={40} />
@@ -450,7 +406,7 @@ export default function InflationTracker() {
                     funding during this period, which interrupted BLS data collection. No CPI data was published
                     for these months. The gap is shown here as-is — we don't interpolate or estimate missing values.
                     <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#A08B4E", display: "block", marginTop: 4 }}>
-                      Source: BLS news release USDL-26-0599, footnote on Oct/Nov 2025 data availability
+                      Source: BLS via FRED. Gaps indicate months with no published data.
                     </span>
                   </div>
                 </div>
@@ -506,7 +462,7 @@ export default function InflationTracker() {
 
               {/* Slider Grid — 2 columns for compact layout */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
-                {CPI_DATA.categories.map(cat => (
+                {data.categories.map(cat => (
                   <WeightSlider
                     key={cat.id} cat={cat} weight={weights[cat.id] || 0}
                     onChange={handleWeightChange}
@@ -554,7 +510,7 @@ export default function InflationTracker() {
                 Average Prices — U.S. City Average
               </div>
               <div style={{ fontSize: 13, color: "#555", marginBottom: 16 }}>
-                Actual dollar prices from BLS Average Price Data (AP series). March 2026 vs. March 2025. These are prices collected from ~22,000 retail outlets across 75 urban areas.
+                Actual dollar prices from BLS Average Price Data (AP series). {data.referenceMonthLabel} vs. one year prior. These are prices collected from ~22,000 retail outlets across 75 urban areas.
               </div>
 
               <div style={{ display: "flex", padding: "8px 0", borderBottom: "2px solid #1B4965", gap: 8, fontSize: 11, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#888" }}>
@@ -567,7 +523,7 @@ export default function InflationTracker() {
               {(() => {
                 let lastCat = null;
                 const catIcons = { Protein: "🥩", Dairy: "🥛", Staples: "🌾", Produce: "🥬", Beverages: "☕", Snacks: "🍿", Energy: "⚡" };
-                return AVG_PRICES.map((item, i) => {
+                return data.avgPrices.map((item, i) => {
                   const showHeader = item.category !== lastCat;
                   lastCat = item.category;
                   const change = ((item.current - item.yearAgo) / item.yearAgo * 100);
@@ -608,7 +564,7 @@ export default function InflationTracker() {
               <div style={{ marginTop: 16, fontSize: 11, color: "#888", fontStyle: "italic", lineHeight: 1.5 }}>
                 Source: BLS Consumer Price Index Average Price Data. All prices are national averages and may differ from your local area.{" "}
                 <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                  {AVG_PRICES.length} items across {[...new Set(AVG_PRICES.map(p => p.category))].length} categories.
+                  {data.avgPrices.length} items across {[...new Set(data.avgPrices.map(p => p.category))].length} categories.
                 </span>
               </div>
             </div>
@@ -624,7 +580,7 @@ export default function InflationTracker() {
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart
                   data={
-                    AVG_PRICES
+                    data.avgPrices
                       .map(p => ({ name: p.item, change: parseFloat(((p.current - p.yearAgo) / p.yearAgo * 100).toFixed(1)), seriesId: p.seriesId }))
                       .sort((a, b) => b.change - a.change)
                       .slice(0, 10)
@@ -645,7 +601,7 @@ export default function InflationTracker() {
                     );
                   }} />
                   <Bar dataKey="change" radius={[0, 4, 4, 0]} barSize={18}>
-                    {AVG_PRICES
+                    {data.avgPrices
                       .map(p => ({ change: parseFloat(((p.current - p.yearAgo) / p.yearAgo * 100).toFixed(1)) }))
                       .sort((a, b) => b.change - a.change)
                       .slice(0, 10)
@@ -664,7 +620,7 @@ export default function InflationTracker() {
                 VERIFY THIS DATA — All BLS Series IDs:
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                {AVG_PRICES.map((p, i) => <DataSourceBadge key={i} seriesId={p.seriesId} />)}
+                {data.avgPrices.map((p, i) => <DataSourceBadge key={i} seriesId={p.seriesId} />)}
               </div>
               <div style={{ fontSize: 11, color: "#888", marginTop: 8 }}>
                 Enter any ID at <span style={{ fontFamily: "'JetBrains Mono', monospace", color: "#457b9d" }}>fred.stlouisfed.org</span> → download CSV → see the same numbers.
@@ -781,7 +737,7 @@ export default function InflationTracker() {
             <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 24 }}>
               <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 12px", color: "#0D1B2A" }}>All Series IDs Used</h3>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {[CPI_DATA.headline, CPI_DATA.core, ...CPI_DATA.categories].map((s, i) => (
+                {[data.headline, data.core, ...data.categories].map((s, i) => (
                   <div key={i} style={{
                     fontFamily: "'JetBrains Mono', monospace", fontSize: 10, background: "#f0f4f8",
                     padding: "4px 8px", borderRadius: 4, color: "#1B4965",
@@ -789,7 +745,7 @@ export default function InflationTracker() {
                     {s.seriesId} <span style={{ color: "#888" }}>— {s.label}</span>
                   </div>
                 ))}
-                {AVG_PRICES.map((p, i) => (
+                {data.avgPrices.map((p, i) => (
                   <div key={`ap-${i}`} style={{
                     fontFamily: "'JetBrains Mono', monospace", fontSize: 10, background: "#E8F5E9",
                     padding: "4px 8px", borderRadius: 4, color: "#2D6A4F",
@@ -808,7 +764,7 @@ export default function InflationTracker() {
             DATA: U.S. Bureau of Labor Statistics, Consumer Price Index for All Urban Consumers (CPI-U). Accessed via FRED, Federal Reserve Bank of St. Louis.
           </div>
           <div>
-            All data is public domain (citation requested). Reference month: March 2026 (released April 10, 2026). This tool is for informational purposes only and does not constitute financial advice.
+            All data is public domain (citation requested). Reference month: {data.referenceMonthLabel}. Data fetched {data.generatedAt}. This tool is for informational purposes only and does not constitute financial advice.
             Methodology and all series IDs available in the Sources & Method tab for independent verification.
           </div>
         </footer>
