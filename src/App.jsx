@@ -48,17 +48,66 @@ function WeightSlider({ cat, weight, onChange, contribution }) {
   );
 }
 
-function BigNumber({ value, label, sub, color, size = 48 }) {
+function BigNumber({ value, label, sub, color, size = 48, info }) {
   const sign = value > 0 ? "+" : "";
   return (
     <div style={{ textAlign: "center" }}>
       <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: size, fontWeight: 700, color, lineHeight: 1.1, letterSpacing: -2 }}>
         {sign}{value.toFixed(1)}%
       </div>
-      <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 14, fontWeight: 600, color: "#1a1a1a", marginTop: 4 }}>{label}</div>
+      <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 14, fontWeight: 600, color: "#1a1a1a", marginTop: 4 }}>
+        {label}{info && <InfoTip text={info} label={`About ${label}`} />}
+      </div>
       {sub && <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>{sub}</div>}
     </div>
   );
+}
+
+// Small accessible info tooltip: opens on hover, focus, AND tap (so it works on
+// touch devices, which have no hover). Used to explain jargon inline.
+function InfoTip({ text, label = "More information" }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span style={{ position: "relative", display: "inline-flex", verticalAlign: "middle" }}>
+      <button
+        type="button"
+        aria-label={label}
+        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        style={{
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          width: 15, height: 15, marginLeft: 5, padding: 0, borderRadius: "50%",
+          border: "1px solid #b6c2cc", background: "#fff", color: "#5a6b78",
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700,
+          lineHeight: 1, cursor: "help", verticalAlign: "middle",
+        }}
+      >i</button>
+      {open && (
+        <span
+          role="tooltip"
+          style={{
+            position: "absolute", bottom: "calc(100% + 7px)", left: "50%", transform: "translateX(-50%)",
+            width: 224, maxWidth: "80vw", background: "#0D1B2A", color: "#EAF1F6",
+            fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 12, fontWeight: 400,
+            lineHeight: 1.5, letterSpacing: 0, textAlign: "left", textTransform: "none",
+            padding: "9px 11px", borderRadius: 6, boxShadow: "0 4px 16px rgba(0,0,0,0.28)", zIndex: 50,
+          }}
+        >{text}</span>
+      )}
+    </span>
+  );
+}
+
+// Format the FRED fetch timestamp for the "Live data · updated …" header chip.
+function formatUpdated(iso) {
+  try {
+    return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  } catch {
+    return "";
+  }
 }
 
 function DataSourceBadge({ seriesId }) {
@@ -312,6 +361,17 @@ export default function InflationTracker() {
           <p style={{ fontSize: 14, color: "#A8BFCF", margin: "6px 0 0", fontStyle: "italic", maxWidth: 600 }}>
             The headline says {data.headline.yoy}%. But what's <em>your</em> number? Adjust the weights below to match how you actually spend.
           </p>
+          {data.generatedAt && (
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#9FB6C9",
+              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)",
+              borderRadius: 20, padding: "3px 10px", letterSpacing: 0.3,
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ADE80", display: "inline-block" }} />
+              Live FRED data · updated {formatUpdated(data.generatedAt)}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 4, marginTop: 16 }}>
             {[
               { key: "dashboard", label: "Dashboard" },
@@ -336,13 +396,23 @@ export default function InflationTracker() {
             ═══════════════════════════════════════════════════════════ */}
         {view === "dashboard" && (
           <>
+            {/* ── How-to-use hint for first-time visitors ── */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 9, marginBottom: 16,
+              background: "#EAF3FB", border: "1px solid #CFE2F3", borderRadius: 8,
+              padding: "9px 14px", fontSize: 13, color: "#1B4965", lineHeight: 1.5,
+            }}>
+              <span style={{ fontSize: 15, flexShrink: 0 }}>👋</span>
+              <span><strong>New here?</strong> Pick a profile or drag the sliders below to match how you actually spend — every number on this page updates live.</span>
+            </div>
+
             {/* ── Row 1: Big Numbers ── */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
               <div style={{ background: "#fff", borderRadius: 10, padding: 20, border: "1px solid #e0e0e0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-                <BigNumber value={personalRate} label="Your Inflation" sub="Based on your spending mix" color={personalRate > data.headline.yoy ? "#c1121f" : "#2D6A4F"} />
+                <BigNumber value={personalRate} label="Your Inflation" sub="Based on your spending mix" color={personalRate > data.headline.yoy ? "#c1121f" : "#2D6A4F"} info="Your personal inflation rate: the same CPI category data, but weighted by your spending mix from the sliders below instead of the national-average weights. Drag the sliders and watch it move." />
               </div>
               <div style={{ background: "#fff", borderRadius: 10, padding: 20, border: "1px solid #e0e0e0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-                <BigNumber value={data.headline.yoy} label="Headline CPI-U" sub={`BLS All Items, ${data.referenceMonthLabel}`} color="#1B4965" />
+                <BigNumber value={data.headline.yoy} label="Headline CPI-U" sub={`BLS All Items, ${data.referenceMonthLabel}`} color="#1B4965" info="The official all-items CPI-U: how much prices rose over the last 12 months for a typical U.S. urban household, using the government's national spending weights. This is the number the news usually quotes." />
                 <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #f0f0f0", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#666", lineHeight: 1.7 }}>
                   <div>
                     Headline{" "}
@@ -350,6 +420,10 @@ export default function InflationTracker() {
                       {(data.headline.mom ?? 0) >= 0 ? "+" : ""}{data.headline.mom ?? "—"}%
                     </strong>{" "}
                     MoM · {data.headline.momAnnualized ?? "—"}% annualized
+                    <InfoTip
+                      label="About month-over-month"
+                      text="MoM is the change from just the prior month (seasonally adjusted) — it reacts faster than the 12-month figure above. 'Annualized' projects that single month's pace over a full year."
+                    />
                   </div>
                   <div>
                     Core{" "}
@@ -361,7 +435,7 @@ export default function InflationTracker() {
                 </div>
               </div>
               <div style={{ background: delta > 0 ? "#FFF5F5" : "#F0FAF0", borderRadius: 10, padding: 20, border: `1px solid ${delta > 0 ? "#FECACA" : "#BBF7D0"}`, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-                <BigNumber value={delta} label={delta > 0 ? "Above Headline" : "Below Headline"} sub="Your rate vs. official CPI" color={delta > 0 ? "#c1121f" : "#2D6A4F"} size={40} />
+                <BigNumber value={delta} label={delta > 0 ? "Above Headline" : "Below Headline"} sub="Your rate vs. official CPI" color={delta > 0 ? "#c1121f" : "#2D6A4F"} size={40} info="The gap between your rate and the official headline. Positive means your spending mix runs hotter than the national average; negative means cooler." />
               </div>
             </div>
 
@@ -408,6 +482,10 @@ export default function InflationTracker() {
                 </div>
                 <div style={{ fontSize: 11, color: "#888", marginBottom: 12 }}>
                   Your estimated rate vs. headline CPI-U (year-over-year % change)
+                  <InfoTip
+                    label="About the trend lines"
+                    text="The solid blue line is the official headline CPI. The dashed red line is an estimate — it applies your current spending mix to each past month's headline move, not your actual historical rate."
+                  />
                 </div>
                 <div style={{ flex: 1, minHeight: 200 }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -467,6 +545,10 @@ export default function InflationTracker() {
                       ✓ 100%
                     </span>
                   )}
+                  <InfoTip
+                    label="About weight normalization"
+                    text="Your slider weights don't need to add up to 100. We scale them proportionally to total 100% before computing your rate, so only the relative sizes matter."
+                  />
                   <button onClick={() => applyPreset("bls")} style={{
                     fontSize: 10, fontFamily: "'JetBrains Mono', monospace", background: "none", border: "1px solid #ccc",
                     borderRadius: 4, padding: "3px 10px", cursor: "pointer", color: "#888",
@@ -509,6 +591,8 @@ export default function InflationTracker() {
                 {[
                   { term: "CPI-U", def: "Consumer Price Index for All Urban Consumers. The government's main measure of how prices are changing for about 88% of the U.S. population. When the news says \"inflation is 3.3%,\" this is usually what they mean." },
                   { term: "Year-Over-Year (YoY)", def: "The percent change comparing this month to the same month one year ago. A YoY of 3% means prices are 3% higher than they were 12 months ago." },
+                  { term: "Month-over-Month (MoM)", def: "The percent change from just the previous month, seasonally adjusted. It reacts faster than YoY, so it's useful for spotting whether inflation is speeding up or slowing down right now." },
+                  { term: "Annualized", def: "What a single month's change would add up to over a full year if that pace kept up. A 0.5% monthly rise annualizes to roughly 6%." },
                   { term: "Core CPI", def: "CPI with food and energy stripped out. Economists watch this because food and gas prices swing wildly month to month, which can mask the underlying trend." },
                   { term: "Weighted Contribution", def: "How much each spending category adds to your total inflation number. If Gasoline contributes 0.38%, that means gas alone is responsible for 0.38% out of your total rate." },
                   { term: "Owners' Equivalent Rent (OER)", def: "How BLS measures housing costs for homeowners. Instead of tracking mortgage payments, they ask: \"How much would your home rent for?\" This is the single largest piece of CPI (~27%) and is often debated." },
@@ -516,7 +600,7 @@ export default function InflationTracker() {
                   { term: "Seasonally Adjusted (SA)", def: "Data smoothed to remove predictable seasonal patterns (e.g., gas prices rise every summer). The non-adjusted version shows raw price changes including seasonal swings." },
                   { term: "BLS", def: "Bureau of Labor Statistics. The U.S. federal agency that collects and publishes this data. It's a nonpartisan statistical agency — career staff, not political appointees, produce the numbers." },
                   { term: "FRED", def: "Federal Reserve Economic Data. A free database run by the St. Louis Fed that mirrors BLS data and thousands of other economic series. Anyone can search, download, and chart data at fred.stlouisfed.org." },
-                  { term: "Series ID", def: "The unique code for each data series (e.g., CPIAUCSL for headline CPI). You can type any series ID shown in this dashboard into FRED's search bar and download the exact same data we use." },
+                  { term: "Series ID", def: "The unique code for each data series (e.g., CPIAUCNS for headline CPI). You can type any series ID shown in this dashboard into FRED's search bar and download the exact same data we use." },
                 ].map((g, i) => (
                   <div key={i} style={{ padding: "10px 12px", background: "#F8F9FA", borderRadius: 6, borderLeft: "3px solid #1B4965" }}>
                     <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 700, color: "#1B4965", marginBottom: 4 }}>{g.term}</div>
