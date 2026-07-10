@@ -769,6 +769,7 @@ export default function InflationTracker() {
                   where category_inflation<sub>i</sub> = 12-month % change in CPI-U sub-index<sub>i</sub>
                 </div>
                 <p>Every number in this dashboard traces to a specific BLS series ID. You can type any of these IDs into <a href="https://fred.stlouisfed.org" target="_blank" rel="noopener" style={{ color: "#1B4965" }}>FRED</a> and download the same data as CSV or Excel.</p>
+                <p>The figures here are pulled <strong>live from the FRED API</strong> each time the site rebuilds and refresh automatically around the middle of every month, when BLS publishes new CPI data — this is not a hand-entered snapshot. Year-over-year figures use the <strong>not-seasonally-adjusted</strong> (NSA) series BLS reports headline inflation from; the month-over-month figures use the <strong>seasonally-adjusted</strong> (SA) series, which is the correct basis for a one-month change. The "updated" date in the header shows when the data was last fetched.</p>
               </div>
             </div>
 
@@ -833,7 +834,7 @@ export default function InflationTracker() {
                   </thead>
                   <tbody>
                     {[
-                      ["FRED API", "CPI-U sub-indexes (monthly, SA/NSA)", "Free key — fred.stlouisfed.org"],
+                      ["FRED API", "This dashboard's live data source (CPI-U sub-indexes, monthly, NSA + SA)", "Free key — fred.stlouisfed.org"],
                       ["BLS Data Viewer", "Same data, manual download", "data.bls.gov"],
                       ["BLS Flat Files", "Full CPI-U dataset, tab-delimited", "download.bls.gov/pub/time.series/cu/"],
                       ["BLS Rel. Importance", "Official spending weights (Dec 2024)", "bls.gov/cpi/tables/relative-importance/"],
@@ -856,6 +857,7 @@ export default function InflationTracker() {
                 <li><strong>Shelter uses OER.</strong> Owners' Equivalent Rent is imputed — homeowners with fixed mortgages don't actually experience it.</li>
                 <li><strong>Health insurance lags.</strong> BLS uses a "retained earnings" method that doesn't capture premium spikes in real time.</li>
                 <li><strong>National average.</strong> Your metro area may differ. Regional CPI data covers 23 areas but with less granularity.</li>
+                <li><strong>FRED coverage.</strong> A few CPI categories aren't mirrored in FRED's public API — motor-vehicle insurance, for one — so they're left out here rather than shown with stale numbers.</li>
                 <li><strong>Oct–Nov 2025 gap.</strong> The 2025 government shutdown caused missing data for some series in these months.</li>
               </ul>
             </div>
