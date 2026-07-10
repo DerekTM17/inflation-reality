@@ -48,3 +48,15 @@ test("missing series falls back to prior value and marks stale", () => {
   assert.equal(p.categories.gas.yoy, 9.9);
   assert.equal(p.categories.gas.stale, true);
 });
+
+test("partial macro failure (one sub-series empty) is flagged stale", () => {
+  // Headline NSA (yoy source) present, headline SA (mom source) empty → partial fallback.
+  const fallback = { headline: { mom: 7.7 } };
+  const p = assemblePayload({
+    observationsBySeries: { ...observationsBySeries, CPIAUCSL: [] },
+    catalog, fallback, generatedAt: "2026-07-13T14:00:00.000Z",
+  });
+  assert.equal(p.headline.stale, true);
+  assert.equal(typeof p.headline.yoy, "number");
+  assert.equal(p.headline.mom, 7.7);
+});

@@ -28,10 +28,15 @@ export function assemblePayload({ observationsBySeries, catalog, fallback, gener
     const yoy = computeYoY(level);
     const mom = computeMoM(sa);
     const momAnnualized = computeMoMAnnualized(sa);
-    if (yoy == null && mom == null) {
-      return { yoy: fbNode.yoy ?? null, mom: fbNode.mom ?? null, momAnnualized: fbNode.momAnnualized ?? null, stale: true };
-    }
-    return { yoy: yoy ?? fbNode.yoy ?? null, mom: mom ?? fbNode.mom ?? null, momAnnualized: momAnnualized ?? fbNode.momAnnualized ?? null };
+    // headline/core draw from two series (yoy from seriesId, mom from momSeriesId);
+    // if EITHER sub-series had to fall back, the entry is stale — not only when both fail.
+    const usedFallback = yoy == null || mom == null;
+    return {
+      yoy: yoy ?? fbNode.yoy ?? null,
+      mom: mom ?? fbNode.mom ?? null,
+      momAnnualized: momAnnualized ?? fbNode.momAnnualized ?? null,
+      ...(usedFallback ? { stale: true } : {}),
+    };
   };
 
   const categories = {};
