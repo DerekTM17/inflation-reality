@@ -348,6 +348,18 @@ export default function InflationTracker() {
   return (
     <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", background: "#FAFAF8", minHeight: "100vh", color: "#1a1a1a" }}>
       <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+      {/* Responsive layout: inline styles can't hold media queries, so the grid
+          column counts live here and collapse to a single column on phones. */}
+      <style>{`
+        .ir-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+        .ir-grid-2 { grid-template-columns: 1fr 1fr; }
+        @media (max-width: 760px) {
+          .ir-grid-2 { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 620px) {
+          .ir-grid-3 { grid-template-columns: 1fr; }
+        }
+      `}</style>
 
       {/* ── HEADER ── */}
       <header style={{ background: "#0D1B2A", color: "#fff", padding: "28px 24px 20px" }}>
@@ -407,7 +419,7 @@ export default function InflationTracker() {
             </div>
 
             {/* ── Row 1: Big Numbers ── */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 20 }}>
+            <div className="ir-grid-3" style={{ display: "grid", gap: 16, marginBottom: 20 }}>
               <div style={{ background: "#fff", borderRadius: 10, padding: 20, border: "1px solid #e0e0e0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
                 <BigNumber value={personalRate} label="Your Inflation" sub="Based on your spending mix" color={personalRate > data.headline.yoy ? "#c1121f" : "#2D6A4F"} info="Your personal inflation rate: the same CPI category data, but weighted by your spending mix from the sliders below instead of the national-average weights. Drag the sliders and watch it move." />
               </div>
@@ -440,7 +452,7 @@ export default function InflationTracker() {
             </div>
 
             {/* ── Row 2: Charts side by side ── */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+            <div className="ir-grid-2" style={{ display: "grid", gap: 16, marginBottom: 20 }}>
               {/* Contribution breakdown */}
               <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 20 }}>
                 <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#888", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
@@ -571,7 +583,7 @@ export default function InflationTracker() {
               </div>
 
               {/* Slider Grid — 2 columns for compact layout */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+              <div className="ir-grid-2" style={{ display: "grid", gap: "0 24px" }}>
                 {data.categories.map(cat => (
                   <WeightSlider
                     key={cat.id} cat={cat} weight={weights[cat.id] || 0}
@@ -587,7 +599,7 @@ export default function InflationTracker() {
               <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#888", letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>
                 📖 Key Terms Explained
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 24px" }}>
+              <div className="ir-grid-2" style={{ display: "grid", gap: "12px 24px" }}>
                 {[
                   { term: "CPI-U", def: "Consumer Price Index for All Urban Consumers. The government's main measure of how prices are changing for about 88% of the U.S. population. When the news says \"inflation is 3.3%,\" this is usually what they mean." },
                   { term: "Year-Over-Year (YoY)", def: "The percent change comparing this month to the same month one year ago. A YoY of 3% means prices are 3% higher than they were 12 months ago." },
@@ -810,29 +822,31 @@ export default function InflationTracker() {
 
             <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 24, marginBottom: 20 }}>
               <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 12px", color: "#0D1B2A" }}>Data Sources</h3>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                <thead>
-                  <tr style={{ borderBottom: "2px solid #1B4965" }}>
-                    {["Source", "What", "Access"].map(h => (
-                      <th key={h} style={{ textAlign: "left", padding: "6px 8px", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#888" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    ["FRED API", "CPI-U sub-indexes (monthly, SA/NSA)", "Free key — fred.stlouisfed.org"],
-                    ["BLS Data Viewer", "Same data, manual download", "data.bls.gov"],
-                    ["BLS Flat Files", "Full CPI-U dataset, tab-delimited", "download.bls.gov/pub/time.series/cu/"],
-                    ["BLS Rel. Importance", "Official spending weights (Dec 2024)", "bls.gov/cpi/tables/relative-importance/"],
-                  ].map(([a, b, c], i) => (
-                    <tr key={i} style={{ borderBottom: "1px solid #eee" }}>
-                      <td style={{ padding: "8px", fontWeight: 600 }}>{a}</td>
-                      <td style={{ padding: "8px" }}>{b}</td>
-                      <td style={{ padding: "8px", fontSize: 12, color: "#457b9d" }}>{c}</td>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, tableLayout: "fixed" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "2px solid #1B4965" }}>
+                      {["Source", "What", "Access"].map(h => (
+                        <th key={h} style={{ textAlign: "left", padding: "6px 8px", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#888" }}>{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["FRED API", "CPI-U sub-indexes (monthly, SA/NSA)", "Free key — fred.stlouisfed.org"],
+                      ["BLS Data Viewer", "Same data, manual download", "data.bls.gov"],
+                      ["BLS Flat Files", "Full CPI-U dataset, tab-delimited", "download.bls.gov/pub/time.series/cu/"],
+                      ["BLS Rel. Importance", "Official spending weights (Dec 2024)", "bls.gov/cpi/tables/relative-importance/"],
+                    ].map(([a, b, c], i) => (
+                      <tr key={i} style={{ borderBottom: "1px solid #eee" }}>
+                        <td style={{ padding: "8px", fontWeight: 600, overflowWrap: "anywhere" }}>{a}</td>
+                        <td style={{ padding: "8px", overflowWrap: "anywhere" }}>{b}</td>
+                        <td style={{ padding: "8px", fontSize: 12, color: "#457b9d", overflowWrap: "anywhere" }}>{c}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div style={{ background: "#FFF8E1", borderRadius: 10, border: "1px solid #F0C36D", padding: 24, marginBottom: 20 }}>
