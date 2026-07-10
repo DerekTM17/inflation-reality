@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-10T18:35:39.550Z",
+  "generatedAt": "2026-07-10T19:06:29.079Z",
   "referenceMonth": "2026-05",
   "referenceMonthLabel": "May 2026",
   "headline": {
@@ -29,24 +29,17 @@
     "gas": {
       "yoy": 40.5
     },
-    "carInsurance": {
-      "yoy": 8.2,
-      "stale": true
-    },
     "healthcare": {
-      "yoy": 3.1,
-      "stale": true
+      "yoy": 2.6
     },
     "tuition": {
       "yoy": 2.6
     },
     "apparel": {
-      "yoy": 1.8,
-      "stale": true
+      "yoy": 4.8
     },
     "recreation": {
-      "yoy": 2.2,
-      "stale": true
+      "yoy": 2.6
     },
     "other": {
       "yoy": 3.5
