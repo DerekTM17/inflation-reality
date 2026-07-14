@@ -579,7 +579,8 @@ export default function InflationTracker() {
               <ResponsiveContainer width="100%" height={Math.max(200, measureComparison.length * 34 + 10)}>
                 <BarChart data={measureComparison} layout="vertical" margin={{ left: 0, right: 44, top: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#eee" horizontal={false} />
-                  <XAxis type="number" domain={[0, "auto"]} tick={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }} tickFormatter={v => `${v}%`} />
+                  {/* Baseline at 0 so bar lengths compare fairly, but extend below 0 if a measure ever deflates. */}
+                  <XAxis type="number" domain={[(dataMin) => Math.min(0, dataMin), "auto"]} tick={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }} tickFormatter={v => `${v}%`} />
                   <YAxis type="category" dataKey="name" width={116} tick={{ fontSize: 10, fontFamily: "'Source Serif 4', Georgia, serif" }} />
                   <Tooltip content={({ active, payload }) => {
                     if (!active || !payload?.length) return null;
