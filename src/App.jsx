@@ -202,6 +202,18 @@ export default function InflationTracker() {
   // gap markers and callout below so they track the live data instead of a fixed date.
   const gapMonths = data.trend.filter(d => d.gap).map(d => d.month);
 
+  // Rows for the "How Others Measure It" comparison chart: headline + core plus
+  // every alternative measure (Task 4), sorted highest-to-lowest so the bar chart
+  // reads as a ranking. Measures with no current reading (null yoy) are dropped
+  // rather than rendered as a zero-length bar.
+  const measureComparison = [
+    { name: "Headline CPI", yoy: data.headline.yoy, color: "#1B4965", seriesId: data.headline.seriesId,
+      blurb: "All items — the number the news usually quotes." },
+    { name: "Core CPI", yoy: data.core.yoy, color: "#457B9D", seriesId: data.core.seriesId,
+      blurb: "All items except food and energy, which swing the most month to month." },
+    ...data.altMeasures.map(m => ({ name: m.label, yoy: m.yoy, color: m.color, seriesId: m.seriesId, blurb: m.blurb })),
+  ].filter(m => m.yoy != null).sort((a, b) => b.yoy - a.yoy);
+
   // ═══════════════════════════════════════════════════════════════
   // EXCEL EXPORT — builds a multi-sheet workbook with all data
   // ═══════════════════════════════════════════════════════════════
@@ -550,6 +562,50 @@ export default function InflationTracker() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* ── Row 2.5: Alternative measures comparison ── */}
+            <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 20, marginBottom: 20 }}>
+              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#888", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
+                How Others Measure It
+              </div>
+              <div style={{ fontSize: 11, color: "#888", marginBottom: 12 }}>
+                The headline isn't the only inflation gauge — here's what the major alternative measures say for the most recent period (12-month change).
+              </div>
+              <ResponsiveContainer width="100%" height={Math.max(200, measureComparison.length * 34 + 10)}>
+                <BarChart data={measureComparison} layout="vertical" margin={{ left: 0, right: 44, top: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" horizontal={false} />
+                  <XAxis type="number" domain={[0, "auto"]} tick={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }} tickFormatter={v => `${v}%`} />
+                  <YAxis type="category" dataKey="name" width={116} tick={{ fontSize: 10, fontFamily: "'Source Serif 4', Georgia, serif" }} />
+                  <Tooltip content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const d = payload[0].payload;
+                    return (
+                      <div style={{ background: "#fff", border: "1px solid #ddd", borderRadius: 6, padding: "8px 12px", fontSize: 12, maxWidth: 240, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+                        <strong>{d.name}: {d.yoy}%</strong><br />
+                        <span style={{ color: "#555" }}>{d.blurb}</span>
+                      </div>
+                    );
+                  }} />
+                  <Bar dataKey="yoy" radius={[0, 4, 4, 0]} barSize={18}>
+                    {measureComparison.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                    <LabelList dataKey="yoy" position="right" formatter={(v) => `${v}%`} style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, fill: "#555" }} />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", marginTop: 10, paddingTop: 10, borderTop: "1px solid #f0f0f0" }}>
+                {measureComparison.map((m, i) => (
+                  <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: "#555" }}>
+                    <span style={{ width: 9, height: 9, borderRadius: 2, background: m.color, flexShrink: 0 }} />
+                    {m.name}
+                    <InfoTip text={m.blurb} label={`About ${m.name}`} />
+                    <DataSourceBadge seriesId={m.seriesId} />
+                  </span>
+                ))}
+              </div>
+              <div style={{ fontSize: 10, color: "#999", marginTop: 8, fontStyle: "italic" }}>
+                All figures are ~12-month (year-over-year) changes. Measures may reflect slightly different latest months (e.g. PCE publishes after CPI).
               </div>
             </div>
 
