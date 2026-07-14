@@ -271,6 +271,9 @@ export default function InflationTracker() {
       [data.headline.label, data.headline.seriesId, data.headline.code, data.headline.yoy, data.headline.relImportance, "Monthly", `https://fred.stlouisfed.org/series/${data.headline.seriesId}`, "Headline CPI — all items benchmark"],
       [data.core.label, data.core.seriesId, data.core.code, data.core.yoy, data.core.relImportance, "Monthly", `https://fred.stlouisfed.org/series/${data.core.seriesId}`, "Core CPI — excludes volatile food and energy"],
     ];
+    data.altMeasures.forEach(m => {
+      cpiRows.push([m.label, m.seriesId, "", m.yoy, "", "Monthly", `https://fred.stlouisfed.org/series/${m.seriesId}`, "Alternative inflation measure (12-month % change)"]);
+    });
     data.categories.forEach(c => {
       cpiRows.push([c.label, c.seriesId, c.code, c.yoy, c.weight, "Monthly", `https://fred.stlouisfed.org/series/${c.seriesId}`, ""]);
     });
@@ -684,6 +687,10 @@ export default function InflationTracker() {
                   { term: "Month-over-Month (MoM)", def: "The percent change from just the previous month, seasonally adjusted. It reacts faster than YoY, so it's useful for spotting whether inflation is speeding up or slowing down right now." },
                   { term: "Annualized", def: "What a single month's change would add up to over a full year if that pace kept up. A 0.5% monthly rise annualizes to roughly 6%." },
                   { term: "Core CPI", def: "CPI with food and energy stripped out. Economists watch this because food and gas prices swing wildly month to month, which can mask the underlying trend." },
+                  { term: "PCE / Core PCE", def: "Personal Consumption Expenditures price index (from the BEA). A second official inflation gauge the Federal Reserve prefers and targets at 2% — weighted differently than CPI and usually a bit lower." },
+                  { term: "Median CPI", def: "A core measure from the Cleveland Fed that uses the middle category's price change and ignores the biggest movers on both ends — a cleaner read on the broad trend." },
+                  { term: "Trimmed-Mean CPI", def: "A Cleveland Fed core measure that discards the most extreme price moves on each side and averages the rest, stripping out volatile outliers." },
+                  { term: "Sticky-Price CPI", def: "An Atlanta Fed measure built only from prices that change slowly (like rent and insurance), which tend to reflect longer-run inflation expectations." },
                   { term: "Weighted Contribution", def: "How much each spending category adds to your total inflation number. If Gasoline contributes 0.38%, that means gas alone is responsible for 0.38% out of your total rate." },
                   { term: "Owners' Equivalent Rent (OER)", def: "How BLS measures housing costs for homeowners. Instead of tracking mortgage payments, they ask: \"How much would your home rent for?\" This is the single largest piece of CPI (~27%) and is often debated." },
                   { term: "Relative Importance (Weight)", def: "How much each category counts in the overall CPI calculation. Shelter has a weight of ~36%, meaning it accounts for over a third of the index. Your sliders replace these defaults with your own spending." },
@@ -946,7 +953,7 @@ export default function InflationTracker() {
             <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 24 }}>
               <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 12px", color: "#0D1B2A" }}>All Series IDs Used</h3>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {[data.headline, data.core, ...data.categories].map((s, i) => (
+                {[data.headline, data.core, ...data.altMeasures, ...data.categories].map((s, i) => (
                   <div key={i} style={{
                     fontFamily: "'JetBrains Mono', monospace", fontSize: 10, background: "#f0f4f8",
                     padding: "4px 8px", borderRadius: 4, color: "#1B4965",
