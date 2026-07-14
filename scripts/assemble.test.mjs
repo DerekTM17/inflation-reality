@@ -7,6 +7,10 @@ const catalog = {
   CORE: { key: "core", seriesId: "CPILFESNS", momSeriesId: "CPILFESL" },
   CATEGORIES: [{ id: "gas", seriesId: "CUUR0000SETB01" }],
   AVG_PRICE_ITEMS: [{ item: "Eggs", seriesId: "APU0000708111" }],
+  ALT_MEASURES: [
+    { key: "corePce", seriesId: "PCEPILFE", kind: "index" },
+    { key: "medianCpi", seriesId: "MEDCPIM159SFRBCLE", kind: "yoyRate" },
+  ],
 };
 
 const series = (start, step) =>
@@ -22,6 +26,12 @@ const observationsBySeries = {
   CPILFESL: series(100, 0.2),
   CUUR0000SETB01: series(200, 1),
   APU0000708111: series(5, 0.05),
+  PCEPILFE: series(100, 0.3),
+  MEDCPIM159SFRBCLE: Array.from({ length: 14 }, (_, i) => ({
+    date: `2025-${String(i + 4).padStart(2, "0")}-01`
+      .replace("2025-17", "2026-05"),
+    value: "2.9",
+  })),
 };
 
 test("assemblePayload produces headline yoy/mom and keyed maps", () => {
@@ -59,4 +69,20 @@ test("partial macro failure (one sub-series empty) is flagged stale", () => {
   assert.equal(p.headline.stale, true);
   assert.equal(typeof p.headline.yoy, "number");
   assert.equal(p.headline.mom, 7.7);
+});
+
+test("altMeasures: index computes YoY, yoyRate passes the value through", () => {
+  const p = assemblePayload({ observationsBySeries, catalog, fallback: null, generatedAt: "2026-07-13T00:00:00.000Z" });
+  assert.equal(typeof p.altMeasures.corePce.yoy, "number");         // computed from index
+  assert.equal(p.altMeasures.medianCpi.yoy, 2.9);                   // passthrough latest value
+});
+
+test("altMeasures: missing series falls back with stale", () => {
+  const fallback = { altMeasures: { medianCpi: { yoy: 3.1 } } };
+  const p = assemblePayload({
+    observationsBySeries: { ...observationsBySeries, MEDCPIM159SFRBCLE: [] },
+    catalog, fallback, generatedAt: "2026-07-13T00:00:00.000Z",
+  });
+  assert.equal(p.altMeasures.medianCpi.yoy, 3.1);
+  assert.equal(p.altMeasures.medianCpi.stale, true);
 });

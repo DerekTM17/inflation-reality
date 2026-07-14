@@ -2,7 +2,7 @@
 // Turn raw FRED observations into the dynamic-only payload the app consumes.
 import {
   parseObservations, computeYoY, computeMoM, computeMoMAnnualized,
-  buildTrend, avgPrice, referenceMonthLabel,
+  buildTrend, avgPrice, latestValue, referenceMonthLabel,
 } from "./compute.mjs";
 
 // latestDateLabel isn't exported by compute; derive reference month from the headline series here.
@@ -55,6 +55,14 @@ export function assemblePayload({ observationsBySeries, catalog, fallback, gener
 
   const trend = headObs.length ? buildTrend(headObs, 12) : (fb.trend || []);
 
+  const altMeasures = {};
+  for (const m of catalog.ALT_MEASURES || []) {
+    const series = obs(m.seriesId);
+    const raw = m.kind === "index" ? computeYoY(series) : latestValue(series);
+    if (raw == null) altMeasures[m.key] = { yoy: fb.altMeasures?.[m.key]?.yoy ?? null, stale: true };
+    else altMeasures[m.key] = { yoy: parseFloat(raw.toFixed(1)) };
+  }
+
   return {
     generatedAt,
     referenceMonth,
@@ -63,6 +71,7 @@ export function assemblePayload({ observationsBySeries, catalog, fallback, gener
     core: macro(catalog.CORE, fb.core),
     categories,
     avgPrices,
+    altMeasures,
     trend,
   };
 }
