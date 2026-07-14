@@ -4,7 +4,9 @@ import { writeFileSync, readFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { assemblePayload } from "./assemble.mjs";
-import { allSeries, HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS } from "../src/data/catalog.js";
+// Import the whole catalog namespace and pass it straight through, so adding a new
+// catalog export (e.g. a new measure group) can never be silently dropped here.
+import * as catalog from "../src/data/catalog.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
@@ -28,7 +30,7 @@ async function main() {
   }
 
   const fallback = JSON.parse(readFileSync(resolve(ROOT, "src/data/fallback.json"), "utf8"));
-  const series = allSeries();
+  const series = catalog.allSeries();
   const observationsBySeries = {};
   let successes = 0;
 
@@ -49,7 +51,7 @@ async function main() {
 
   const payload = assemblePayload({
     observationsBySeries,
-    catalog: { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS },
+    catalog,
     fallback,
     generatedAt: new Date().toISOString(),
   });
