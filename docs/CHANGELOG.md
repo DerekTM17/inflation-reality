@@ -14,6 +14,8 @@ Curated, not exhaustive — `git log` has every commit.
 
 **Fix (production wiring):** the first deploy shipped an empty `altMeasures` because `fetch-fred.mjs` hand-built the catalog object it passes to `assemblePayload` and was never updated to include `ALT_MEASURES` — unit tests missed it (assemble.test uses its own catalog stub; fetch-fred has no unit test), caught only by verifying the live `cpi.json`. `fetch-fred.mjs` now imports the whole catalog namespace and passes it through, so a future catalog export can't be silently dropped. **Lesson: verify build-time-generated output against production, not just unit tests.**
 
+**Follow-up:** added a fifth alternative measure, Dallas Fed **Trimmed-Mean PCE** (`PCETRIM12M159SFRBDAL`, native 12-month rate). Comparison chart is now 7 bars; propagated automatically to the Excel export and series list, with a glossary entry added. Verified mobile-friendly at 360/375/414 px across all three tabs.
+
 ## 2026-07-10
 
 ### Live-data polish: drop Car Insurance, fix broken series IDs, add onboarding tooltips
