@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-14T01:12:27.289Z",
+  "generatedAt": "2026-07-14T01:15:55.298Z",
   "referenceMonth": "2026-05",
   "referenceMonthLabel": "May 2026",
   "headline": {
@@ -127,7 +127,20 @@
       "yearAgo": 1.626
     }
   },
-  "altMeasures": {},
+  "altMeasures": {
+    "corePce": {
+      "yoy": 3.4
+    },
+    "medianCpi": {
+      "yoy": 2.9
+    },
+    "trimmedCpi": {
+      "yoy": 2.9
+    },
+    "stickyCpi": {
+      "yoy": 3.1
+    }
+  },
   "trend": [
     {
       "month": "Jun 25",
