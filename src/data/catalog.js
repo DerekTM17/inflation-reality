@@ -57,9 +57,24 @@ export const AVG_PRICE_ITEMS = [
   { item: "Natural Gas",               unit: "/therm",  seriesId: "APU000072620",  category: "Energy" },
 ];
 
+// Alternative official inflation gauges, shown as 12-month (YoY) % alongside CPI.
+// kind "index"  → fetch the index and compute YoY (like CPI).
+// kind "yoyRate"→ the series value already IS the 12-month %; use the latest value.
+export const ALT_MEASURES = [
+  { key: "corePce",    label: "Core PCE",         seriesId: "PCEPILFE",              kind: "index",   color: "#2D6A4F",
+    blurb: "The Fed's preferred gauge (from the BEA). Weighted differently than CPI and usually runs a bit lower — it's what the Fed targets at 2%." },
+  { key: "medianCpi",  label: "Median CPI",       seriesId: "MEDCPIM159SFRBCLE",     kind: "yoyRate", color: "#6D597A",
+    blurb: "Takes the middle category's price change, ignoring the biggest movers on both ends — a cleaner read on the broad trend. (Cleveland Fed.)" },
+  { key: "trimmedCpi", label: "Trimmed-Mean CPI", seriesId: "TRMMEANCPIM159SFRBCLE", kind: "yoyRate", color: "#52796F",
+    blurb: "Throws out the most extreme price moves on each side, then averages the rest — like Median CPI, it strips out the noise. (Cleveland Fed.)" },
+  { key: "stickyCpi",  label: "Sticky-Price CPI", seriesId: "CORESTICKM159SFRBATL",  kind: "yoyRate", color: "#E76F51",
+    blurb: "Counts only prices that change slowly (rent, insurance), which tend to reflect longer-run expectations — a steadier signal. (Atlanta Fed.)" },
+];
+
 // The de-duplicated list of FRED series the fetch script must request.
 // kind "level"   → used for YoY / trend / avg-price (NSA levels)
 // kind "levelSA" → used for MoM (seasonally adjusted levels)
+// kind "rate"    → used for pre-computed yoy rates (no compute needed)
 export function allSeries() {
   const seen = new Map();
   const add = (id, kind) => { if (!seen.has(id)) seen.set(id, { id, kind }); };
@@ -69,5 +84,6 @@ export function allSeries() {
   add(CORE.momSeriesId, "levelSA");
   for (const c of CATEGORIES) add(c.seriesId, "level");
   for (const p of AVG_PRICE_ITEMS) add(p.seriesId, "level");
+  for (const m of ALT_MEASURES) add(m.seriesId, m.kind === "index" ? "level" : "rate");
   return [...seen.values()];
 }

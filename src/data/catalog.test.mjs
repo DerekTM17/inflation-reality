@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, allSeries } from "./catalog.js";
+import { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, allSeries } from "./catalog.js";
 
 test("headline and core use NSA for yoy and SA for mom", () => {
   assert.equal(HEADLINE.seriesId, "CPIAUCNS");
@@ -24,4 +24,17 @@ test("allSeries de-duplicates and includes SA mom series", () => {
   assert.ok(ids.includes("CPIAUCNS"));
   assert.ok(ids.includes("CPIAUCSL"));
   assert.ok(allSeries().some(s => s.id === "CPIAUCSL" && s.kind === "levelSA"));
+});
+
+test("alt measures: 4 entries with verified series ids and known kinds", () => {
+  assert.equal(ALT_MEASURES.length, 4);
+  const byKey = Object.fromEntries(ALT_MEASURES.map(m => [m.key, m]));
+  assert.equal(byKey.corePce.seriesId, "PCEPILFE");
+  assert.equal(byKey.corePce.kind, "index");
+  assert.equal(byKey.medianCpi.seriesId, "MEDCPIM159SFRBCLE");
+  assert.equal(byKey.trimmedCpi.seriesId, "TRMMEANCPIM159SFRBCLE");
+  assert.equal(byKey.stickyCpi.seriesId, "CORESTICKM159SFRBATL");
+  for (const m of ALT_MEASURES) assert.ok(m.label && m.color && m.blurb);
+  const ids = allSeries().map(s => s.id);
+  assert.ok(ids.includes("PCEPILFE") && ids.includes("MEDCPIM159SFRBCLE"));
 });
