@@ -42,7 +42,8 @@
     "corePce": { "yoy": 3.4 },
     "medianCpi": { "yoy": 2.9 },
     "trimmedCpi": { "yoy": 2.9 },
-    "stickyCpi": { "yoy": 3.1 }
+    "stickyCpi": { "yoy": 3.1 },
+    "trimmedPce": { "yoy": 2.4 }
   },
   "trend": [
     { "month": "Apr 25", "headline": 2.3 },

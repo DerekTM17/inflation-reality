@@ -27,7 +27,7 @@ test("allSeries de-duplicates and includes SA mom series", () => {
 });
 
 test("alt measures: 4 entries with verified series ids and known kinds", () => {
-  assert.equal(ALT_MEASURES.length, 4);
+  assert.equal(ALT_MEASURES.length, 5);
   const byKey = Object.fromEntries(ALT_MEASURES.map(m => [m.key, m]));
   assert.equal(byKey.corePce.seriesId, "PCEPILFE");
   assert.equal(byKey.corePce.kind, "index");

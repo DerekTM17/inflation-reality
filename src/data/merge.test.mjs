@@ -42,7 +42,7 @@ test("buildViewData tolerates a missing dynamic entry (yoy null)", () => {
 
 test("buildViewData exposes altMeasures merged with catalog metadata", () => {
   const view = buildViewData(catalog, dynamic);
-  assert.equal(view.altMeasures.length, 4);
+  assert.equal(view.altMeasures.length, 5);
   const pce = view.altMeasures.find(m => m.key === "corePce");
   assert.equal(pce.yoy, 3.4);              // from fallback.json dynamic
   assert.equal(pce.seriesId, "PCEPILFE");  // from catalog

@@ -69,6 +69,8 @@ export const ALT_MEASURES = [
     blurb: "Throws out the most extreme price moves on each side, then averages the rest — like Median CPI, it strips out the noise. (Cleveland Fed.)" },
   { key: "stickyCpi",  label: "Sticky-Price CPI", seriesId: "CORESTICKM159SFRBATL",  kind: "yoyRate", color: "#E76F51",
     blurb: "Counts only prices that change slowly (rent, insurance), which tend to reflect longer-run expectations — a steadier signal. (Atlanta Fed.)" },
+  { key: "trimmedPce", label: "Trimmed-Mean PCE", seriesId: "PCETRIM12M159SFRBDAL",  kind: "yoyRate", color: "#B5838D",
+    blurb: "The Dallas Fed's trimmed-mean measure applied to PCE (the Fed's preferred index) instead of CPI — drops the biggest movers on each side to show the underlying trend." },
 ];
 
 // The de-duplicated list of FRED series the fetch script must request.
