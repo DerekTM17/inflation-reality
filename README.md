@@ -14,6 +14,12 @@ YoY figures use NSA series (e.g. `CPIAUCNS`); MoM figures use seasonally-adjuste
 series (e.g. `CPIAUCSL`). A GitHub Actions schedule refreshes the data on the 13th
 and 16th of each month. Set the `FRED_API_KEY` repo secret to enable fetching.
 
+The dashboard also displays alternative official inflation measures alongside headline CPI
+and core CPI — Core PCE (`PCEPILFE`), Median CPI (`MEDCPIM159SFRBCLE`), 16% Trimmed-Mean
+CPI (`TRMMEANCPIM159SFRBCLE`), and Sticky-Price Core CPI (`CORESTICKM159SFRBATL`) — all
+sourced from FRED via the same build-time pipeline. Each carries metadata and a FRED series
+badge for full provenance.
+
 ## Development
 
 ```bash

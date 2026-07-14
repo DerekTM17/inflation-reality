@@ -6,6 +6,12 @@ also include **Tradeoffs / Alternatives considered**.
 
 Curated, not exhaustive — `git log` has every commit.
 
+## 2026-07-13
+
+### Add "How Others Measure It" panel with alternative official inflation gauges
+
+**Why:** Dashboard now displays a horizontal bar comparison of the latest 12-month inflation across Headline CPI, Core CPI, and four alternative official measures: Core PCE (`PCEPILFE`), Median CPI (`MEDCPIM159SFRBCLE`), 16% Trimmed-Mean CPI (`TRMMEANCPIM159SFRBCLE`), and Sticky-Price Core CPI (`CORESTICKM159SFRBATL`). All measures are sourced from FRED using the existing build-time pipeline, with no new API keys required. Core PCE requires index-to-YoY conversion; the other three measures are native 12-month percentage rates (distinguished by the FRED suffix convention: `M158`=1-month-annualized vs `M159`=12-month). Each measure carries an InfoTip explaining its methodology and a FRED series badge for full provenance. Panel is also added to the Excel export and the glossary reference. Per-series stale fallback is handled by the existing resilience layer.
+
 ## 2026-07-10
 
 ### Live-data polish: drop Car Insurance, fix broken series IDs, add onboarding tooltips
