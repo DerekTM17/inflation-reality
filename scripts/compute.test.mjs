@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   parseObservations, shiftMonths, computeYoY, computeMoM,
   computeMoMAnnualized, buildTrend, avgPrice, monthLabel, referenceMonthLabel,
+  latestValue,
 } from "./compute.mjs";
 
 // 14 monthly points; Oct/Nov 2025 missing (".") to exercise gap handling.
@@ -68,4 +69,14 @@ test("avgPrice returns latest and 12-months-prior levels", () => {
 test("labels format correctly", () => {
   assert.equal(monthLabel("2026-03-01"), "Mar 26");
   assert.equal(referenceMonthLabel("2026-03-01"), "March 2026");
+});
+
+test("latestValue returns the latest non-null value, null when none", () => {
+  assert.equal(latestValue(parseObservations([
+    { date: "2026-03-01", value: "2.5" },
+    { date: "2026-04-01", value: "2.9" },
+    { date: "2026-05-01", value: "." },
+  ])), 2.9);
+  assert.equal(latestValue(parseObservations([{ date: "2026-01-01", value: "." }])), null);
+  assert.equal(latestValue([]), null);
 });

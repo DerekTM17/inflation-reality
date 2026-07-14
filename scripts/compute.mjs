@@ -80,6 +80,13 @@ export function buildTrend(observations, count = 12) {
   return out;
 }
 
+export function latestValue(observations) {
+  for (let i = observations.length - 1; i >= 0; i--) {
+    if (observations[i].value != null) return observations[i].value;
+  }
+  return null;
+}
+
 export function avgPrice(observations) {
   const map = toMap(observations);
   const d = latestDate(observations);
