@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-07-14T04:02:00.031Z",
-  "referenceMonth": "2026-05",
-  "referenceMonthLabel": "May 2026",
+  "generatedAt": "2026-07-14T19:37:17.300Z",
+  "referenceMonth": "2026-06",
+  "referenceMonthLabel": "June 2026",
   "headline": {
-    "yoy": 4.2,
-    "mom": 0.5,
-    "momAnnualized": 5.8
+    "yoy": 3.5,
+    "mom": -0.4,
+    "momAnnualized": -5
   },
   "core": {
     "yoy": 2.6,
-    "mom": 0.2,
-    "momAnnualized": 2.5,
+    "mom": 0,
+    "momAnnualized": -0.2,
     "stale": true
   },
   "categories": {
@@ -18,113 +18,113 @@
       "yoy": 2.7
     },
     "dining": {
-      "yoy": 3.5
-    },
-    "shelter": {
       "yoy": 3.4
     },
+    "shelter": {
+      "yoy": 3.3
+    },
     "energy": {
-      "yoy": 6.4
+      "yoy": 4.6
     },
     "gas": {
-      "yoy": 40.5
+      "yoy": 26.7
     },
     "healthcare": {
-      "yoy": 2.6
+      "yoy": 2
     },
     "tuition": {
-      "yoy": 2.6
+      "yoy": 2.5
     },
     "apparel": {
-      "yoy": 4.8
+      "yoy": 3.9
     },
     "recreation": {
-      "yoy": 2.6
+      "yoy": 2.8
     },
     "other": {
-      "yoy": 3.5
+      "yoy": 3.2
     }
   },
   "avgPrices": {
     "APU0000708111": {
-      "current": 2.191,
-      "yearAgo": 4.548
+      "current": 2.141,
+      "yearAgo": 3.775
     },
     "APU0000703112": {
-      "current": 6.745,
-      "yearAgo": 5.981
+      "current": 6.825,
+      "yearAgo": 6.12
     },
     "APU0000706111": {
-      "current": 2.036,
-      "yearAgo": 2.061
+      "current": 2.044,
+      "yearAgo": 2.086
     },
     "APU0000704111": {
-      "current": 6.712,
-      "yearAgo": 6.985
+      "current": 6.561,
+      "yearAgo": 7.098
     },
     "APU0000709112": {
-      "current": 4.217,
-      "yearAgo": 4.022
+      "current": 4.317,
+      "yearAgo": 4.029
     },
     "APU0000FS1101": {
-      "current": 3.929,
-      "yearAgo": 4.952
+      "current": 3.816,
+      "yearAgo": 4.872
     },
     "APU0000710212": {
-      "current": 5.685,
-      "yearAgo": 5.908
+      "current": 5.96,
+      "yearAgo": 5.999
     },
     "APU0000702111": {
-      "current": 1.83,
-      "yearAgo": 1.876
+      "current": 1.814,
+      "yearAgo": 1.864
     },
     "APU0000701111": {
       "current": 0.544,
-      "yearAgo": 0.562
+      "yearAgo": 0.574
     },
     "APU0000701312": {
-      "current": 1.071,
-      "yearAgo": 1.067
+      "current": 1.089,
+      "yearAgo": 1.061
     },
     "APU0000715211": {
-      "current": 1.034,
+      "current": 1.018,
       "yearAgo": 1.054
     },
     "APU0000711211": {
-      "current": 0.646,
-      "yearAgo": 0.655
+      "current": 0.645,
+      "yearAgo": 0.654
     },
     "APU0000712311": {
-      "current": 2.489,
-      "yearAgo": 1.705
+      "current": 2.154,
+      "yearAgo": 1.737
     },
     "APU0000712112": {
-      "current": 0.894,
-      "yearAgo": 0.958
+      "current": 0.923,
+      "yearAgo": 0.981
     },
     "APU0000717311": {
-      "current": 9.511,
-      "yearAgo": 7.931
+      "current": 9.457,
+      "yearAgo": 8.132
     },
     "APU0000FJ4101": {
-      "current": 1.537,
-      "yearAgo": 1.577
+      "current": 1.587,
+      "yearAgo": 1.494
     },
     "APU0000FN1101": {
-      "current": 2.195,
-      "yearAgo": 2.129
+      "current": 2.196,
+      "yearAgo": 2.183
     },
     "APU000074714": {
-      "current": 4.651,
+      "current": 4.195,
       "yearAgo": 3.306
     },
     "APU000072610": {
-      "current": 0.196,
-      "yearAgo": 0.182
+      "current": 0.198,
+      "yearAgo": 0.19
     },
     "APU000072620": {
-      "current": 1.677,
-      "yearAgo": 1.626
+      "current": 1.688,
+      "yearAgo": 1.653
     }
   },
   "altMeasures": {
@@ -132,20 +132,19 @@
       "yoy": 3.4
     },
     "medianCpi": {
-      "yoy": 2.9
+      "yoy": 2.7
     },
     "trimmedCpi": {
-      "yoy": 2.9
+      "yoy": 2.6
     },
     "stickyCpi": {
-      "yoy": 3.1
+      "yoy": 2.8
+    },
+    "trimmedPce": {
+      "yoy": 2.4
     }
   },
   "trend": [
-    {
-      "month": "Jun 25",
-      "headline": 2.7
-    },
     {
       "month": "Jul 25",
       "headline": 2.7
@@ -190,6 +189,10 @@
     {
       "month": "May 26",
       "headline": 4.2
+    },
+    {
+      "month": "Jun 26",
+      "headline": 3.5
     }
   ]
 }
