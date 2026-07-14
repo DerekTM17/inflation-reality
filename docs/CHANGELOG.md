@@ -12,6 +12,8 @@ Curated, not exhaustive — `git log` has every commit.
 
 **Why:** Dashboard now displays a horizontal bar comparison of the latest 12-month inflation across Headline CPI, Core CPI, and four alternative official measures: Core PCE (`PCEPILFE`), Median CPI (`MEDCPIM159SFRBCLE`), 16% Trimmed-Mean CPI (`TRMMEANCPIM159SFRBCLE`), and Sticky-Price Core CPI (`CORESTICKM159SFRBATL`). All measures are sourced from FRED using the existing build-time pipeline, with no new API keys required. Core PCE requires index-to-YoY conversion; the other three measures are native 12-month percentage rates (distinguished by the FRED suffix convention: `M158`=1-month-annualized vs `M159`=12-month). Each measure carries an InfoTip explaining its methodology and a FRED series badge for full provenance. Panel is also added to the Excel export and the glossary reference. Per-series stale fallback is handled by the existing resilience layer.
 
+**Fix (production wiring):** the first deploy shipped an empty `altMeasures` because `fetch-fred.mjs` hand-built the catalog object it passes to `assemblePayload` and was never updated to include `ALT_MEASURES` — unit tests missed it (assemble.test uses its own catalog stub; fetch-fred has no unit test), caught only by verifying the live `cpi.json`. `fetch-fred.mjs` now imports the whole catalog namespace and passes it through, so a future catalog export can't be silently dropped. **Lesson: verify build-time-generated output against production, not just unit tests.**
+
 ## 2026-07-10
 
 ### Live-data polish: drop Car Insurance, fix broken series IDs, add onboarding tooltips
