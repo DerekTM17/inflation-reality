@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS } from "./catalog.js";
+import { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES } from "./catalog.js";
 import { buildViewData } from "./merge.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -9,7 +9,7 @@ import { dirname, resolve } from "node:path";
 const dynamic = JSON.parse(
   readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "fallback.json"), "utf8"),
 );
-const catalog = { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS };
+const catalog = { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES };
 
 test("buildViewData merges static metadata with dynamic values", () => {
   const view = buildViewData(catalog, dynamic);
@@ -38,4 +38,13 @@ test("buildViewData tolerates a missing dynamic entry (yoy null)", () => {
   const view = buildViewData(catalog, stripped);
   const gas = view.categories.find(c => c.id === "gas");
   assert.equal(gas.yoy, null);
+});
+
+test("buildViewData exposes altMeasures merged with catalog metadata", () => {
+  const view = buildViewData(catalog, dynamic);
+  assert.equal(view.altMeasures.length, 4);
+  const pce = view.altMeasures.find(m => m.key === "corePce");
+  assert.equal(pce.yoy, 3.4);              // from fallback.json dynamic
+  assert.equal(pce.seriesId, "PCEPILFE");  // from catalog
+  assert.ok(pce.blurb && pce.color);
 });

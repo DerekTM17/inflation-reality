@@ -38,6 +38,12 @@
     "APU000072610": { "current": 0.179, "yearAgo": 0.168 },
     "APU000072620": { "current": 1.48, "yearAgo": 1.35 }
   },
+  "altMeasures": {
+    "corePce": { "yoy": 3.4 },
+    "medianCpi": { "yoy": 2.9 },
+    "trimmedCpi": { "yoy": 2.9 },
+    "stickyCpi": { "yoy": 3.1 }
+  },
   "trend": [
     { "month": "Apr 25", "headline": 2.3 },
     { "month": "May 25", "headline": 2.4 },
