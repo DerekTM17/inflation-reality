@@ -21,7 +21,7 @@ Items we want to tackle in the near term but aren't started yet.
 - [ ] **[bug]** avgPrices yearAgo-null does not fall back or flag stale — when year-ago average price is unavailable, UI should gracefully handle or signal the missing data like other series <!-- added 2026-07-10 -->
 - [ ] **[tech-debt]** merge macro uses default-param not optional-chaining for null headline/core node — refactor to use optional-chaining for consistency and clarity <!-- added 2026-07-10 -->
 - [ ] **[perf]** code-split the xlsx export behind a dynamic import() — bundle is 851kB / 258kB gzip, tripping Vite's 500kB chunk warning; xlsx is only needed on Excel export <!-- added 2026-05-21 -->
-- [ ] **[ops]** bump GitHub Actions to Node 24 / newer action majors — checkout@v4, setup-node@v4, peaceiris@v4 flagged Node 20 deprecation (forced June 2 2026, removed Sept 16 2026) <!-- added 2026-05-21 -->
+- [x] **[ops]** bump GitHub Actions off deprecated Node 20 — DONE 2026-07-14: checkout/setup-node v4→v7 (native Node 24 runtime), app build node-version 20→22 LTS; peaceiris@v4 left (not flagged). Deprecation annotation confirmed gone. <!-- added 2026-05-21, done 2026-07-14 -->
 
 ## Someday
 
