@@ -6,6 +6,12 @@ also include **Tradeoffs / Alternatives considered**.
 
 Curated, not exhaustive — `git log` has every commit.
 
+## 2026-07-16
+
+### Code-split xlsx export behind a dynamic import
+
+**Why:** xlsx is ~258 kB gzipped but only used on the Download .xlsx click, so a static top-level import forced every visitor to download it on first paint; moving it to an on-demand import() puts it in its own chunk and cuts ~90 kB gzip off the main bundle's critical path.
+
 ## 2026-07-13
 
 ### Add "How Others Measure It" panel with alternative official inflation gauges
