@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell, LabelList } from "recharts";
-import * as XLSX from "xlsx";
 import * as catalog from "./data/catalog.js";
 import { buildViewData } from "./data/merge.js";
 import fallbackDynamic from "./data/fallback.json";
@@ -217,7 +216,10 @@ export default function InflationTracker() {
   // ═══════════════════════════════════════════════════════════════
   // EXCEL EXPORT — builds a multi-sheet workbook with all data
   // ═══════════════════════════════════════════════════════════════
-  const downloadWorkbook = useCallback(() => {
+  const downloadWorkbook = useCallback(async () => {
+    // xlsx is ~258 kB gzipped and only needed on export, so load it on demand
+    // (dynamic import → its own chunk) rather than in the main bundle.
+    const XLSX = await import("xlsx");
     const wb = XLSX.utils.book_new();
 
     // ── Sheet 1: Your Calculation ──
