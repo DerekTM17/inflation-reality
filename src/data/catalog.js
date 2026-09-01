@@ -55,6 +55,7 @@ export const AVG_PRICE_ITEMS = [
   { item: "Orange Juice",              unit: "/16oz",   seriesId: "APU0000FJ4101", category: "Beverages" },
   { item: "Potato Chips",              unit: "/16oz",   seriesId: "APU0000FN1101", category: "Snacks" },
   { item: "Gasoline, Regular",         unit: "/gal",    seriesId: "APU000074714",  category: "Energy" },
+  { item: "Diesel, Automotive",        unit: "/gal",    seriesId: "APU000074717", category: "Energy" },
   { item: "Electricity",               unit: "/kWh",    seriesId: "APU000072610",  category: "Energy" },
   { item: "Natural Gas",               unit: "/therm",  seriesId: "APU000072620",  category: "Energy" },
 ];

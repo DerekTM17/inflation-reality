@@ -24,7 +24,7 @@ test("buildViewData merges static metadata with dynamic values", () => {
   assert.equal(gas.color, "#E76F51");                 // from catalog
   assert.equal(gas.icon, "⛽");
 
-  assert.equal(view.avgPrices.length, 20);
+  assert.equal(view.avgPrices.length, 21);
   const eggs = view.avgPrices.find(p => p.item === "Eggs, Grade A Large");
   assert.equal(eggs.current, 6.23);
   assert.equal(eggs.unit, "/doz");                    // from catalog

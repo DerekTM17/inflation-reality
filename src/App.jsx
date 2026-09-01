@@ -47,6 +47,18 @@ function WeightSlider({ cat, weight, onChange, contribution }) {
   );
 }
 
+// The three hero tiles are stretched to a common height by the grid, so their
+// contents are centred vertically — otherwise the shorter two hang off the top
+// of a box sized by the tallest (the Headline tile, which carries the MoM rows).
+const heroCard = {
+  borderRadius: 10,
+  padding: 20,
+  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+};
+
 function BigNumber({ value, label, sub, color, size = 48, info }) {
   const sign = value > 0 ? "+" : "";
   return (
@@ -453,10 +465,10 @@ export default function InflationTracker() {
 
             {/* ── Row 1: Big Numbers ── */}
             <div className="ir-grid-3" style={{ display: "grid", gap: 16, marginBottom: 20 }}>
-              <div style={{ background: "#fff", borderRadius: 10, padding: 20, border: "1px solid #e0e0e0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              <div style={{ ...heroCard, background: "#fff", border: "1px solid #e0e0e0" }}>
                 <BigNumber value={personalRate} label="Your Inflation" sub="Based on your spending mix" color={personalRate > data.headline.yoy ? "#c1121f" : "#2D6A4F"} info="Your personal inflation rate: the same CPI category data, but weighted by your spending mix from the sliders below instead of the national-average weights. Drag the sliders and watch it move." />
               </div>
-              <div style={{ background: "#fff", borderRadius: 10, padding: 20, border: "1px solid #e0e0e0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              <div style={{ ...heroCard, background: "#fff", border: "1px solid #e0e0e0" }}>
                 <BigNumber value={data.headline.yoy} label="Headline CPI-U" sub={`BLS All Items, ${data.referenceMonthLabel}`} color="#1B4965" info="The official all-items CPI-U: how much prices rose over the last 12 months for a typical U.S. urban household, using the government's national spending weights. This is the number the news usually quotes." />
                 <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #f0f0f0", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#666", lineHeight: 1.7 }}>
                   <div>
@@ -479,7 +491,7 @@ export default function InflationTracker() {
                   </div>
                 </div>
               </div>
-              <div style={{ background: delta > 0 ? "#FFF5F5" : "#F0FAF0", borderRadius: 10, padding: 20, border: `1px solid ${delta > 0 ? "#FECACA" : "#BBF7D0"}`, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              <div style={{ ...heroCard, background: delta > 0 ? "#FFF5F5" : "#F0FAF0", border: `1px solid ${delta > 0 ? "#FECACA" : "#BBF7D0"}` }}>
                 <BigNumber value={delta} label={delta > 0 ? "Above Headline" : "Below Headline"} sub="Your rate vs. official CPI" color={delta > 0 ? "#c1121f" : "#2D6A4F"} size={40} info="The gap between your rate and the official headline. Positive means your spending mix runs hotter than the national average; negative means cooler." />
               </div>
             </div>

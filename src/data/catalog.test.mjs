@@ -9,9 +9,9 @@ test("headline and core use NSA for yoy and SA for mom", () => {
   assert.equal(CORE.momSeriesId, "CPILFESL");
 });
 
-test("catalog has 10 categories and 20 avg-price items, all with FRED series ids", () => {
+test("catalog has 10 categories and 21 avg-price items, all with FRED series ids", () => {
   assert.equal(CATEGORIES.length, 10);
-  assert.equal(AVG_PRICE_ITEMS.length, 20);
+  assert.equal(AVG_PRICE_ITEMS.length, 21);
   // Most categories are CUUR NSA series; a few use FRED's friendly CPI* aliases
   // (e.g. CPIMEDNS/CPIAPPNS/CPIRECNS) where FRED doesn't mirror the CUUR id.
   for (const c of CATEGORIES) assert.match(c.seriesId, /^(CUUR|CPI)/);
