@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-16T14:12:33.533Z",
+  "generatedAt": "2026-09-01T19:52:16.925Z",
   "referenceMonth": "2026-07",
   "referenceMonthLabel": "July 2026",
   "headline": {
@@ -8,10 +8,9 @@
     "momAnnualized": 0.9
   },
   "core": {
-    "yoy": 2.6,
+    "yoy": 2.5,
     "mom": 0.2,
-    "momAnnualized": 2.6,
-    "stale": true
+    "momAnnualized": 2.6
   },
   "categories": {
     "groceries": {
@@ -141,7 +140,7 @@
       "yoy": 2.7
     },
     "trimmedPce": {
-      "yoy": 2.2
+      "yoy": 2.3
     }
   },
   "trend": [
