@@ -5,7 +5,7 @@ import { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, allSeries } 
 test("headline and core use NSA for yoy and SA for mom", () => {
   assert.equal(HEADLINE.seriesId, "CPIAUCNS");
   assert.equal(HEADLINE.momSeriesId, "CPIAUCSL");
-  assert.equal(CORE.seriesId, "CPILFESNS");
+  assert.equal(CORE.seriesId, "CPILFENS");
   assert.equal(CORE.momSeriesId, "CPILFESL");
 });
 
@@ -26,7 +26,7 @@ test("allSeries de-duplicates and includes SA mom series", () => {
   assert.ok(allSeries().some(s => s.id === "CPIAUCSL" && s.kind === "levelSA"));
 });
 
-test("alt measures: 4 entries with verified series ids and known kinds", () => {
+test("alt measures: 5 entries with verified series ids and known kinds", () => {
   assert.equal(ALT_MEASURES.length, 5);
   const byKey = Object.fromEntries(ALT_MEASURES.map(m => [m.key, m]));
   assert.equal(byKey.corePce.seriesId, "PCEPILFE");

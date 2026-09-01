@@ -4,7 +4,7 @@ import { assemblePayload } from "./assemble.mjs";
 
 const catalog = {
   HEADLINE: { key: "headline", seriesId: "CPIAUCNS", momSeriesId: "CPIAUCSL" },
-  CORE: { key: "core", seriesId: "CPILFESNS", momSeriesId: "CPILFESL" },
+  CORE: { key: "core", seriesId: "CPILFENS", momSeriesId: "CPILFESL" },
   CATEGORIES: [{ id: "gas", seriesId: "CUUR0000SETB01" }],
   AVG_PRICE_ITEMS: [{ item: "Eggs", seriesId: "APU0000708111" }],
   ALT_MEASURES: [
@@ -22,7 +22,7 @@ const series = (start, step) =>
 const observationsBySeries = {
   CPIAUCNS: series(100, 0.3),
   CPIAUCSL: series(100, 0.3),
-  CPILFESNS: series(100, 0.2),
+  CPILFENS: series(100, 0.2),
   CPILFESL: series(100, 0.2),
   CUUR0000SETB01: series(200, 1),
   APU0000708111: series(5, 0.05),

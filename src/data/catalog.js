@@ -15,8 +15,10 @@ export const CORE = {
   label: "All Items Less Food & Energy",
   code: "SA0L1E",
   relImportance: 79.6,
-  seriesId: "CPILFESNS",
-  momSeriesId: "CPILFESL",
+  // NSA core is CPILFENS, NOT CPILFESNS — the latter 404s on FRED and silently
+  // sent this node down the fallback path on every build from 2026-07-10 to 2026-08-16.
+  seriesId: "CPILFENS",   // NSA — 12-month (YoY) change
+  momSeriesId: "CPILFESL", // SA — 1-month (MoM) change
 };
 
 // id/label/code/weight/icon/color are presentation-only; seriesId (NSA CUUR) drives YoY.
