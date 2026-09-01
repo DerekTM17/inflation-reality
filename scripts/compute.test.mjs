@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {
   parseObservations, shiftMonths, computeYoY, computeMoM,
   computeMoMAnnualized, buildTrend, avgPrice, monthLabel, referenceMonthLabel,
-  latestValue,
+  latestValue, weeklyPrice, weekLabel,
 } from "./compute.mjs";
 
 // 14 monthly points; Oct/Nov 2025 missing (".") to exercise gap handling.
@@ -79,4 +79,51 @@ test("latestValue returns the latest non-null value, null when none", () => {
   ])), 2.9);
   assert.equal(latestValue(parseObservations([{ date: "2026-01-01", value: "." }])), null);
   assert.equal(latestValue([]), null);
+});
+
+// ── Weekly (EIA) fuel prices ──────────────────────────────────────────────
+// Mondays, 2025-08-25 through 2026-08-31, so the year-ago match is 364 days back
+// (52 weeks) rather than an exact calendar-date hit.
+const weeklyRaw = (() => {
+  const out = [];
+  let t = Date.parse("2025-08-25");
+  for (let i = 0; i < 54; i++) {
+    out.push({ date: new Date(t).toISOString().slice(0, 10), value: String(3 + i * 0.05) });
+    t += 7 * 86400000;
+  }
+  return out;
+})();
+
+test("weeklyPrice finds the year-ago value on a weekly grid", () => {
+  const obs = parseObservations(weeklyRaw);
+  const { current, yearAgo, asOf } = weeklyPrice(obs);
+  const last = obs[obs.length - 1];
+  assert.equal(current, last.value);
+  assert.equal(asOf, last.date);
+  // 52 weeks back is 364 days — the nearest observation to the 365-day target.
+  const wanted = obs[obs.length - 1 - 52];
+  assert.equal(yearAgo, wanted.value);
+});
+
+test("weeklyPrice returns null yearAgo when history is too short", () => {
+  const obs = parseObservations(weeklyRaw.slice(-10));
+  const { current, yearAgo } = weeklyPrice(obs);
+  assert.ok(current != null);
+  assert.equal(yearAgo, null);      // nearest match is ~9 weeks off, outside tolerance
+});
+
+test("weeklyPrice handles an empty or all-null series", () => {
+  assert.deepEqual(weeklyPrice([]), { current: null, yearAgo: null, asOf: null });
+  const allNull = parseObservations([{ date: "2026-01-05", value: "." }]);
+  assert.deepEqual(weeklyPrice(allNull), { current: null, yearAgo: null, asOf: null });
+});
+
+test("weeklyPrice ignores trailing nulls when picking the current reading", () => {
+  const obs = parseObservations([...weeklyRaw, { date: "2026-09-07", value: "." }]);
+  const { asOf } = weeklyPrice(obs);
+  assert.equal(asOf, weeklyRaw[weeklyRaw.length - 1].date);
+});
+
+test("weekLabel renders a day-level date", () => {
+  assert.equal(weekLabel("2026-08-31"), "Aug 31, 2026");
 });

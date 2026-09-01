@@ -76,6 +76,19 @@ export const ALT_MEASURES = [
     blurb: "The Dallas Fed's trimmed-mean measure applied to PCE (the Fed's preferred index) instead of CPI — drops the biggest movers on each side to show the underlying trend." },
 ];
 
+// Weekly retail fuel prices from the EIA, mirrored on FRED (so no second API key).
+// These are a deliberate second source for two goods the BLS APU table above also
+// covers: EIA surveys weekly and posts within days, where the BLS average is a
+// monthly figure that can be six weeks old by the end of a release cycle. Showing
+// the pair is the point — it cross-checks BLS on identical goods and makes the lag
+// visible instead of implying the monthly number is today's price.
+export const WEEKLY_PRICES = [
+  { key: "gasoline", label: "Gasoline, Regular", unit: "/gal", seriesId: "GASREGW", blsSeriesId: "APU000074714",
+    blurb: "EIA's weekly survey of retail stations nationwide, averaged across all formulations of regular unleaded. Published every Monday for the prior week." },
+  { key: "diesel",   label: "Diesel",            unit: "/gal", seriesId: "GASDESW", blsSeriesId: "APU000074717",
+    blurb: "EIA's weekly retail diesel price, all types. Diesel moves freight, so it feeds through into the price of most physical goods a few months later." },
+];
+
 // The de-duplicated list of FRED series the fetch script must request.
 // kind "level"   → used for YoY / trend / avg-price (NSA levels)
 // kind "levelSA" → used for MoM (seasonally adjusted levels)
@@ -90,5 +103,6 @@ export function allSeries() {
   for (const c of CATEGORIES) add(c.seriesId, "level");
   for (const p of AVG_PRICE_ITEMS) add(p.seriesId, "level");
   for (const m of ALT_MEASURES) add(m.seriesId, m.kind === "index" ? "level" : "rate");
+  for (const w of WEEKLY_PRICES) add(w.seriesId, "level");
   return [...seen.values()];
 }

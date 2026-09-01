@@ -7,6 +7,7 @@ const catalog = {
   CORE: { key: "core", seriesId: "CPILFENS", momSeriesId: "CPILFESL" },
   CATEGORIES: [{ id: "gas", seriesId: "CUUR0000SETB01" }],
   AVG_PRICE_ITEMS: [{ item: "Eggs", seriesId: "APU0000708111" }],
+  WEEKLY_PRICES: [{ key: "diesel", seriesId: "GASDESW", blsSeriesId: "APU0000708111" }],
   ALT_MEASURES: [
     { key: "corePce", seriesId: "PCEPILFE", kind: "index" },
     { key: "medianCpi", seriesId: "MEDCPIM159SFRBCLE", kind: "yoyRate" },
@@ -19,7 +20,13 @@ const series = (start, step) =>
     value: String(start + i * step),
   }));
 
+const weekly = Array.from({ length: 54 }, (_, i) => ({
+  date: new Date(Date.parse("2025-08-25") + i * 7 * 86400000).toISOString().slice(0, 10),
+  value: String(3 + i * 0.05),
+}));
+
 const observationsBySeries = {
+  GASDESW: weekly,
   CPIAUCNS: series(100, 0.3),
   CPIAUCSL: series(100, 0.3),
   CPILFENS: series(100, 0.2),
@@ -85,4 +92,21 @@ test("altMeasures: missing series falls back with stale", () => {
   });
   assert.equal(p.altMeasures.medianCpi.yoy, 3.1);
   assert.equal(p.altMeasures.medianCpi.stale, true);
+});
+
+test("weeklyPrices: current, year-ago and as-of date come through", () => {
+  const p = assemblePayload({ observationsBySeries, catalog, fallback: {}, generatedAt: "T" });
+  const d = p.weeklyPrices.diesel;
+  assert.equal(d.asOf, weekly[weekly.length - 1].date);
+  assert.equal(d.current, Number(weekly[weekly.length - 1].value));
+  assert.equal(d.yearAgo, Number(weekly[weekly.length - 1 - 52].value));
+  assert.equal(d.asOfLabel, "Aug 31, 2026");
+  assert.equal(d.stale, undefined);
+});
+
+test("weeklyPrices: missing series falls back with stale", () => {
+  const fallback = { weeklyPrices: { diesel: { current: 4.44, yearAgo: 4.00, asOf: "2026-01-05" } } };
+  const p = assemblePayload({ observationsBySeries: {}, catalog, fallback, generatedAt: "T" });
+  assert.equal(p.weeklyPrices.diesel.current, 4.44);
+  assert.equal(p.weeklyPrices.diesel.stale, true);
 });

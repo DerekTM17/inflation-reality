@@ -96,6 +96,36 @@ export function avgPrice(observations) {
   return { current, yearAgo };
 }
 
+const DAY_MS = 86400000;
+
+// Average-price lookup for WEEKLY series (EIA fuel). avgPrice() can't be reused:
+// it finds the year-ago value by exact key (shiftMonths(d,-12) → YYYY-MM-01), which
+// only ever matches a monthly series. Weekly observations land on Mondays, so we take
+// the observation closest to 365 days back and reject it if nothing falls within
+// toleranceDays — 52 weeks is 364 days, so a real match is at most a day or two off.
+export function weeklyPrice(observations, toleranceDays = 10) {
+  const rows = observations.filter(o => o.value != null);
+  if (!rows.length) return { current: null, yearAgo: null, asOf: null };
+  const last = rows[rows.length - 1];
+  const target = Date.parse(last.date) - 365 * DAY_MS;
+  let best = null, bestGap = Infinity;
+  for (const o of rows) {
+    const gap = Math.abs(Date.parse(o.date) - target);
+    if (gap < bestGap) { bestGap = gap; best = o; }
+  }
+  return {
+    current: last.value,
+    yearAgo: best && bestGap <= toleranceDays * DAY_MS ? best.value : null,
+    asOf: last.date,
+  };
+}
+
+// "Aug 31, 2026" — weekly readings need a day, unlike the monthly reference label.
+export function weekLabel(dateStr) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return `${MONTHS_SHORT[m - 1]} ${d}, ${y}`;
+}
+
 export function monthLabel(dateStr) {
   const [y, m] = dateStr.split("-").map(Number);
   return `${MONTHS_SHORT[m - 1]} ${String(y).slice(-2)}`;

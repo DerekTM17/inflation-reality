@@ -2,7 +2,7 @@
 // into render-ready objects for the app. Pure; no side effects.
 
 export function buildViewData(catalog, dynamic) {
-  const { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES } = catalog;
+  const { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, WEEKLY_PRICES } = catalog;
 
   const macro = (spec, node = {}) => ({
     ...spec,
@@ -31,6 +31,15 @@ export function buildViewData(catalog, dynamic) {
     stale: dynamic.altMeasures?.[m.key]?.stale ?? false,
   }));
 
+  const weeklyPrices = (WEEKLY_PRICES || []).map(w => ({
+    ...w,
+    current: dynamic.weeklyPrices?.[w.key]?.current ?? null,
+    yearAgo: dynamic.weeklyPrices?.[w.key]?.yearAgo ?? null,
+    asOf: dynamic.weeklyPrices?.[w.key]?.asOf ?? null,
+    asOfLabel: dynamic.weeklyPrices?.[w.key]?.asOfLabel ?? "",
+    stale: dynamic.weeklyPrices?.[w.key]?.stale ?? false,
+  }));
+
   return {
     generatedAt: dynamic.generatedAt ?? null,
     referenceMonth: dynamic.referenceMonth ?? null,
@@ -40,6 +49,7 @@ export function buildViewData(catalog, dynamic) {
     categories,
     avgPrices,
     altMeasures,
+    weeklyPrices,
     trend: dynamic.trend ?? [],
   };
 }

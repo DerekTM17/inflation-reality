@@ -2,7 +2,7 @@
 // Turn raw FRED observations into the dynamic-only payload the app consumes.
 import {
   parseObservations, computeYoY, computeMoM, computeMoMAnnualized,
-  buildTrend, avgPrice, latestValue, referenceMonthLabel,
+  buildTrend, avgPrice, latestValue, referenceMonthLabel, weeklyPrice, weekLabel,
 } from "./compute.mjs";
 
 // latestDateLabel isn't exported by compute; derive reference month from the headline series here.
@@ -63,6 +63,13 @@ export function assemblePayload({ observationsBySeries, catalog, fallback, gener
     else altMeasures[m.key] = { yoy: parseFloat(raw.toFixed(1)) };
   }
 
+  const weeklyPrices = {};
+  for (const w of catalog.WEEKLY_PRICES || []) {
+    const { current, yearAgo, asOf } = weeklyPrice(obs(w.seriesId));
+    if (current == null) weeklyPrices[w.key] = { ...(fb.weeklyPrices?.[w.key] || { current: null, yearAgo: null, asOf: null }), stale: true };
+    else weeklyPrices[w.key] = { current, yearAgo, asOf, asOfLabel: weekLabel(asOf) };
+  }
+
   return {
     generatedAt,
     referenceMonth,
@@ -72,6 +79,7 @@ export function assemblePayload({ observationsBySeries, catalog, fallback, gener
     categories,
     avgPrices,
     altMeasures,
+    weeklyPrices,
     trend,
   };
 }

@@ -310,6 +310,15 @@ export default function InflationTracker() {
       priceRows.push([p.category, p.item, p.seriesId, p.unit, p.current, p.yearAgo, change, `https://fred.stlouisfed.org/series/${p.seriesId}`]);
     });
     priceRows.push([]);
+    priceRows.push(["SECOND SOURCE — EIA WEEKLY RETAIL FUEL PRICES"]);
+    priceRows.push(["Source: U.S. Energy Information Administration weekly retail price survey, via FRED. Weekly, so these lead the BLS monthly averages above."]);
+    priceRows.push(["Item", "EIA Series ID", "Unit", "Week Ending", "Current Price ($)", "Year-Ago Price ($)", "YoY Change (%)", "FRED URL"]);
+    data.weeklyPrices.forEach(w => {
+      const pct = pctChange(w.current, w.yearAgo);
+      const change = pct == null ? null : parseFloat(pct.toFixed(2));
+      priceRows.push([w.label, w.seriesId, w.unit, w.asOfLabel, w.current, w.yearAgo, change, `https://fred.stlouisfed.org/series/${w.seriesId}`]);
+    });
+    priceRows.push([]);
     priceRows.push(["NOTE: Average prices are best used to measure price levels, not price change over time. BLS recommends using CPI index values for measuring price change."]);
     priceRows.push(["See: https://www.bls.gov/cpi/factsheets/average-prices.htm"]);
     const ws3 = XLSX.utils.aoa_to_sheet(priceRows);
@@ -471,24 +480,24 @@ export default function InflationTracker() {
               <div style={{ ...heroCard, background: "#fff", border: "1px solid #e0e0e0" }}>
                 <BigNumber value={data.headline.yoy} label="Headline CPI-U" sub={`BLS All Items, ${data.referenceMonthLabel}`} color="#1B4965" info="The official all-items CPI-U: how much prices rose over the last 12 months for a typical U.S. urban household, using the government's national spending weights. This is the number the news usually quotes." />
                 <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #f0f0f0", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#666", lineHeight: 1.7 }}>
-                  <div>
-                    Headline{" "}
-                    <strong style={{ color: (data.headline.mom ?? 0) >= 0 ? "#c1121f" : "#2D6A4F" }}>
-                      {(data.headline.mom ?? 0) >= 0 ? "+" : ""}{data.headline.mom ?? "—"}%
-                    </strong>{" "}
-                    MoM · {data.headline.momAnnualized ?? "—"}% annualized
-                    <InfoTip
-                      label="About month-over-month"
-                      text="MoM is the change from just the prior month (seasonally adjusted) — it reacts faster than the 12-month figure above. 'Annualized' projects that single month's pace over a full year."
-                    />
-                  </div>
-                  <div>
-                    Core{" "}
-                    <strong style={{ color: (data.core.mom ?? 0) >= 0 ? "#c1121f" : "#2D6A4F" }}>
-                      {(data.core.mom ?? 0) >= 0 ? "+" : ""}{data.core.mom ?? "—"}%
-                    </strong>{" "}
-                    MoM · {data.core.momAnnualized ?? "—"}% annualized
-                  </div>
+                  {[
+                    { label: "Headline", node: data.headline, tip: true },
+                    { label: "Core", node: data.core, tip: false },
+                  ].map(({ label, node, tip }) => (
+                    <div key={label} style={{ whiteSpace: "nowrap" }}>
+                      <span style={{ display: "inline-block", width: 56 }}>{label}</span>
+                      <strong style={{ color: (node.mom ?? 0) >= 0 ? "#c1121f" : "#2D6A4F" }}>
+                        {(node.mom ?? 0) >= 0 ? "+" : ""}{node.mom ?? "—"}%
+                      </strong>{" "}
+                      MoM · {node.momAnnualized ?? "—"}% annualized
+                      {tip && (
+                        <InfoTip
+                          label="About month-over-month"
+                          text="MoM is the change from just the prior month (seasonally adjusted) — it reacts faster than the 12-month figure above. 'Annualized' projects that single month's pace over a full year."
+                        />
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
               <div style={{ ...heroCard, background: delta > 0 ? "#FFF5F5" : "#F0FAF0", border: `1px solid ${delta > 0 ? "#FECACA" : "#BBF7D0"}` }}>
@@ -795,6 +804,65 @@ export default function InflationTracker() {
               </div>
             </div>
 
+            {/* ── Second source: EIA weekly fuel prices ── */}
+            <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 24, marginBottom: 20 }}>
+              <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#888", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
+                A Second Source — EIA Weekly Fuel
+                <InfoTip
+                  label="About the EIA comparison"
+                  text="Everything else on this page comes from the BLS. These two rows come from the Energy Information Administration, which surveys retail stations every week instead of once a month. Same goods, different agency, much fresher — so it doubles as a check on the BLS figure and a measure of how far behind the monthly number runs."
+                />
+              </div>
+              <div style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>
+                The same two fuels priced by a different agency, weekly instead of monthly.
+              </div>
+
+              {data.weeklyPrices.map((w) => {
+                const bls = data.avgPrices.find(p => p.seriesId === w.blsSeriesId);
+                const change = pctChange(w.current, w.yearAgo);
+                const isUp = change != null && change > 0;
+                const lag = bls?.current != null && w.current != null ? w.current - bls.current : null;
+                return (
+                  <div key={w.key} style={{
+                    display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 12,
+                    padding: "12px 0", borderTop: "1px solid #f0f0f0",
+                  }}>
+                    <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontWeight: 600, fontSize: 14, minWidth: 150 }}>
+                      {w.label}
+                      <InfoTip text={w.blurb} label={`About ${w.label} (EIA)`} />
+                    </div>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 700, color: "#0D1B2A" }}>
+                      {w.current != null ? `$${w.current.toFixed(3)}` : "—"}
+                      <span style={{ fontSize: 11, fontWeight: 400, color: "#888" }}>{w.unit}</span>
+                    </div>
+                    {change != null && (
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600, color: isUp ? "#c1121f" : "#2D6A4F" }}>
+                        {isUp ? "▲" : "▼"} {Math.abs(change).toFixed(1)}% YoY
+                      </div>
+                    )}
+                    <div style={{ flex: 1, minWidth: 200, textAlign: "right", fontSize: 11, color: "#888", lineHeight: 1.6 }}>
+                      <div>EIA week ending <strong style={{ color: "#555" }}>{w.asOfLabel || "—"}</strong></div>
+                      {bls?.current != null && (
+                        <div>
+                          BLS monthly: ${bls.current.toFixed(3)} ({data.referenceMonthLabel})
+                          {lag != null && (
+                            <> · <span style={{ color: Math.abs(lag) >= 0.1 ? "#c1121f" : "#888" }}>
+                              EIA {lag >= 0 ? "+" : "−"}${Math.abs(lag).toFixed(2)}
+                            </span></>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div style={{ marginTop: 14, fontSize: 11, color: "#888", fontStyle: "italic", lineHeight: 1.5 }}>
+                Source: U.S. Energy Information Administration weekly retail price survey, via FRED. The gap against the BLS row is
+                mostly recency, not disagreement — the BLS figure is a full-month average that lands weeks after the month ends.
+              </div>
+            </div>
+
             {/* Top movers chart */}
             <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e0e0e0", padding: 24 }}>
               <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#888", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
@@ -845,10 +913,11 @@ export default function InflationTracker() {
 
             <div style={{ background: "#F8F9FA", borderRadius: 10, border: "1px solid #e0e0e0", padding: 16, marginTop: 20 }}>
               <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#888", marginBottom: 8 }}>
-                VERIFY THIS DATA — All BLS Series IDs:
+                VERIFY THIS DATA — All Series IDs (BLS + EIA):
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                 {data.avgPrices.map((p, i) => <DataSourceBadge key={i} seriesId={p.seriesId} />)}
+                {data.weeklyPrices.map((w, i) => <DataSourceBadge key={`w${i}`} seriesId={w.seriesId} />)}
               </div>
               <div style={{ fontSize: 11, color: "#888", marginTop: 8 }}>
                 Enter any ID at <span style={{ fontFamily: "'JetBrains Mono', monospace", color: "#457b9d" }}>fred.stlouisfed.org</span> → download CSV → see the same numbers.
@@ -983,6 +1052,14 @@ export default function InflationTracker() {
                     padding: "4px 8px", borderRadius: 4, color: "#2D6A4F",
                   }}>
                     {p.seriesId} <span style={{ color: "#888" }}>— {p.item}</span>
+                  </div>
+                ))}
+                {data.weeklyPrices.map((w, i) => (
+                  <div key={`wp-${i}`} style={{
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 10, background: "#FFF4E5",
+                    padding: "4px 8px", borderRadius: 4, color: "#8A5A00",
+                  }}>
+                    {w.seriesId} <span style={{ color: "#888" }}>— {w.label} (EIA, weekly)</span>
                   </div>
                 ))}
               </div>

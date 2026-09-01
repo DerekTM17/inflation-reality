@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, allSeries } from "./catalog.js";
+import { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, allSeries, WEEKLY_PRICES } from "./catalog.js";
 
 test("headline and core use NSA for yoy and SA for mom", () => {
   assert.equal(HEADLINE.seriesId, "CPIAUCNS");
@@ -37,4 +37,23 @@ test("alt measures: 5 entries with verified series ids and known kinds", () => {
   for (const m of ALT_MEASURES) assert.ok(m.label && m.color && m.blurb);
   const ids = allSeries().map(s => s.id);
   assert.ok(ids.includes("PCEPILFE") && ids.includes("MEDCPIM159SFRBCLE"));
+});
+
+test("weekly prices are a second source for goods the BLS table also covers", () => {
+  assert.equal(WEEKLY_PRICES.length, 2);
+  const byKey = Object.fromEntries(WEEKLY_PRICES.map(w => [w.key, w]));
+  assert.equal(byKey.gasoline.seriesId, "GASREGW");
+  assert.equal(byKey.diesel.seriesId, "GASDESW");
+  // Each weekly series must pair with a BLS APU item actually present in the table,
+  // otherwise the cross-source comparison has nothing to compare against.
+  const blsIds = new Set(AVG_PRICE_ITEMS.map(p => p.seriesId));
+  for (const w of WEEKLY_PRICES) {
+    assert.ok(w.label && w.unit && w.blurb);
+    assert.ok(blsIds.has(w.blsSeriesId), `${w.key} pairs with a listed BLS item`);
+  }
+});
+
+test("allSeries includes the weekly EIA series", () => {
+  const ids = allSeries().map(s => s.id);
+  for (const w of WEEKLY_PRICES) assert.ok(ids.includes(w.seriesId));
 });

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES } from "./catalog.js";
+import { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, WEEKLY_PRICES } from "./catalog.js";
 import { buildViewData } from "./merge.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -9,7 +9,7 @@ import { dirname, resolve } from "node:path";
 const dynamic = JSON.parse(
   readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "fallback.json"), "utf8"),
 );
-const catalog = { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES };
+const catalog = { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, WEEKLY_PRICES };
 
 test("buildViewData merges static metadata with dynamic values", () => {
   const view = buildViewData(catalog, dynamic);
@@ -47,4 +47,18 @@ test("buildViewData exposes altMeasures merged with catalog metadata", () => {
   assert.equal(pce.yoy, 3.4);              // from fallback.json dynamic
   assert.equal(pce.seriesId, "PCEPILFE");  // from catalog
   assert.ok(pce.blurb && pce.color);
+});
+
+test("buildViewData exposes weeklyPrices merged with catalog metadata", () => {
+  const view = buildViewData(catalog, {
+    weeklyPrices: { gasoline: { current: 4.07, yearAgo: 3.42, asOf: "2026-08-31" } },
+  });
+  const gas = view.weeklyPrices.find(w => w.key === "gasoline");
+  assert.equal(gas.current, 4.07);
+  assert.equal(gas.asOf, "2026-08-31");
+  assert.equal(gas.seriesId, "GASREGW");     // from catalog
+  assert.equal(gas.unit, "/gal");            // from catalog
+  const diesel = view.weeklyPrices.find(w => w.key === "diesel");
+  assert.equal(diesel.current, null);        // absent from the payload
+  assert.equal(diesel.stale, false);
 });
