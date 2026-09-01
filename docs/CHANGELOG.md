@@ -6,6 +6,12 @@ also include **Tradeoffs / Alternatives considered**.
 
 Curated, not exhaustive — `git log` has every commit.
 
+## 2026-09-01
+
+### Core CPI year-over-year was never live
+
+**Why:** The NSA core series id in the catalog, `CPILFESNS`, 404s on FRED, so `assemblePayload`'s `macro()` got no observations for core YoY, fell back to `src/data/fallback.json`, and set `stale: true`. Every build from the 2026-07-10 live-data ship through 2026-08-16 published `core.yoy = 2.6` — a March 2026 seed value — and the UI rendered it beside genuinely live numbers with no warning, because the `stale` flag is computed and stored but never displayed. Correct id is `CPILFENS` (same title, confirmed NSA); July 2026 core YoY is 2.5, not 2.6. Verified against production: CI now reports 39/39 series live and live `cpi.json` has zero stale nodes. This is the same 404-on-FRED failure as the July category audit, which fixed the category ids and confirmed '0 stale categories' but never checked the headline/core macro nodes — the audit's scope, not its method, was the gap.
+
 ## 2026-07-16
 
 ### Code-split xlsx export behind a dynamic import
