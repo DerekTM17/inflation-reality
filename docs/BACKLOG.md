@@ -7,6 +7,8 @@ domain. Markdown checkboxes; edit by hand. Shipped items go to
 ## Now
 
 Items we're actively working on or planning to do imminently.
+- [ ] **[feat]** surface `stale` flags in the UI when a series falls back — the flag is computed in `assemble.mjs` and stored in `cpi.json` but never rendered, which is why core CPI showed a frozen March value for 5 weeks with no visible warning. Promoted from Soon 2026-09-01 after that incident. <!-- added 2026-07-10, promoted 2026-09-01 -->
+- [ ] **[bug]** `fetch-fred.mjs` should fail the build when a *macro* series (headline/core) falls back — it currently only fatals if every request fails, so one dead id among 39 ships silently. Categories can reasonably degrade to a fallback; the three big numbers cannot. <!-- added 2026-09-01 -->
 
 ## Soon
 
@@ -15,7 +17,6 @@ Items we want to tackle in the near term but aren't started yet.
 - [ ] **[feat]** add Case-Shiller home price index (`CSUSHPINSA`) to the alternatives panel — requires FRED series fetch and UI layout adjustment to accommodate a fifth measure <!-- added 2026-07-13 -->
 - [ ] **[feat]** integrate Zillow ZORI (rent) data for real-time rental inflation visibility — fragile bulk CSV download + licensing check required; consider seasonal adjustment and smoothing <!-- added 2026-07-13 -->
 - [ ] **[feat]** integrate EIA energy price API for gasoline and heating-oil spot prices — requires EIA API key, series routing, and comparison layout updates <!-- added 2026-07-13 -->
-- [ ] **[feat]** surface `stale` flags subtly in the UI when a series falls back — when live FRED data is unavailable, highlight or badge affected series to signal data freshness <!-- added 2026-07-10 -->
 - [ ] **[feat]** consider optional daily cron if mid-month proves too sparse — current 13th/16th schedule may miss data for mid-cycle analytics; daily refresh would catch all releases <!-- added 2026-07-10 -->
 - [ ] **[feat]** consider category MoM if SA `CUSR` series coverage is sufficient — currently categories are YoY-only; expand to MoM if seasonally-adjusted CUSR series exist for all tracked categories <!-- added 2026-07-10 -->
 - [ ] **[bug]** avgPrices yearAgo-null does not fall back or flag stale — when year-ago average price is unavailable, UI should gracefully handle or signal the missing data like other series <!-- added 2026-07-10 -->

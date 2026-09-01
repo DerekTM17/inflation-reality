@@ -3,6 +3,36 @@
 Durable, reusable takeaways from building this project — the things worth
 remembering next time, not a play-by-play. Newest first.
 
+## 2026-09-01 — A resilience layer hides the failure it handles
+
+- **A silent fallback is a silent bug.** `assemblePayload` correctly detected
+  that core CPI's NSA series returned nothing, correctly substituted the
+  bundled fallback, and correctly set `stale: true`. Every piece worked — and
+  the net effect was a five-week-old wrong number displayed with the same
+  confidence as live ones, because nothing rendered the flag. Graceful
+  degradation only counts as graceful if the degraded state is *visible*.
+  Design the fallback and its indicator in the same change, never separately.
+
+- **Audit the whole manifest, not the interesting part of it.** July's series
+  audit found four dead category ids, fixed them, and verified "0 stale
+  categories" — a true statement that quietly excluded the headline and core
+  macro nodes, which sit outside the `CATEGORIES` loop. The method was right;
+  the scope was drawn around the part that had already broken. When validating
+  a manifest, enumerate it programmatically (`allSeries()`) rather than by the
+  category you happen to be thinking about.
+
+- **`CPILFESNS` does not exist on FRED; the NSA core id is `CPILFENS`.** The
+  `S`-for-seasonal convention that gives `CPIAUCNS`/`CPIAUCSL` its symmetry does
+  not extend to the less-food-and-energy series. Confirm every id resolves
+  (`fredgraph.csv?id=<ID>` → HTTP 200, not a 404 HTML page) before trusting it;
+  a plausible-looking id is not a real one.
+
+- **The build log had the answer all along.** `fetch-fred.mjs` prints
+  `N/M series live` on every run — it was reporting 38/39 for five weeks and
+  nobody read it. A counter nobody looks at is not monitoring. Either fail the
+  build on the condition or surface it where someone will see it.
+
+
 ## 2026-05-21 — Scaffolding a single-component dashboard onto GitHub Pages
 
 - **A `export default` component drops in with zero glue.** The source
