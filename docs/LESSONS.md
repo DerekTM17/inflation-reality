@@ -3,6 +3,27 @@
 Durable, reusable takeaways from building this project — the things worth
 remembering next time, not a play-by-play. Newest first.
 
+## 2026-09-01 — Adding a source with a different cadence
+
+- **A helper that looks generic can be silently monthly-only.** `avgPrice()` reads
+  like "get current and year-ago price", but it finds the year-ago value with
+  `map.get(shiftMonths(d, -12))` — an exact `YYYY-MM-01` key lookup. Point it at a
+  weekly series and it returns `yearAgo: null` forever, with no error. Before
+  reusing a date helper on a new frequency, check whether it matches keys exactly
+  or searches; exact-key lookups only work when every series shares one grid.
+
+- **Nearest-match needs a tolerance, or it lies.** `weeklyPrice()` picks the
+  observation closest to 365 days back — which, given a two-month history, would
+  happily return the oldest point as "a year ago". The 10-day guard is what makes
+  a missing comparison read as null instead of a confident wrong number. Same
+  lesson as the stale-fallback bug above, one layer down.
+
+- **A second source is worth more when it overlaps the first.** The tempting move
+  was a new dataset covering new goods. Picking EIA fuel — goods the BLS table
+  *already* lists — means the two numbers can be put side by side, which both
+  cross-checks BLS and exposes how stale the monthly figure is. Overlap is the
+  feature, not redundancy.
+
 ## 2026-09-01 — A resilience layer hides the failure it handles
 
 - **A silent fallback is a silent bug.** `assemblePayload` correctly detected
