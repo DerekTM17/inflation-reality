@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-01T19:54:14.434Z",
+  "generatedAt": "2026-09-01T20:10:17.046Z",
   "referenceMonth": "2026-07",
   "referenceMonthLabel": "July 2026",
   "headline": {
@@ -116,6 +116,10 @@
     "APU000074714": {
       "current": 4.094,
       "yearAgo": 3.285
+    },
+    "APU000074717": {
+      "current": 5.077,
+      "yearAgo": 3.746
     },
     "APU000072610": {
       "current": 0.197,
