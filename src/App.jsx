@@ -516,6 +516,13 @@ export default function InflationTracker() {
               </div>
             </div>
             <StaleNote labels={staleLabels([data.headline, data.core])} />
+            {data.yoyGap && (
+              <div style={{ fontSize: 11, color: "#888", marginTop: 8, fontStyle: "italic" }}>
+                Why {data.referenceMonthLabel}? The newest CPI is for {data.yoyGap.latestMonthLabel}, but its 12-month change
+                can't be calculated: no figure was published for {data.yoyGap.missingMonthLabel}. These are the most recent
+                numbers with a full year to compare against.
+              </div>
+            )}
 
             {/* ── Row 2: Charts side by side ── */}
             <div className="ir-grid-2" style={{ display: "grid", gap: 16, marginBottom: 20 }}>

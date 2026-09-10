@@ -75,6 +75,9 @@ async function main() {
   mkdirSync(resolve(ROOT, "public"), { recursive: true });
   writeFileSync(resolve(ROOT, "public/cpi.json"), JSON.stringify(payload, null, 2) + "\n");
   console.log(`Wrote public/cpi.json — reference month ${payload.referenceMonth}, ${successes}/${series.length} series live.`);
+  if (payload.yoyGap) {
+    console.log(`Note: ${payload.yoyGap.latestMonthLabel} has no year-ago figure (${payload.yoyGap.missingMonthLabel} was never published), so CPI figures are for ${payload.referenceMonthLabel}.`);
+  }
 }
 
 main().catch(err => { console.error(err); process.exit(1); });

@@ -44,6 +44,7 @@ export function buildViewData(catalog, dynamic) {
     generatedAt: dynamic.generatedAt ?? null,
     referenceMonth: dynamic.referenceMonth ?? null,
     referenceMonthLabel: dynamic.referenceMonthLabel ?? "",
+    yoyGap: dynamic.yoyGap ?? null,
     headline: macro(HEADLINE, dynamic.headline),
     core: macro(CORE, dynamic.core),
     categories,

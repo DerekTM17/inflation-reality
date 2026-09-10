@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {
   parseObservations, shiftMonths, computeYoY, computeMoM,
   computeMoMAnnualized, buildTrend, avgPrice, monthLabel, referenceMonthLabel,
-  latestValue, weeklyPrice, weekLabel,
+  latestValue, weeklyPrice, weekLabel, yoyAnchorDate,
 } from "./compute.mjs";
 
 // 14 monthly points; Oct/Nov 2025 missing (".") to exercise gap handling.
@@ -126,4 +126,39 @@ test("weeklyPrice ignores trailing nulls when picking the current reading", () =
 
 test("weekLabel renders a day-level date", () => {
   assert.equal(weekLabel("2026-08-31"), "Aug 31, 2026");
+});
+
+// ── Year-over-year anchor month ───────────────────────────────────────────
+// Aug 2025 – Oct 2026 with October 2025 never published: October 2026 has no
+// year-ago month, which is exactly what the November 2026 builds will see.
+const shutdownGap = Array.from({ length: 15 }, (_, i) => {
+  const date = shiftMonths("2025-08-01", i);
+  return { date, value: date === "2025-10-01" ? "." : String(100 + i) };
+});
+
+test("yoyAnchorDate is the latest month when its year-over-year is computable", () => {
+  assert.equal(yoyAnchorDate(parseObservations(raw)), "2026-03-01");
+});
+
+test("yoyAnchorDate steps back past a latest month with no year-ago figure", () => {
+  const obs = parseObservations(shutdownGap);
+  assert.equal(computeYoY(obs), null);               // the problem: Oct 2026 vs missing Oct 2025
+  assert.equal(yoyAnchorDate(obs), "2026-09-01");
+});
+
+test("yoyAnchorDate returns the latest month when nothing nearby is computable", () => {
+  // Five months of history: no month has a year-ago figure, so the caller sees the
+  // failure (null YoY → stale) instead of a silently older month.
+  assert.equal(yoyAnchorDate(parseObservations(raw.slice(-5))), "2026-03-01");
+  assert.equal(yoyAnchorDate([]), null);
+});
+
+test("compute functions honour an explicit anchor month", () => {
+  const obs = parseObservations(shutdownGap);
+  // Sep 2026 = 113, Aug 2026 = 112, Sep 2025 = 101
+  assert.equal(computeYoY(obs, "2026-09-01"), 11.9);        // 113/101 - 1
+  assert.equal(computeMoM(obs, "2026-09-01"), 0.9);         // 113/112 - 1
+  assert.equal(computeMoMAnnualized(obs, "2026-09-01"), 11.3);
+  assert.deepEqual(avgPrice(obs, "2026-09-01"), { current: 113, yearAgo: 101 });
+  assert.equal(buildTrend(obs, 12, "2026-09-01").at(-1).month, "Sep 26");
 });

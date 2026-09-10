@@ -3,6 +3,7 @@
 import {
   parseObservations, computeYoY, computeMoM, computeMoMAnnualized,
   buildTrend, avgPrice, latestValue, referenceMonthLabel, weeklyPrice, weekLabel,
+  yoyAnchorDate, shiftMonths,
 } from "./compute.mjs";
 
 // latestDateLabel isn't exported by compute; derive reference month from the headline series here.
@@ -18,16 +19,30 @@ export function assemblePayload({ observationsBySeries, catalog, fallback, gener
   const fb = fallback || {};
 
   const headObs = obs(catalog.HEADLINE.seriesId);
-  const refDate = latestNonNullDate(headObs);
+  const latestHeadDate = latestNonNullDate(headObs);
+  // Normally the latest month. When that month has no year-ago figure (every CPI series is
+  // missing October 2025, so October 2026 can't produce a year-over-year change), this steps
+  // back to the newest month that can, and yoyGap records why so the page can say so.
+  const refDate = yoyAnchorDate(headObs);
+  const yoyGap = latestHeadDate && refDate && refDate !== latestHeadDate
+    ? {
+        latestMonth: latestHeadDate.slice(0, 7),
+        latestMonthLabel: referenceMonthLabel(latestHeadDate),
+        missingMonthLabel: referenceMonthLabel(shiftMonths(latestHeadDate, -12)),
+      }
+    : null;
+  // Pin CPI series to the reference month only when there IS a gap. Otherwise each series
+  // keeps its own latest month, as before — FRED can post one release's series hours apart.
+  const anchor = yoyGap ? refDate : undefined;
   const referenceMonth = refDate ? refDate.slice(0, 7) : (fb.referenceMonth || "");
   const referenceMonthLabelStr = refDate ? referenceMonthLabel(refDate) : (fb.referenceMonthLabel || "");
 
   const macro = (spec, fbNode = {}) => {
     const level = obs(spec.seriesId);
     const sa = obs(spec.momSeriesId);
-    const yoy = computeYoY(level);
-    const mom = computeMoM(sa);
-    const momAnnualized = computeMoMAnnualized(sa);
+    const yoy = computeYoY(level, anchor);
+    const mom = computeMoM(sa, anchor);
+    const momAnnualized = computeMoMAnnualized(sa, anchor);
     // headline/core draw from two series (yoy from seriesId, mom from momSeriesId);
     // if EITHER sub-series had to fall back, the entry is stale — not only when both fail.
     const usedFallback = yoy == null || mom == null;
@@ -41,20 +56,22 @@ export function assemblePayload({ observationsBySeries, catalog, fallback, gener
 
   const categories = {};
   for (const c of catalog.CATEGORIES) {
-    const yoy = computeYoY(obs(c.seriesId));
+    const yoy = computeYoY(obs(c.seriesId), anchor);
     if (yoy == null) categories[c.id] = { yoy: fb.categories?.[c.id]?.yoy ?? null, stale: true };
     else categories[c.id] = { yoy };
   }
 
   const avgPrices = {};
   for (const p of catalog.AVG_PRICE_ITEMS) {
-    const { current, yearAgo } = avgPrice(obs(p.seriesId));
+    const { current, yearAgo } = avgPrice(obs(p.seriesId), anchor);
     if (current == null) avgPrices[p.seriesId] = { ...(fb.avgPrices?.[p.seriesId] || { current: null, yearAgo: null }), stale: true };
     else avgPrices[p.seriesId] = { current, yearAgo };
   }
 
-  const trend = headObs.length ? buildTrend(headObs, 12) : (fb.trend || []);
+  const trend = headObs.length ? buildTrend(headObs, 12, anchor) : (fb.trend || []);
 
+  // Alt measures and weekly fuel keep their own latest dates: they come from other
+  // publishers (BEA, the regional Feds, EIA) on other schedules, not the BLS CPI release.
   const altMeasures = {};
   for (const m of catalog.ALT_MEASURES || []) {
     const series = obs(m.seriesId);
@@ -74,6 +91,7 @@ export function assemblePayload({ observationsBySeries, catalog, fallback, gener
     generatedAt,
     referenceMonth,
     referenceMonthLabel: referenceMonthLabelStr,
+    ...(yoyGap ? { yoyGap } : {}),
     headline: macro(catalog.HEADLINE, fb.headline),
     core: macro(catalog.CORE, fb.core),
     categories,

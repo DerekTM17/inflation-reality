@@ -33,9 +33,11 @@ function latestDate(observations) {
 
 function round1(n) { return Math.round(n * 10) / 10; }
 
-export function computeYoY(observations) {
+// The monthly functions below take an optional `anchor` (a YYYY-MM-01 date) to compute
+// for a specific month instead of the latest one — see yoyAnchorDate.
+export function computeYoY(observations, anchor) {
   const map = toMap(observations);
-  const d = latestDate(observations);
+  const d = anchor ?? latestDate(observations);
   if (!d) return null;
   const now = map.get(d);
   const prior = map.get(shiftMonths(d, -12));
@@ -43,9 +45,27 @@ export function computeYoY(observations) {
   return round1((now / prior - 1) * 100);
 }
 
-export function computeMoM(observations) {
+// The month a year-over-year figure should be reported for: the latest month, unless it
+// has no year-ago observation (BLS never published October 2025, so October 2026 can't be
+// compared), in which case step back up to maxLookback months to the newest month that can.
+// If none can, return the latest month anyway, so the caller's YoY comes back null and the
+// failure stays visible instead of quietly reporting an older month.
+export function yoyAnchorDate(observations, maxLookback = 2) {
+  const latest = latestDate(observations);
+  if (!latest) return null;
   const map = toMap(observations);
-  const d = latestDate(observations);
+  for (let i = 0; i <= maxLookback; i++) {
+    const d = shiftMonths(latest, -i);
+    const now = map.get(d);
+    const prior = map.get(shiftMonths(d, -12));
+    if (now != null && prior != null && prior !== 0) return d;
+  }
+  return latest;
+}
+
+export function computeMoM(observations, anchor) {
+  const map = toMap(observations);
+  const d = anchor ?? latestDate(observations);
   if (!d) return null;
   const now = map.get(d);
   const prev = map.get(shiftMonths(d, -1));
@@ -53,9 +73,9 @@ export function computeMoM(observations) {
   return round1((now / prev - 1) * 100);
 }
 
-export function computeMoMAnnualized(observations) {
+export function computeMoMAnnualized(observations, anchor) {
   const map = toMap(observations);
-  const d = latestDate(observations);
+  const d = anchor ?? latestDate(observations);
   if (!d) return null;
   const now = map.get(d);
   const prev = map.get(shiftMonths(d, -1));
@@ -63,9 +83,9 @@ export function computeMoMAnnualized(observations) {
   return round1(((now / prev) ** 12 - 1) * 100);
 }
 
-export function buildTrend(observations, count = 12) {
+export function buildTrend(observations, count = 12, anchor) {
   const map = toMap(observations);
-  const d = latestDate(observations);
+  const d = anchor ?? latestDate(observations);
   if (!d) return [];
   const out = [];
   for (let i = count - 1; i >= 0; i--) {
@@ -87,9 +107,9 @@ export function latestValue(observations) {
   return null;
 }
 
-export function avgPrice(observations) {
+export function avgPrice(observations, anchor) {
   const map = toMap(observations);
-  const d = latestDate(observations);
+  const d = anchor ?? latestDate(observations);
   if (!d) return { current: null, yearAgo: null };
   const current = map.get(d) ?? null;
   const yearAgo = map.get(shiftMonths(d, -12)) ?? null;

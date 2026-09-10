@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { assemblePayload, staleMacroKeys } from "./assemble.mjs";
+import { shiftMonths } from "./compute.mjs";
 
 const catalog = {
   HEADLINE: { key: "headline", seriesId: "CPIAUCNS", momSeriesId: "CPIAUCSL" },
@@ -137,4 +138,37 @@ test("staleMacroKeys: flags a stale core, and both when both fell back", () => {
 test("staleMacroKeys: treats a missing node as stale", () => {
   assert.deepEqual(staleMacroKeys({}), ["headline", "core"]);
   assert.deepEqual(staleMacroKeys({ headline: { yoy: 1 } }), ["core"]);
+});
+
+// Every BLS CPI series is missing October 2025 (never published). Once October 2026
+// is the latest month, no CPI series can produce an October year-over-year change.
+const gapSeries = (start, step) =>
+  Array.from({ length: 15 }, (_, i) => {
+    const date = shiftMonths("2025-08-01", i);
+    return { date, value: date === "2025-10-01" ? "." : String(start + i * step) };
+  });
+
+test("yoyGap: a latest month with no year-ago figure anchors CPI numbers to the last computable month", () => {
+  const gapObs = {
+    ...observationsBySeries,
+    CPIAUCNS: gapSeries(100, 0.3), CPIAUCSL: gapSeries(100, 0.3),
+    CPILFENS: gapSeries(100, 0.2), CPILFESL: gapSeries(100, 0.2),
+    CUUR0000SETB01: gapSeries(200, 1), APU0000708111: gapSeries(5, 1),
+  };
+  const p = assemblePayload({ observationsBySeries: gapObs, catalog, fallback: null, generatedAt: "T" });
+  assert.equal(p.referenceMonth, "2026-09");
+  assert.equal(p.referenceMonthLabel, "September 2026");
+  assert.deepEqual(p.yoyGap, {
+    latestMonth: "2026-10", latestMonthLabel: "October 2026", missingMonthLabel: "October 2025",
+  });
+  assert.deepEqual(staleMacroKeys(p), []);
+  assert.equal(p.categories.gas.yoy, 6);                       // Sep 2026 213 vs Sep 2025 201
+  assert.equal(p.categories.gas.stale, undefined);
+  assert.deepEqual(p.avgPrices.APU0000708111, { current: 18, yearAgo: 6 });
+  assert.equal(p.trend.at(-1).month, "Sep 26");
+});
+
+test("yoyGap: absent when the latest month has a year-ago figure", () => {
+  const p = assemblePayload({ observationsBySeries, catalog, fallback: null, generatedAt: "T" });
+  assert.equal(p.yoyGap, undefined);
 });

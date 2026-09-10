@@ -80,6 +80,12 @@ test("staleLabels: picks label for categories/altMeasures/weeklyPrices, item for
   );
 });
 
+test("buildViewData passes a yoyGap through, and null when there isn't one", () => {
+  const yoyGap = { latestMonth: "2026-10", latestMonthLabel: "October 2026", missingMonthLabel: "October 2025" };
+  assert.deepEqual(buildViewData(catalog, { ...dynamic, yoyGap }).yoyGap, yoyGap);
+  assert.equal(buildViewData(catalog, dynamic).yoyGap, null);
+});
+
 test("staleLabels: tolerates an empty or missing list", () => {
   assert.deepEqual(staleLabels([]), []);
   assert.deepEqual(staleLabels(undefined), []);
