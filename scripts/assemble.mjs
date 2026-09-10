@@ -83,3 +83,14 @@ export function assemblePayload({ observationsBySeries, catalog, fallback, gener
     trend,
   };
 }
+
+// Which macro nodes (headline/core) are running on a fallback value rather than
+// a fresh fetch. Unlike categories/prices/alt measures, these two are load-bearing
+// for the whole dashboard, so the build treats a stale one as fatal (see fetch-fred.mjs).
+// A missing node (e.g. a malformed payload) counts as stale too, not healthy.
+export function staleMacroKeys(payload) {
+  return ["headline", "core"].filter((key) => {
+    const node = payload?.[key];
+    return !node || node.stale === true;
+  });
+}

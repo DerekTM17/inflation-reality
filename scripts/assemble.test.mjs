@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { assemblePayload } from "./assemble.mjs";
+import { assemblePayload, staleMacroKeys } from "./assemble.mjs";
 
 const catalog = {
   HEADLINE: { key: "headline", seriesId: "CPIAUCNS", momSeriesId: "CPIAUCSL" },
@@ -109,4 +109,32 @@ test("weeklyPrices: missing series falls back with stale", () => {
   const p = assemblePayload({ observationsBySeries: {}, catalog, fallback, generatedAt: "T" });
   assert.equal(p.weeklyPrices.diesel.current, 4.44);
   assert.equal(p.weeklyPrices.diesel.stale, true);
+});
+
+test("staleMacroKeys: healthy payload reports no stale macro keys", () => {
+  const p = assemblePayload({ observationsBySeries, catalog, fallback: null, generatedAt: "T" });
+  assert.deepEqual(staleMacroKeys(p), []);
+});
+
+test("staleMacroKeys: flags a stale headline (one sub-series fell back)", () => {
+  const fallback = { headline: { mom: 7.7 } };
+  const p = assemblePayload({
+    observationsBySeries: { ...observationsBySeries, CPIAUCSL: [] },
+    catalog, fallback, generatedAt: "T",
+  });
+  assert.deepEqual(staleMacroKeys(p), ["headline"]);
+});
+
+test("staleMacroKeys: flags a stale core, and both when both fell back", () => {
+  const fallback = { core: { yoy: 2.6, mom: 0.2 } };
+  const p = assemblePayload({
+    observationsBySeries: { ...observationsBySeries, CPILFENS: [] },
+    catalog, fallback, generatedAt: "T",
+  });
+  assert.deepEqual(staleMacroKeys(p), ["core"]);
+});
+
+test("staleMacroKeys: treats a missing node as stale", () => {
+  assert.deepEqual(staleMacroKeys({}), ["headline", "core"]);
+  assert.deepEqual(staleMacroKeys({ headline: { yoy: 1 } }), ["core"]);
 });

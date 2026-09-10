@@ -3,7 +3,7 @@
 import { writeFileSync, readFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
-import { assemblePayload } from "./assemble.mjs";
+import { assemblePayload, staleMacroKeys } from "./assemble.mjs";
 // Import the whole catalog namespace and pass it straight through, so adding a new
 // catalog export (e.g. a new measure group) can never be silently dropped here.
 import * as catalog from "../src/data/catalog.js";
@@ -55,6 +55,22 @@ async function main() {
     fallback,
     generatedAt: new Date().toISOString(),
   });
+
+  // Headline/core are load-bearing for the whole dashboard — unlike categories/prices/alt
+  // measures, which are allowed to degrade to a fallback value, a stale macro node fatals
+  // the build rather than shipping a frozen number silently (this happened for 5 weeks
+  // when CPILFESNS quietly 404'd — see the comment on CORE in catalog.js).
+  const staleKeys = staleMacroKeys(payload);
+  if (staleKeys.length > 0) {
+    const idsFor = (key) => {
+      const spec = key === "headline" ? catalog.HEADLINE : catalog.CORE;
+      return `${spec.seriesId} (yoy), ${spec.momSeriesId} (mom)`;
+    };
+    console.error(
+      `FATAL: macro series fell back to a cached value — ${staleKeys.map(k => `${k} [${idsFor(k)}]`).join(", ")}. Not overwriting cpi.json.`,
+    );
+    process.exit(1);
+  }
 
   mkdirSync(resolve(ROOT, "public"), { recursive: true });
   writeFileSync(resolve(ROOT, "public/cpi.json"), JSON.stringify(payload, null, 2) + "\n");
