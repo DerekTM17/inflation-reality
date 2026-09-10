@@ -10,6 +10,7 @@ Items we're actively working on or planning to do imminently.
 - [x] **[feat]** surface `stale` flags in the UI when a series falls back — DONE 2026-09-10: `staleLabels()` + `StaleNote` under every section that shows fallback-able figures. Plain text for now; restyle in the redesign. <!-- added 2026-07-10, promoted 2026-09-01, done 2026-09-10 -->
 - [x] **[bug]** `fetch-fred.mjs` should fail the build when a *macro* series (headline/core) falls back — DONE 2026-09-10: `staleMacroKeys()` fatals before cpi.json is written. Paired with `yoyAnchorDate()` so the missing October 2025 doesn't trip it in November 2026. <!-- added 2026-09-01, done 2026-09-10 -->
 - [ ] **[feat]** calculator-first redesign: "how inflation hits you" reframe, dollar inputs + household situation choices (housing, getting around, commute, heating, daycare, tuition, health insurance via your own renewal increase), non-generic visual identity, real buttons with pressed/focus states. Brainstorm in progress 2026-09-10; spec to docs/superpowers/specs/. <!-- added 2026-09-10 -->
+- [ ] **[ops]** register a free BLS Public Data API key (bls.gov/developers) and add it as a GitHub Actions secret — 7 of the redesign series are NOT on FRED (car insurance SETE, daycare SEEB03, tuition SEEB01, fuel oil SEHE01, intracity transit SETG02, health insurance SEME, other motor fuels SETB02); keyless tier is 25 requests/day. USER TASK. <!-- added 2026-09-10 -->
 
 ## Soon
 
