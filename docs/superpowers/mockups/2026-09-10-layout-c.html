@@ -1,0 +1,701 @@
+<title>Your Inflation Receipt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Martian+Mono:wght@400;600&family=Public+Sans:wght@400;600;700&display=swap">
+<style>
+  :root {
+    --paper: #F2F3EF;
+    --paper-2: #E7E9E3;
+    --ink: #17191E;
+    --ink-2: #4B5058;
+    --rule: #CDD1C9;
+    --field: #FFFFFF;
+    --btn: #FFFFFF;
+    --btn-hover: #F6F6F1;
+    --btn-edge: #17191E;
+    --receipt: #FFFEFA;
+    --receipt-ink: #1E1F22;
+    --receipt-ink-2: #5C5E63;
+    --tag: #F5C542;
+    --tag-ink: #17191E;
+    --up: #B3261E;
+    --up-bar: #D4574E;
+    --you-bar: #17191E;
+    --us-bar: #A3A89F;
+    --shadow: rgba(23, 25, 30, 0.16);
+
+    --display: "Big Shoulders Display", "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+    --body: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: "Martian Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #111316; --paper-2: #1A1D21; --ink: #ECEDE7; --ink-2: #A6ABB2; --rule: #2E3238;
+      --field: #1A1D21; --btn: #1A1D21; --btn-hover: #23272C; --btn-edge: #5A606A;
+      --receipt: #1F2226; --receipt-ink: #EDEDE8; --receipt-ink-2: #A2A6AC;
+      --tag: #E9B93A; --tag-ink: #141414; --up: #F2766E; --up-bar: #D9665E;
+      --you-bar: #ECEDE7; --us-bar: #5F646B; --shadow: rgba(0, 0, 0, 0.55);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #111316; --paper-2: #1A1D21; --ink: #ECEDE7; --ink-2: #A6ABB2; --rule: #2E3238;
+    --field: #1A1D21; --btn: #1A1D21; --btn-hover: #23272C; --btn-edge: #5A606A;
+    --receipt: #1F2226; --receipt-ink: #EDEDE8; --receipt-ink-2: #A2A6AC;
+    --tag: #E9B93A; --tag-ink: #141414; --up: #F2766E; --up-bar: #D9665E;
+    --you-bar: #ECEDE7; --us-bar: #5F646B; --shadow: rgba(0, 0, 0, 0.55);
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 16px/1.5 var(--body);
+    padding-inline: 16px;
+    padding-block: 0 110px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  .mock-note {
+    max-width: 1080px; margin: 12px auto 0;
+    font-size: 13px; color: var(--ink-2);
+    border: 1px dashed var(--rule); padding: 6px 10px; border-radius: 4px;
+  }
+  .ph { font-family: var(--mono); color: var(--ink-2); }
+
+  /* ── Header + tabs ── */
+  .site { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 24px; padding-block: 18px 0; border-bottom: 2px solid var(--ink); }
+  .brand { font: 800 30px/1 var(--display); letter-spacing: 0.01em; color: var(--ink); text-decoration: none; padding-bottom: 10px; }
+  .tabs-scroll { overflow-x: auto; max-width: 100%; }
+  .tabs { display: flex; gap: 4px; }
+  .tab {
+    font: 600 15px/1 var(--body); color: var(--ink-2); background: none; border: 0;
+    padding: 12px 12px 13px; border-bottom: 4px solid transparent; cursor: pointer; white-space: nowrap;
+    border-radius: 4px 4px 0 0;
+  }
+  .tab:hover { color: var(--ink); background: var(--paper-2); }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+
+  /* ── Calculator layout ── */
+  .calc {
+    display: grid; gap: 32px; padding-block: 28px 0;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "intro" "choices" "receipt" "amounts";
+  }
+  .intro { grid-area: intro; display: grid; gap: 14px; }
+  .choices-area { grid-area: choices; display: grid; gap: 16px; scroll-margin-top: 16px; }
+  .choices { display: grid; gap: 22px; }
+  .receipt-col { grid-area: receipt; filter: drop-shadow(0 6px 14px var(--shadow)); align-self: start; scroll-margin-top: 16px; }
+  .amounts { grid-area: amounts; }
+  @media (min-width: 900px) {
+    .calc { grid-template-columns: minmax(0, 1fr) 390px; column-gap: 56px; grid-template-areas: "intro receipt" "choices receipt" "amounts receipt"; align-items: start; }
+    .receipt-col { position: sticky; top: 16px; }
+    .pinbar { display: none !important; }
+  }
+
+  h1 { font: 800 clamp(40px, 10vw, 60px)/0.95 var(--display); margin: 0; text-wrap: balance; letter-spacing: 0.005em; }
+  .lede { margin: 0; max-width: 34em; font-size: 17px; color: var(--ink-2); }
+  .lede strong { color: var(--ink); }
+  .start-label { font-weight: 600; font-size: 15px; margin: 6px 0 0; }
+
+  /* Text-style actions: underlined, so they read as links next to the chunky option buttons */
+  .linkish {
+    background: none; border: 0; padding: 2px 0; cursor: pointer; justify-self: start;
+    font: 600 15px/1.3 var(--body); color: var(--ink); text-decoration: underline; text-underline-offset: 3px;
+  }
+  .linkish:hover { text-decoration-thickness: 2px; }
+  .saved-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; font-size: 14px; color: var(--ink-2); margin: 0; }
+  .saved-row .linkish { font-size: 14px; }
+
+  /* ── Buttons that look and act like buttons ── */
+  .opts, .profiles { display: flex; flex-wrap: wrap; gap: 10px; }
+  .opt {
+    font: 600 15px/1.2 var(--body); color: var(--ink); background: var(--btn);
+    border: 2px solid var(--btn-edge); border-radius: 6px; padding: 10px 14px;
+    box-shadow: 0 3px 0 var(--btn-edge); cursor: pointer;
+    transition: transform 70ms ease, box-shadow 70ms ease, background-color 120ms ease;
+  }
+  .opt.sm { font-size: 14px; padding: 8px 12px; }
+  .opt:hover { background: var(--btn-hover); }
+  .opt:active { transform: translateY(3px); box-shadow: 0 0 0 var(--btn-edge); }
+  .opt[aria-pressed="true"] {
+    background: var(--ink); color: var(--paper); border-color: var(--ink);
+    transform: translateY(2px); box-shadow: 0 1px 0 var(--ink);
+  }
+  .opt[aria-pressed="true"]::before { content: "\2713\00a0"; }
+  .opt:focus-visible, .tab:focus-visible, input:focus-visible, .linkish:focus-visible,
+  .pin-main:focus-visible, .pin-edit:focus-visible, .r-more:focus-visible, .r-link:focus-visible { outline: 3px solid var(--tag); outline-offset: 2px; }
+
+  fieldset.group { border: 0; margin: 0; padding: 0; min-width: 0; }
+  fieldset.group legend { font: 700 17px/1.3 var(--body); padding: 0; margin-bottom: 10px; }
+  .help { margin: 12px 0 0; font-size: 14px; color: var(--ink-2); max-width: 36em; }
+  .help b { color: var(--ink); }
+  .filled-note { margin: 0; font-size: 14px; color: var(--ink-2); }
+
+  /* Returning visitor: answers folded into one line */
+  .summary { display: grid; gap: 10px; background: var(--btn); border: 2px solid var(--ink); border-radius: 8px; padding: 14px 16px; }
+  .summary-title { margin: 0; font: 700 17px/1.2 var(--body); }
+  .summary-list { margin: 0; color: var(--ink-2); }
+  .summary-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 4px; }
+
+  /* ── Receipt ── */
+  .receipt {
+    background: var(--receipt); color: var(--receipt-ink);
+    font: 400 12.5px/1.55 var(--mono);
+    padding: 22px 20px 34px;
+    -webkit-mask: radial-gradient(circle 7px at 9px 100%, transparent 97%, #000 100%) 0 0 / 18px 100% repeat-x;
+            mask: radial-gradient(circle 7px at 9px 100%, transparent 97%, #000 100%) 0 0 / 18px 100% repeat-x;
+  }
+  .r-store { text-align: center; font-weight: 600; letter-spacing: 0.04em; }
+  .r-meta { display: flex; justify-content: space-between; color: var(--receipt-ink-2); margin-top: 4px; }
+  .r-cut { border: 0; border-top: 1.5px dashed var(--receipt-ink-2); margin: 14px 0; opacity: 0.7; }
+  .r-title { font: 800 30px/1 var(--display); letter-spacing: 0.01em; margin: 0; }
+  .r-sub { margin: 6px 0 0; color: var(--receipt-ink-2); font-size: 12px; }
+  .r-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+  .r-line { display: grid; grid-template-columns: minmax(0, 1fr) auto 5.8em; column-gap: 10px; align-items: baseline; font-variant-numeric: tabular-nums; }
+  .r-name { overflow-wrap: anywhere; }
+  .r-rate { color: var(--receipt-ink-2); text-align: right; }
+  .r-amt { text-align: right; font-weight: 600; }
+  .r-bar { grid-column: 1 / -1; height: 3px; margin-top: 3px; background: var(--up-bar); border-radius: 0 2px 2px 0; width: var(--w); }
+  .r-fixed { font-size: 10.5px; border: 1px solid var(--receipt-ink-2); border-radius: 3px; padding: 0 4px; margin-left: 6px; color: var(--receipt-ink-2); white-space: nowrap; }
+  .r-rest .r-name { color: var(--receipt-ink-2); }
+  .r-more {
+    margin-top: 10px; width: 100%; font: 600 12px/1 var(--mono); color: var(--receipt-ink);
+    background: none; border: 1.5px dashed var(--receipt-ink-2); border-radius: 4px; padding: 8px; cursor: pointer;
+  }
+  .r-more:hover { background: var(--paper-2); }
+  .r-total { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; }
+  .r-total-label { font-weight: 600; letter-spacing: 0.04em; padding-bottom: 10px; }
+  .r-total-amt { font: 800 58px/0.9 var(--display); font-variant-numeric: tabular-nums; }
+  .r-total-amt mark { background: var(--tag); color: var(--tag-ink); padding: 2px 8px 0; display: inline-block; }
+  .r-total-amt.bump mark { animation: bump 320ms ease-out; }
+  @keyframes bump { from { transform: scale(1.06); } to { transform: scale(1); } }
+  /* one shared grid so both bars start at the same x, whatever the label widths */
+  .r-compare { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; align-items: center; gap: 8px 10px; margin-top: 16px; font-variant-numeric: tabular-nums; }
+  .cmp { display: contents; }
+  .cmp-bar { display: block; height: 12px; border-radius: 0 4px 4px 0; width: var(--w); }
+  .cmp.you .cmp-bar { background: var(--you-bar); }
+  .cmp.us .cmp-bar { background: var(--us-bar); }
+  .cmp-val { text-align: right; font-weight: 600; }
+  .r-verdict { font: 600 15px/1.4 var(--body); margin: 16px 0 0; }
+  .r-link {
+    margin-top: 12px; background: none; border: 0; padding: 2px 0; cursor: pointer;
+    font: 600 12.5px/1.3 var(--mono); color: var(--receipt-ink); text-decoration: underline; text-underline-offset: 3px;
+  }
+  .r-foot { margin-top: 14px; color: var(--receipt-ink-2); font-size: 11px; }
+
+  /* ── Amounts ── */
+  .amounts h2 { font: 800 34px/1 var(--display); margin: 0; }
+  .amounts > p { margin: 8px 0 16px; color: var(--ink-2); max-width: 36em; }
+  .amt-list { display: grid; border-top: 1px solid var(--rule); }
+  .amt-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding-block: 12px; border-bottom: 1px solid var(--rule); }
+  .amt-label { display: grid; font-weight: 600; min-width: 0; }
+  .amt-rate { font-weight: 400; font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .amt-fixed { font: 600 17px/1 var(--body); font-variant-numeric: tabular-nums; }
+  .money { display: flex; align-items: center; gap: 6px; }
+  .money .cur { font-weight: 600; color: var(--ink-2); }
+  .money input {
+    width: 6.5em; font: 600 17px/1 var(--body); font-variant-numeric: tabular-nums; text-align: right;
+    color: var(--ink); background: var(--field); border: 2px solid var(--ink-2); border-radius: 5px; padding: 8px 10px;
+  }
+  .money input.pct { width: 4.2em; }
+  .per { font-size: 14px; color: var(--ink-2); }
+  .amt-sub { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 14px; color: var(--ink-2); }
+
+  /* ── Other tabs (placeholder) ── */
+  .other { padding-block: 40px; max-width: 40em; }
+  .other h1 { margin-bottom: 14px; }
+  .other p { color: var(--ink-2); font-size: 17px; margin: 0 0 12px; }
+
+  /* ── Pinned result bar (phones) ── */
+  .pinbar {
+    position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 5;
+    display: flex; align-items: stretch; gap: 8px; padding: 8px;
+    background: var(--ink); border-radius: 12px;
+    box-shadow: 0 8px 24px var(--shadow); transition: transform 200ms ease;
+  }
+  .pin-main {
+    flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: none; border: 0; color: var(--paper); cursor: pointer; text-align: left;
+    font: 600 13px/1.25 var(--body); padding: 4px 8px;
+  }
+  .pin-main strong { font: 800 26px/1 var(--display); color: var(--tag); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pin-edit { background: var(--paper); color: var(--ink); border: 0; border-radius: 8px; font: 700 14px/1 var(--body); padding: 0 16px; cursor: pointer; }
+  .pinbar.away { transform: translateY(160%); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .opt, .pinbar { transition: none; }
+    .r-total-amt.bump mark { animation: none; }
+  }
+</style>
+
+<p class="mock-note">Mockup for review, not the live site. Rates are BLS figures for July 2026; lines marked <span class="ph">&#9702;</span> use placeholder rates until those series are wired up. Your answers are saved only in this browser, so reload the page to see what a returning visitor gets.</p>
+
+<div class="wrap">
+  <header class="site">
+    <a class="brand" href="#">Inflation Reality</a>
+    <div class="tabs-scroll">
+      <nav class="tabs" role="tablist" aria-label="Sections">
+        <button type="button" class="tab" role="tab" id="tab-you" data-tab="you" aria-selected="true">Your inflation</button>
+        <button type="button" class="tab" role="tab" id="tab-bigger" data-tab="bigger" aria-selected="false">The bigger picture</button>
+        <button type="button" class="tab" role="tab" id="tab-prices" data-tab="prices" aria-selected="false">Price check</button>
+        <button type="button" class="tab" role="tab" id="tab-sources" data-tab="sources" aria-selected="false">Sources</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="calc" id="panel-you" role="tabpanel" aria-labelledby="tab-you">
+      <div class="intro">
+        <h1>How much has inflation cost you?</h1>
+        <p class="lede" id="lede"></p>
+        <p class="saved-row" id="saved-row" hidden>Your answers are saved in this browser only. <button type="button" class="linkish" id="start-over">Start over</button></p>
+        <p class="start-label" id="start-label">Start from someone like you</p>
+        <div class="profiles" id="profiles"></div>
+        <button type="button" class="linkish" id="skip-link">Skip the questions and see the national numbers</button>
+      </div>
+
+      <div class="choices-area" id="choices-area">
+        <div class="summary" id="summary" hidden>
+          <p class="summary-title">Your answers</p>
+          <p class="summary-list" id="summary-list"></p>
+          <div class="summary-actions">
+            <button type="button" class="opt sm" id="summary-change">Change my answers</button>
+            <button type="button" class="linkish" id="summary-reset">Start over</button>
+          </div>
+        </div>
+        <p class="filled-note" id="filled-note" hidden>We filled in the rest with common answers. Change any that don't fit.</p>
+        <form class="choices" id="choices" onsubmit="return false"></form>
+      </div>
+
+      <div class="receipt-col" id="receipt-col">
+        <div class="receipt" id="receipt"></div>
+      </div>
+
+      <section class="amounts" aria-labelledby="amounts-title">
+        <h2 id="amounts-title">What you spend each month</h2>
+        <p id="amounts-intro"></p>
+        <div class="amt-list" id="amount-rows"></div>
+      </section>
+    </section>
+
+    <section class="other" id="panel-other" role="tabpanel" hidden>
+      <h1 id="other-title"></h1>
+      <p id="other-body"></p>
+      <p><em>Not built in this mockup.</em></p>
+    </section>
+  </main>
+</div>
+
+<div class="pinbar" id="pinbar">
+  <button type="button" class="pin-main" id="pin-main" aria-label="Jump to the result">
+    <span id="pin-rate"></span>
+    <strong id="pin-amt"></strong>
+  </button>
+  <button type="button" class="pin-edit" id="pin-edit">Edit</button>
+</div>
+
+<script>
+  const NATIONAL = 3.4;
+  const STORE_KEY = "inflation-reality-mockup-v1";
+  const DOT = "◦", MID = "·";
+
+  // The national spending mix at $6,000 a month (shares = CPI relative importance).
+  // The live site's 10 categories cover ~79% of the basket; "rest of the basket" is a
+  // placeholder rate that makes the typical household land on the headline, as it must.
+  const TYPICAL = [
+    { id: "housing",   label: "Housing",                     rate: 3.2,  real: true,  monthly: 2184 },
+    { id: "groceries", label: "Groceries",                   rate: 2.7,  real: true,  monthly: 492 },
+    { id: "dining",    label: "Eating out",                  rate: 3.4,  real: true,  monthly: 318 },
+    { id: "energy",    label: "Home energy",                 rate: 5.0,  real: true,  monthly: 192 },
+    { id: "gasoline",  label: "Gas for the car",             rate: 24.6, real: true,  monthly: 180 },
+    { id: "health",    label: "Health care",                 rate: 1.7,  real: true,  monthly: 486 },
+    { id: "school",    label: "School and childcare",        rate: 2.7,  real: true,  monthly: 180 },
+    { id: "clothing",  label: "Clothing",                    rate: 3.9,  real: true,  monthly: 150 },
+    { id: "fun",       label: "Entertainment",               rate: 2.6,  real: true,  monthly: 318 },
+    { id: "other",     label: "Everything else",             rate: 3.1,  real: true,  monthly: 216 },
+    { id: "rest",      label: "Rest of the national basket", rate: 2.3,  real: false, monthly: 1284 },
+  ];
+
+  // rate = 12-month % change. real:false marks a placeholder rate (series not wired up yet).
+  const LINES = {
+    rent:      { label: "Rent", rate: 3.2, real: true, def: 1650 },
+    mortgage:  { label: "Mortgage payment", rate: 0, real: true, def: 1900, fixed: true },
+    homeIns:   { label: "Home insurance", rate: 6.0, real: false, def: 140 },
+    upkeep:    { label: "Home repairs", rate: 4.0, real: false, def: 130 },
+    groceries: { label: "Groceries", rate: 2.7, real: true, def: 620 },
+    dining:    { label: "Eating out", rate: 3.4, real: true, def: 220 },
+    gasoline:  { label: "Gas for the car", rate: 24.6, real: true, def: 190 },
+    charging:  { label: "Charging the car", rate: 5.0, real: true, def: 55 },
+    carIns:    { label: "Car insurance", rate: 7.0, real: false, def: 160 },
+    carUpkeep: { label: "Car repairs", rate: 5.0, real: false, def: 60 },
+    transit:   { label: "Bus and train fares", rate: 2.0, real: false, def: 90 },
+    electric:  { label: "Electricity", rate: 5.0, real: true, def: 110 },
+    heatGas:   { label: "Natural gas bill", rate: 6.0, real: false, def: 70 },
+    heatOil:   { label: "Heating oil", rate: 3.0, real: false, def: 120 },
+    daycare:   { label: "Daycare", rate: 4.5, real: false, def: 1100 },
+    tuition:   { label: "College tuition", rate: 2.7, real: true, def: 900 },
+    health:    { label: "Health insurance", rate: null, real: false, def: 180 },
+    doctor:    { label: "Doctor and pharmacy", rate: 1.7, real: true, def: 90 },
+    clothing:  { label: "Clothing", rate: 3.9, real: true, def: 80 },
+    fun:       { label: "Entertainment", rate: 2.6, real: true, def: 150 },
+    other:     { label: "Everything else", rate: 3.1, real: true, def: 250 },
+  };
+
+  const HEALTH_HELP = "<b>Use your renewal notice.</b> Enter the increase it shows below. The government's health insurance index tracks what insurers keep, not what you pay, so we don't use it.";
+  const GROUPS = [
+    { id: "housing", legend: "Your home", options: [["rent", "Rent"], ["mortgage", "Mortgage, fixed rate"], ["owned", "Own it outright"]],
+      help: { mortgage: "<b>Why your mortgage adds 0%:</b> the government's inflation rate leaves out mortgage payments, and a fixed-rate payment is the same as last year. Home insurance and repairs still go up.",
+              owned: "<b>No payment to count.</b> Home insurance and repairs still go up, so they're on your list." } },
+    { id: "car", legend: "Getting around", options: [["gas", "Gas car"], ["hybrid", "Hybrid"], ["ev", "Electric car"], ["none", "No car"]],
+      help: { ev: "<b>Charging counts as electricity.</b> Most people charge at home, so we use the price change for home electricity, not gas." } },
+    { id: "commute", legend: "Work", options: [["commute", "I commute"], ["home", "No commute"]] },
+    { id: "heat", legend: "Home heating", options: [["electric", "Electric"], ["gas", "Natural gas"], ["oil", "Heating oil"]] },
+    { id: "daycare", legend: "Kids in daycare", options: [["yes", "Yes"], ["no", "No"]] },
+    { id: "college", legend: "Paying college tuition", options: [["yes", "Yes"], ["no", "No"]] },
+    { id: "health", legend: "Health insurance", options: [["work", "Through work"], ["own", "I buy my own"], ["none", "No premium"]],
+      help: { work: HEALTH_HELP, own: HEALTH_HELP } },
+  ];
+  const SUMMARY = {
+    housing: { rent: "Rent", mortgage: "Fixed-rate mortgage", owned: "Own outright" },
+    car: { gas: "Gas car", hybrid: "Hybrid", ev: "Electric car", none: "No car" },
+    commute: { commute: "Commutes", home: "No commute" },
+    heat: { electric: "Electric heat", gas: "Gas heat", oil: "Oil heat" },
+    daycare: { yes: "Kids in daycare" },
+    college: { yes: "Paying tuition" },
+    health: { work: "Insurance through work", own: "Buys own insurance", none: "No premium" },
+  };
+  // Used when someone taps a single answer from the typical-household view.
+  const COMMON_CHOICES = { housing: "rent", car: "gas", commute: "commute", heat: "gas", daycare: "no", college: "no", health: "work" };
+
+  const PROFILES = {
+    typical: { label: "Typical U.S. household", typical: true },
+    renter:  { label: "Renter who drives", choices: { ...COMMON_CHOICES }, base: {} },
+    family:  { label: "Family with a mortgage", choices: { housing: "mortgage", car: "gas", commute: "commute", heat: "gas", daycare: "yes", college: "no", health: "work" },
+               base: { groceries: 1050, dining: 260, gasoline: 300, carIns: 230, clothing: 160, fun: 220, other: 380, health: 520 } },
+    retiree: { label: "Retired homeowner", choices: { housing: "owned", car: "hybrid", commute: "home", heat: "electric", daycare: "no", college: "no", health: "own" },
+               base: { groceries: 520, dining: 180, homeIns: 170, upkeep: 180, health: 420, doctor: 160, fun: 200, other: 260 } },
+    city:    { label: "City renter, no car", choices: { housing: "rent", car: "none", commute: "commute", heat: "electric", daycare: "no", college: "no", health: "work" },
+               base: { rent: 2100, groceries: 480, dining: 380, electric: 60, fun: 200 } },
+  };
+
+  const OTHER_TABS = {
+    bigger: ["The bigger picture", "How the other official measures compare, the 12-month trend, and later, how the U.S. stacks up against other countries. This moves here from today's dashboard."],
+    prices: ["Price check", "Today's average prices for eggs, milk, gas and more, next to a year ago, plus the EIA's weekly gas and diesel prices."],
+    sources: ["Sources", "Where every number comes from, with the series IDs you can look up yourself on FRED and the BLS site."],
+  };
+
+  const fresh = () => ({ mode: "typical", choices: null, base: {}, edits: {}, healthRate: 6, profile: "typical", showAll: false, collapsed: false, filledNote: false, returning: false });
+  let state = fresh();
+
+  // Returning visitor: restore saved answers and start folded into the summary line.
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+    if (saved && saved.mode === "personal" && saved.choices) {
+      state = { ...state, ...saved, collapsed: true, returning: true, showAll: false, filledNote: false };
+    }
+  } catch (e) { /* storage blocked or unreadable: start fresh */ }
+
+  function save() {
+    try {
+      if (state.mode === "personal") {
+        const { mode, choices, base, edits, healthRate, profile } = state;
+        localStorage.setItem(STORE_KEY, JSON.stringify({ mode, choices, base, edits, healthRate, profile }));
+      } else {
+        localStorage.removeItem(STORE_KEY);
+      }
+    } catch (e) { /* not saved; the page still works */ }
+  }
+
+  const $ = (s) => document.querySelector(s);
+  const money = (n) => "$" + Math.round(n).toLocaleString("en-US");
+  const pct = (n) => (n > 0 ? "+" : "") + n.toFixed(1) + "%";
+  const typical = () => state.mode === "typical";
+
+  function activeLines(c) {
+    const L = [];
+    if (c.housing === "rent") L.push("rent");
+    if (c.housing === "mortgage") L.push("mortgage", "homeIns", "upkeep");
+    if (c.housing === "owned") L.push("homeIns", "upkeep");
+    L.push("groceries", "dining");
+    if (c.car === "gas" || c.car === "hybrid") L.push("gasoline");
+    if (c.car === "ev") L.push("charging");
+    if (c.car === "none") L.push("transit"); else L.push("carIns", "carUpkeep");
+    L.push("electric");
+    if (c.heat === "gas") L.push("heatGas");
+    if (c.heat === "oil") L.push("heatOil");
+    if (c.daycare === "yes") L.push("daycare");
+    if (c.college === "yes") L.push("tuition");
+    if (c.health !== "none") L.push("health");
+    L.push("doctor", "clothing", "fun", "other");
+    return L;
+  }
+
+  // Filled-in amount for a line, before the person edits it. Choices nudge the defaults.
+  function defaultAmount(id) {
+    const c = state.choices;
+    let v = state.base[id] ?? LINES[id].def;
+    if (id === "gasoline" && c.car === "hybrid") v = v * 0.55;
+    if ((id === "gasoline" || id === "charging" || id === "transit") && c.commute === "home") v = v * 0.45;
+    if (id === "electric" && c.heat === "electric") v = v + 80;
+    if (id === "health" && c.health === "own" && state.base.health == null) v = 650;
+    return Math.round(v);
+  }
+  const amountFor = (id) => state.edits[id] ?? defaultAmount(id);
+
+  function compute() {
+    const src = typical()
+      ? TYPICAL.map((t) => ({ id: t.id, label: t.label, r: t.rate, monthly: t.monthly, real: t.real, fixed: false }))
+      : activeLines(state.choices).map((id) => ({
+          id, label: LINES[id].label, r: (id === "health" ? state.healthRate : LINES[id].rate) || 0,
+          monthly: amountFor(id), real: LINES[id].real, fixed: !!LINES[id].fixed,
+        }));
+    const lines = src.map((l) => {
+      const annual = l.monthly * 12;
+      // Today's spending already includes the rise, so a year ago the same things cost annual / (1 + r).
+      return { ...l, annual, extra: annual * l.r / (100 + l.r) };
+    });
+    const now = lines.reduce((s, l) => s + l.annual, 0);
+    const extra = lines.reduce((s, l) => s + l.extra, 0);
+    const prior = now - extra;
+    const rate = prior > 0 ? (now / prior - 1) * 100 : 0;
+    lines.sort((a, b) => b.extra - a.extra);
+    return { lines, extra, prior, rate, monthlyTotal: now / 12 };
+  }
+
+  // ── Rendering ──
+  function renderIntro() {
+    const personal = !typical();
+    $("#lede").innerHTML = state.returning && personal && state.collapsed
+      ? "Welcome back. Here's your number with the latest prices, for July 2026. Change anything that's different now."
+      : "The national rate is <strong>3.4%</strong>, but yours depends on what you spend money on. Tap what fits your household. Your numbers update as you go.";
+    $("#saved-row").hidden = !personal || state.collapsed;
+    const folded = state.collapsed;
+    $("#start-label").hidden = folded;
+    $("#profiles").hidden = folded;
+    $("#skip-link").hidden = folded;
+    document.querySelectorAll("[data-profile]").forEach((b) => b.setAttribute("aria-pressed", String(state.profile === b.dataset.profile)));
+  }
+
+  function renderProfiles() {
+    $("#profiles").innerHTML = Object.entries(PROFILES).map(([k, p]) =>
+      `<button type="button" class="opt sm" id="profile-${k}" data-profile="${k}" aria-pressed="false">${p.label}</button>`).join("");
+  }
+
+  function renderChoicesOnce() {
+    $("#choices").innerHTML = GROUPS.map((g) => `
+      <fieldset class="group">
+        <legend>${g.legend}</legend>
+        <div class="opts">${g.options.map(([v, l]) =>
+          `<button type="button" class="opt" id="opt-${g.id}-${v}" data-group="${g.id}" data-value="${v}" aria-pressed="false">${l}</button>`).join("")}</div>
+        <p class="help" id="help-${g.id}" hidden></p>
+      </fieldset>`).join("");
+  }
+
+  function renderChoices() {
+    $("#summary").hidden = !state.collapsed;
+    $("#choices").hidden = state.collapsed;
+    $("#filled-note").hidden = !(state.filledNote && !state.collapsed);
+    if (state.collapsed && state.choices) {
+      const parts = GROUPS.map((g) => SUMMARY[g.id][state.choices[g.id]]).filter(Boolean);
+      $("#summary-list").textContent = parts.join(` ${MID} `) + ` ${MID} About ${money(compute().monthlyTotal)} a month`;
+    }
+    document.querySelectorAll("[data-group]").forEach((b) =>
+      b.setAttribute("aria-pressed", String(!typical() && state.choices[b.dataset.group] === b.dataset.value)));
+    GROUPS.forEach((g) => {
+      const el = document.getElementById("help-" + g.id);
+      const text = typical() ? "" : (g.help?.[state.choices[g.id]] || "");
+      el.innerHTML = text;
+      el.hidden = !text;
+    });
+  }
+
+  let lastKey = "";
+  function rateLabel(id) {
+    if (LINES[id].fixed) return `0% ${MID} your payment doesn't change`;
+    if (id === "health") return `${pct(state.healthRate)} from your renewal notice`;
+    return `${pct(LINES[id].rate)} in a year${LINES[id].real ? "" : " " + DOT}`;
+  }
+  function renderAmounts(force) {
+    if (typical()) {
+      $("#amounts-intro").textContent = "Sample amounts for the national spending mix, about $6,000 a month in total. Tap an answer above to use your own.";
+      if (lastKey !== "typical" || force) {
+        lastKey = "typical";
+        $("#amount-rows").innerHTML = TYPICAL.map((t) => `
+          <div class="amt-row">
+            <span class="amt-label">${t.label}<span class="amt-rate">${pct(t.rate)} in a year${t.real ? "" : " " + DOT}</span></span>
+            <span class="amt-fixed">${money(t.monthly)} <span class="per">a month</span></span>
+          </div>`).join("");
+      }
+      return;
+    }
+    $("#amounts-intro").textContent = "Rough numbers are fine. We filled these in from your answers; change any you know.";
+    const ids = activeLines(state.choices);
+    const key = ids.join();
+    if (!force && key === lastKey) {
+      // Same rows: refresh defaults the answers may have nudged, without touching what's being typed.
+      ids.forEach((id) => {
+        const el = document.getElementById("amt-" + id);
+        if (el && document.activeElement !== el && state.edits[id] == null) el.value = amountFor(id);
+      });
+      return;
+    }
+    lastKey = key;
+    $("#amount-rows").innerHTML = ids.map((id) => `
+      <div class="amt-row">
+        <label class="amt-label" for="amt-${id}">${LINES[id].label}<span class="amt-rate" id="rate-label-${id}">${rateLabel(id)}</span></label>
+        <div class="money"><span class="cur" aria-hidden="true">$</span><input id="amt-${id}" data-line="${id}" inputmode="numeric" autocomplete="off" value="${amountFor(id)}"><span class="per">a month</span></div>
+        ${id === "health" ? `<div class="amt-sub"><label for="rate-health">Increase on your renewal notice</label><span class="money"><input class="pct" id="rate-health" inputmode="decimal" autocomplete="off" value="${state.healthRate}"><span class="per">%</span></span><span class="ph">${DOT} sample</span></div>` : ""}
+      </div>`).join("");
+  }
+
+  const RECEIPT_LINES = 6;   // keeps the total in view on a laptop-height screen
+  let lastTotal = null;
+  function renderReceipt() {
+    const { lines, extra, prior, rate } = compute();
+    const isTypical = typical();
+    const maxExtra = Math.max(...lines.map((l) => l.extra), 1);
+    const scale = Math.max(rate, NATIONAL, 1) * 1.1;
+    const diff = rate - NATIONAL;
+    const shown = state.showAll ? lines : lines.slice(0, RECEIPT_LINES);
+    const rest = lines.slice(RECEIPT_LINES);
+    const restExtra = rest.reduce((s, l) => s + l.extra, 0);
+
+    let verdict;
+    if (isTypical) verdict = "That's the national rate in dollars for a household spending $6,000 a month. Tap your answers to see yours.";
+    else if (prior <= 0) verdict = "Add what you spend each month to see your number.";
+    else if (Math.abs(diff) < 0.05) verdict = "Your prices rose about as fast as the national rate.";
+    else if (diff > 0) verdict = `Your prices rose ${diff.toFixed(1)} points faster than the national rate, mostly because of ${lines[0].label.toLowerCase()}.`;
+    else verdict = `Your prices rose ${Math.abs(diff).toFixed(1)} points slower than the national rate.` +
+      (state.choices.housing === "mortgage" ? " Your fixed mortgage payment is a big reason why." : "");
+
+    const totalText = "+" + money(extra);
+    $("#receipt").innerHTML = `
+      <div class="r-store">CONSUMER PRICES ${MID} U.S. CITY AVERAGE</div>
+      <div class="r-meta"><span>JUL 2026</span><span>VS JUL 2025</span></div>
+      <hr class="r-cut">
+      <p class="r-title">${isTypical ? "A typical U.S. household" : "Your year, repriced"}</p>
+      <p class="r-sub">${isTypical ? "The national spending mix, compared with a year ago." : "What the same things you buy now cost, compared with a year ago."}</p>
+      <hr class="r-cut">
+      <ol class="r-lines">${shown.map((l) => `
+        <li class="r-line">
+          <span class="r-name">${l.label}${l.fixed ? '<span class="r-fixed">FIXED</span>' : ""}</span>
+          <span class="r-rate">${l.fixed ? "0.0%" : pct(l.r)}${l.real ? "" : DOT}</span>
+          <span class="r-amt">+${money(l.extra)}</span>
+          ${l.extra > 0 ? `<span class="r-bar" style="--w:${(l.extra / maxExtra * 100).toFixed(1)}%"></span>` : ""}
+        </li>`).join("")}${rest.length && !state.showAll ? `
+        <li class="r-line r-rest"><span class="r-name">${rest.length} more lines</span><span class="r-rate"></span><span class="r-amt">+${money(restExtra)}</span></li>` : ""}
+      </ol>
+      ${rest.length ? `<button type="button" class="r-more" id="r-more" aria-expanded="${state.showAll}">${state.showAll ? "Show fewer lines" : `Show all ${lines.length} lines`}</button>` : ""}
+      <hr class="r-cut">
+      <div class="r-total">
+        <span class="r-total-label">EXTRA A YEAR</span>
+        <span class="r-total-amt" id="r-total"><mark>${totalText}</mark></span>
+      </div>
+      ${isTypical ? "" : `
+      <div class="r-compare" aria-label="Your inflation rate compared with the national rate">
+        <div class="cmp you"><span>Your prices</span><span><span class="cmp-bar" style="--w:${(Math.max(rate, 0) / scale * 100).toFixed(1)}%"></span></span><span class="cmp-val">${rate.toFixed(1)}%</span></div>
+        <div class="cmp us"><span>U.S. average</span><span><span class="cmp-bar" style="--w:${(NATIONAL / scale * 100).toFixed(1)}%"></span></span><span class="cmp-val">${NATIONAL.toFixed(1)}%</span></div>
+      </div>`}
+      <p class="r-verdict" aria-live="polite">${verdict}</p>
+      <button type="button" class="r-link" id="r-edit">${isTypical ? "Make it mine" : "Change my answers"}</button>
+      <div class="r-foot">${DOT} placeholder rate in this mockup</div>`;
+
+    if (lastTotal !== null && lastTotal !== totalText) $("#r-total").classList.add("bump");
+    lastTotal = totalText;
+    $("#pin-amt").textContent = totalText + " a year";
+    $("#pin-rate").textContent = isTypical ? `Typical household ${MID} ${rate.toFixed(1)}%` : `You ${rate.toFixed(1)}% ${MID} U.S. ${NATIONAL.toFixed(1)}%`;
+  }
+
+  function renderAll(forceAmounts) {
+    renderIntro();
+    renderChoices();
+    renderAmounts(forceAmounts);
+    renderReceipt();
+    save();
+  }
+
+  // ── Actions ──
+  const smooth = () => (matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
+
+  function goToChoices() {
+    showTab("you");
+    if (state.collapsed) { state.collapsed = false; renderAll(false); }
+    $("#choices-area").scrollIntoView({ behavior: smooth(), block: "start" });
+    const target = document.querySelector('#choices [aria-pressed="true"]') || document.querySelector("#choices .opt");
+    target?.focus({ preventScroll: true });
+  }
+
+  function startOver() {
+    state = fresh();
+    lastTotal = null;
+    renderAll(true);
+    window.scrollTo({ top: 0, behavior: smooth() });
+  }
+
+  function showTab(which) {
+    document.querySelectorAll("[data-tab]").forEach((t) => t.setAttribute("aria-selected", String(t.dataset.tab === which)));
+    const you = which === "you";
+    $("#panel-you").hidden = !you;
+    $("#panel-other").hidden = you;
+    $("#pinbar").hidden = !you;
+    if (!you) { $("#other-title").textContent = OTHER_TABS[which][0]; $("#other-body").textContent = OTHER_TABS[which][1]; }
+  }
+
+  $("#profiles").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-profile]");
+    if (!b) return;
+    const key = b.dataset.profile, p = PROFILES[key];
+    if (p.typical) {
+      state = { ...fresh(), profile: "typical" };
+    } else {
+      state = { ...state, mode: "personal", choices: { ...p.choices }, base: { ...p.base }, edits: {}, profile: key, filledNote: false, collapsed: false };
+    }
+    renderAll(true);
+  });
+
+  $("#choices").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-group]");
+    if (!b) return;
+    if (typical()) {
+      // First answer from the typical view: fill the rest with common answers and say so.
+      state = { ...state, mode: "personal", choices: { ...COMMON_CHOICES }, base: {}, edits: {}, filledNote: true };
+    }
+    state.choices[b.dataset.group] = b.dataset.value;
+    state.profile = null;
+    renderAll(false);
+  });
+
+  $("#amount-rows").addEventListener("input", (e) => {
+    const t = e.target;
+    const n = parseFloat(t.value.replace(/[^0-9.]/g, ""));
+    if (t.id === "rate-health") {
+      state.healthRate = Number.isFinite(n) ? n : 0;
+      $("#rate-label-health").textContent = rateLabel("health");
+    } else if (t.dataset.line) {
+      state.edits[t.dataset.line] = Number.isFinite(n) ? n : 0;
+    } else return;
+    state.profile = null;
+    renderIntro(); renderReceipt(); save();
+  });
+
+  $("#receipt").addEventListener("click", (e) => {
+    if (e.target.id === "r-more") { state.showAll = !state.showAll; renderReceipt(); $("#r-more").focus(); }
+    if (e.target.id === "r-edit") goToChoices();
+  });
+
+  $("#summary-change").addEventListener("click", goToChoices);
+  $("#summary-reset").addEventListener("click", startOver);
+  $("#start-over").addEventListener("click", startOver);
+  $("#skip-link").addEventListener("click", () => { showTab("bigger"); window.scrollTo({ top: 0, behavior: smooth() }); });
+  $("#pin-edit").addEventListener("click", goToChoices);
+  $("#pin-main").addEventListener("click", () => $("#receipt-col").scrollIntoView({ behavior: smooth(), block: "start" }));
+  document.querySelectorAll("[data-tab]").forEach((tab) => tab.addEventListener("click", () => showTab(tab.dataset.tab)));
+
+  const pin = $("#pinbar");
+  new IntersectionObserver(([entry]) => pin.classList.toggle("away", entry.isIntersecting), { threshold: 0.2 }).observe($("#receipt"));
+
+  renderProfiles();
+  renderChoicesOnce();
+  renderAll(true);
+</script>
