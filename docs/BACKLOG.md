@@ -27,6 +27,7 @@ Items we want to tackle in the near term but aren't started yet.
 - [x] **[ops]** bump GitHub Actions off deprecated Node 20 — DONE 2026-07-14: checkout/setup-node v4→v7 (native Node 24 runtime), app build node-version 20→22 LTS; peaceiris@v4 left (not flagged). Deprecation annotation confirmed gone. <!-- added 2026-05-21, done 2026-07-14 -->
 - [ ] **[feat]** add IMF/World Bank global commodity prices as a third source — verified live on FRED: coffee `PCOFFOTMUSDM`, beef `PBEEFUSDM`, bananas `PBANSOPUSDM`, sugar `PSUGAISAUSDM`, poultry `PPOULTUSDM`, wheat `PWHEAMTUSDM`. Monthly, first-of-month dates, so `avgPrice`/`computeYoY` work unchanged (no weekly-lookup work needed, unlike the EIA add). Frames as 'what the raw commodity costs on world markets vs what you pay at the store' for goods already in the Price Check table. CONSTRAINT: units are cents/lb and USD/tonne, so only YoY-vs-YoY is honest — never show these as dollars beside retail prices. <!-- added 2026-09-01 -->
 - [ ] **[feat]** international comparison tab: US inflation vs other countries (OECD/IMF, via FRED where mirrored). Separate spec after the redesign lands; verify sources and comparability (HICP vs CPI) first. <!-- added 2026-09-10 -->
+- [ ] **[bug]** Biggest Movers bar colors can land on the wrong bars — the Cell color list is built from a list that does not drop null-yoy items, so indices drift from the chart data. Fix in the redesign. <!-- added 2026-09-10 -->
 
 ## Someday
 
