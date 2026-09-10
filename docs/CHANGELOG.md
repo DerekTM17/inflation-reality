@@ -6,6 +6,12 @@ also include **Tradeoffs / Alternatives considered**.
 
 Curated, not exhaustive — `git log` has every commit.
 
+## 2026-09-10
+
+### Build guard and last-known-value notes
+
+**Why:** The Core CPI incident showed a headline number can fall back to a months-old seed and render as current with no warning. Two layers now. `fetch-fred.mjs` fails the build when headline or core falls back (`staleMacroKeys()` in assemble.mjs, tested), so CI goes red and the live site keeps its last good data instead of shipping a frozen number. Categories, average prices, alt measures and EIA fuel may still degrade, but each section now says in plain text which figures are a last-known value (`staleLabels()` in merge.js plus a `StaleNote` component). Verified locally with injected stale flags, and against production: the first deploy with the guard reported 42/42 series live, 0 stale.
+
 ## 2026-09-01
 
 ### EIA weekly fuel prices as a second source
