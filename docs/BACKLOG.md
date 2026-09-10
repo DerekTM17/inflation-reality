@@ -29,6 +29,7 @@ Items we want to tackle in the near term but aren't started yet.
 - [ ] **[feat]** add IMF/World Bank global commodity prices as a third source — verified live on FRED: coffee `PCOFFOTMUSDM`, beef `PBEEFUSDM`, bananas `PBANSOPUSDM`, sugar `PSUGAISAUSDM`, poultry `PPOULTUSDM`, wheat `PWHEAMTUSDM`. Monthly, first-of-month dates, so `avgPrice`/`computeYoY` work unchanged (no weekly-lookup work needed, unlike the EIA add). Frames as 'what the raw commodity costs on world markets vs what you pay at the store' for goods already in the Price Check table. CONSTRAINT: units are cents/lb and USD/tonne, so only YoY-vs-YoY is honest — never show these as dollars beside retail prices. <!-- added 2026-09-01 -->
 - [ ] **[feat]** international comparison tab: US inflation vs other countries (OECD/IMF, via FRED where mirrored). Separate spec after the redesign lands; verify sources and comparability (HICP vs CPI) first. <!-- added 2026-09-10 -->
 - [ ] **[bug]** Biggest Movers bar colors can land on the wrong bars — the Cell color list is built from a list that does not drop null-yoy items, so indices drift from the chart data. Fix in the redesign. <!-- added 2026-09-10 -->
+- [ ] **[ops]** BLS API keys must be renewed at least once a year (bls.gov/developers/api_faqs.htm). An expired BLS_API_KEY would quietly turn the 6 BLS-only calculator lines stale (non-fatal by design), so fetch should log a loud ::warning:: annotation when BLS returns a key/threshold error, and set a yearly reminder from the date the key is registered. <!-- added 2026-09-10 -->
 
 ## Someday
 
