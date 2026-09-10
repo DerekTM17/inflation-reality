@@ -571,10 +571,11 @@ export default function InflationTracker() {
                     <LineChart data={trendWithPersonal} margin={{ left: 0, right: 12, top: 8, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                       <XAxis dataKey="month" tick={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace" }} />
-                      <YAxis domain={["auto", "auto"]} tick={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }} tickFormatter={v => `${v}%`} />
+                      {/* top/bottom padding keeps the lone "you" dot from being clipped when it's the chart's extreme value */}
+                      <YAxis domain={["auto", "auto"]} padding={{ top: 12, bottom: 6 }} tick={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }} tickFormatter={v => `${v}%`} />
                       <Tooltip content={CustomTooltip} />
                       <Line type="monotone" dataKey="headline" stroke="#1B4965" strokeWidth={2.5} dot={{ r: 3 }} name="Headline CPI-U" connectNulls={false} />
-                      <Line type="monotone" dataKey="personal" stroke="#c1121f" strokeWidth={2} strokeDasharray="6 3" dot={{ r: 4 }} name="You (latest month)" connectNulls={false} isAnimationActive={false} />
+                      <Line type="monotone" dataKey="personal" stroke="#c1121f" strokeWidth={2} dot={{ r: 5, fill: "#c1121f", stroke: "#fff", strokeWidth: 1.5 }} name="You (latest month)" connectNulls={false} isAnimationActive={false} />
                       {gapMonths.map(m => (
                         <ReferenceLine key={m} x={m} stroke="#FFB703" strokeDasharray="3 3" />
                       ))}
