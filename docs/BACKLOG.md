@@ -7,13 +7,14 @@ domain. Markdown checkboxes; edit by hand. Shipped items go to
 ## Now
 
 Items we're actively working on or planning to do imminently.
-- [ ] **[feat]** surface `stale` flags in the UI when a series falls back — the flag is computed in `assemble.mjs` and stored in `cpi.json` but never rendered, which is why core CPI showed a frozen March value for 5 weeks with no visible warning. Promoted from Soon 2026-09-01 after that incident. <!-- added 2026-07-10, promoted 2026-09-01 -->
-- [ ] **[bug]** `fetch-fred.mjs` should fail the build when a *macro* series (headline/core) falls back — it currently only fatals if every request fails, so one dead id among 39 ships silently. Categories can reasonably degrade to a fallback; the three big numbers cannot. <!-- added 2026-09-01 -->
+- [x] **[feat]** surface `stale` flags in the UI when a series falls back — DONE 2026-09-10: `staleLabels()` + `StaleNote` under every section that shows fallback-able figures. Plain text for now; restyle in the redesign. <!-- added 2026-07-10, promoted 2026-09-01, done 2026-09-10 -->
+- [x] **[bug]** `fetch-fred.mjs` should fail the build when a *macro* series (headline/core) falls back — DONE 2026-09-10: `staleMacroKeys()` fatals before cpi.json is written. Paired with `yoyAnchorDate()` so the missing October 2025 doesn't trip it in November 2026. <!-- added 2026-09-01, done 2026-09-10 -->
+- [ ] **[feat]** calculator-first redesign: "how inflation hits you" reframe, dollar inputs + household situation choices (housing, getting around, commute, heating, daycare, tuition, health insurance via your own renewal increase), non-generic visual identity, real buttons with pressed/focus states. Brainstorm in progress 2026-09-10; spec to docs/superpowers/specs/. <!-- added 2026-09-10 -->
 
 ## Soon
 
 Items we want to tackle in the near term but aren't started yet.
-- [ ] **[feat]** add Dallas Trimmed-Mean PCE (`PCETRIM12M159SFRBDAL`) as an additional FRED alternative measure — easy FRED series add to complement the existing four official gauges <!-- added 2026-07-13 -->
+- [x] **[feat]** add Dallas Trimmed-Mean PCE (`PCETRIM12M159SFRBDAL`) as an additional FRED alternative measure — DONE 2026-07-14 (5th alt measure; live on the "How Others Measure It" chart). Ticked 2026-09-10. <!-- added 2026-07-13, done 2026-07-14 -->
 - [ ] **[feat]** add Case-Shiller home price index (`CSUSHPINSA`) to the alternatives panel — requires FRED series fetch and UI layout adjustment to accommodate a fifth measure <!-- added 2026-07-13 -->
 - [ ] **[feat]** integrate Zillow ZORI (rent) data for real-time rental inflation visibility — fragile bulk CSV download + licensing check required; consider seasonal adjustment and smoothing <!-- added 2026-07-13 -->
 - [ ] **[feat]** integrate EIA energy price API for gasoline and heating-oil spot prices — requires EIA API key, series routing, and comparison layout updates <!-- added 2026-07-13 -->
