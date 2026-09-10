@@ -8,6 +8,10 @@ Curated, not exhaustive — `git log` has every commit.
 
 ## 2026-09-10
 
+### Personal trend line no longer invented
+
+**Why:** The dashed "your rate" line on the 12-Month Trend was fabricated: each past point was the headline plus the current gap scaled by `Math.random()`, so it redrew differently on every render. The pipeline only stores each category's latest YoY, so no real personal history exists. The chart now shows the real headline line plus one filled "You (latest month)" dot, and the subtitle and tooltip say why. Found by a code survey during redesign prep, not by a visitor; the old tooltip called it "an estimate", which undersold that it was noise. A real personal history needs category history in the payload and belongs to the redesign spec.
+
 ### Build guard and last-known-value notes
 
 **Why:** The Core CPI incident showed a headline number can fall back to a months-old seed and render as current with no warning. Two layers now. `fetch-fred.mjs` fails the build when headline or core falls back (`staleMacroKeys()` in assemble.mjs, tested), so CI goes red and the live site keeps its last good data instead of shipping a frozen number. Categories, average prices, alt measures and EIA fuel may still degrade, but each section now says in plain text which figures are a last-known value (`staleLabels()` in merge.js plus a `StaleNote` component). Verified locally with injected stale flags, and against production: the first deploy with the guard reported 42/42 series live, 0 stale.
