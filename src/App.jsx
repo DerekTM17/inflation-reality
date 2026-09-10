@@ -212,10 +212,10 @@ export default function InflationTracker() {
     yoy: c.yoy,
   }));
 
-  const trendWithPersonal = data.trend.map(d => ({
-    ...d,
-    personal: d.headline !== null ? d.headline + (delta * (0.6 + Math.random() * 0.4)) : null,
-  }));
+  // We only ever have the LATEST month's personal rate (it's computed live from the
+  // current sliders) — there's no real history of "what your rate would have been"
+  // in past months, so the personal series carries a value only at the latest point.
+  const trendWithPersonal = data.trend.map(d => ({ ...d, personal: null }));
   if (trendWithPersonal.length > 0) {
     trendWithPersonal[trendWithPersonal.length - 1].personal = parseFloat(personalRate.toFixed(1));
   }
@@ -560,10 +560,10 @@ export default function InflationTracker() {
                   12-Month Trend
                 </div>
                 <div style={{ fontSize: 11, color: "#888", marginBottom: 12 }}>
-                  Your estimated rate vs. headline CPI-U (year-over-year % change)
+                  Headline CPI-U over 12 months, with your estimated rate for the latest month
                   <InfoTip
                     label="About the trend lines"
-                    text="The solid blue line is the official headline CPI. The dashed red line is an estimate — it applies your current spending mix to each past month's headline move, not your actual historical rate."
+                    text="The solid blue line is the official headline CPI. The single red dot is your estimated rate for the latest month only — we don't have a real history of your past spending mix, so there's no line to draw for earlier months."
                   />
                 </div>
                 <div style={{ flex: 1, minHeight: 200 }}>
@@ -574,7 +574,7 @@ export default function InflationTracker() {
                       <YAxis domain={["auto", "auto"]} tick={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace" }} tickFormatter={v => `${v}%`} />
                       <Tooltip content={CustomTooltip} />
                       <Line type="monotone" dataKey="headline" stroke="#1B4965" strokeWidth={2.5} dot={{ r: 3 }} name="Headline CPI-U" connectNulls={false} />
-                      <Line type="monotone" dataKey="personal" stroke="#c1121f" strokeWidth={2} strokeDasharray="6 3" dot={{ r: 3 }} name="Your Rate (est.)" connectNulls={false} />
+                      <Line type="monotone" dataKey="personal" stroke="#c1121f" strokeWidth={2} strokeDasharray="6 3" dot={{ r: 4 }} name="You (latest month)" connectNulls={false} isAnimationActive={false} />
                       {gapMonths.map(m => (
                         <ReferenceLine key={m} x={m} stroke="#FFB703" strokeDasharray="3 3" />
                       ))}
