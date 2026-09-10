@@ -8,6 +8,10 @@ Curated, not exhaustive — `git log` has every commit.
 
 ## 2026-09-10
 
+### Year-over-year anchored past a missing year-ago month
+
+**Why:** BLS never published October 2025, so the October 2026 release (due around Nov 12) cannot produce any year-over-year change. The exact 12-month lookup would return null for headline, core and every category, and the new macro guard would fail the Nov 13 and 16 builds; before the guard it would have silently shipped the March fallback. `yoyAnchorDate()` now steps back up to 2 months to the newest month with a year-ago figure. assemble.mjs pins CPI YoY, MoM, categories, average prices and the trend to that month only when a gap exists (otherwise each series keeps its own latest month, because FRED can post one release's series hours apart), records a `yoyGap`, and the page explains "Why September?". Alt measures and EIA fuel keep their own dates. If nothing within 2 months is computable it still fails loudly. 46 tests pass; the note was checked rendering with a simulated gap.
+
 ### Personal trend line no longer invented
 
 **Why:** The dashed "your rate" line on the 12-Month Trend was fabricated: each past point was the headline plus the current gap scaled by `Math.random()`, so it redrew differently on every render. The pipeline only stores each category's latest YoY, so no real personal history exists. The chart now shows the real headline line plus one filled "You (latest month)" dot, and the subtitle and tooltip say why. Found by a code survey during redesign prep, not by a visitor; the old tooltip called it "an estimate", which undersold that it was noise. A real personal history needs category history in the payload and belongs to the redesign spec.
