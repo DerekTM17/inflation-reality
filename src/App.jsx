@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell, LabelList } from "recharts";
 import * as catalog from "./data/catalog.js";
-import { buildViewData } from "./data/merge.js";
+import { buildViewData, staleLabels } from "./data/merge.js";
 import fallbackDynamic from "./data/fallback.json";
 
 const PRESETS = {
@@ -126,6 +126,17 @@ function formatUpdated(iso) {
 function pctChange(current, yearAgo) {
   if (current == null || yearAgo == null || yearAgo === 0) return null;
   return (current - yearAgo) / yearAgo * 100;
+}
+
+// Plain, muted note for when one or more figures in a section are a carried-over
+// fallback value rather than a fresh fetch. Renders nothing when the section is clean.
+function StaleNote({ labels }) {
+  if (!labels || labels.length === 0) return null;
+  return (
+    <div style={{ fontSize: 11, color: "#888", marginTop: 8, fontStyle: "italic" }}>
+      Using the last known value for: {labels.join(", ")} — the latest figure couldn't be fetched.
+    </div>
+  );
 }
 
 function DataSourceBadge({ seriesId }) {
@@ -504,6 +515,7 @@ export default function InflationTracker() {
                 <BigNumber value={delta} label={delta > 0 ? "Above Headline" : "Below Headline"} sub="Your rate vs. official CPI" color={delta > 0 ? "#c1121f" : "#2D6A4F"} size={40} info="The gap between your rate and the official headline. Positive means your spending mix runs hotter than the national average; negative means cooler." />
               </div>
             </div>
+            <StaleNote labels={staleLabels([data.headline, data.core])} />
 
             {/* ── Row 2: Charts side by side ── */}
             <div className="ir-grid-2" style={{ display: "grid", gap: 16, marginBottom: 20 }}>
@@ -539,6 +551,7 @@ export default function InflationTracker() {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
+                <StaleNote labels={staleLabels(data.categories)} />
               </div>
 
               {/* Trend chart */}
@@ -634,6 +647,7 @@ export default function InflationTracker() {
               <div style={{ fontSize: 10, color: "#999", marginTop: 8, fontStyle: "italic" }}>
                 All figures are ~12-month (year-over-year) changes. Measures may reflect slightly different latest months (e.g. PCE publishes after CPI).
               </div>
+              <StaleNote labels={staleLabels(data.altMeasures)} />
             </div>
 
             {/* ── Row 3: Spending Controls — full width, compact grid ── */}
@@ -697,6 +711,7 @@ export default function InflationTracker() {
                   />
                 ))}
               </div>
+              <StaleNote labels={staleLabels(data.categories)} />
             </div>
 
             {/* ── Row 4: Glossary ── */}
@@ -802,6 +817,7 @@ export default function InflationTracker() {
                   {data.avgPrices.length} items across {[...new Set(data.avgPrices.map(p => p.category))].length} categories.
                 </span>
               </div>
+              <StaleNote labels={staleLabels(data.avgPrices)} />
             </div>
 
             {/* ── Second source: EIA weekly fuel prices ── */}
@@ -861,6 +877,7 @@ export default function InflationTracker() {
                 Source: U.S. Energy Information Administration weekly retail price survey, via FRED. The gap against the BLS row is
                 mostly recency, not disagreement — the BLS figure is a full-month average that lands weeks after the month ends.
               </div>
+              <StaleNote labels={staleLabels(data.weeklyPrices)} />
             </div>
 
             {/* Top movers chart */}

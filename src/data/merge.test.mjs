@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, WEEKLY_PRICES } from "./catalog.js";
-import { buildViewData } from "./merge.js";
+import { buildViewData, staleLabels } from "./merge.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
@@ -61,4 +61,31 @@ test("buildViewData exposes weeklyPrices merged with catalog metadata", () => {
   const diesel = view.weeklyPrices.find(w => w.key === "diesel");
   assert.equal(diesel.current, null);        // absent from the payload
   assert.equal(diesel.stale, false);
+});
+
+test("staleLabels: returns the display labels of stale items only", () => {
+  const view = buildViewData(catalog, dynamic);
+  // fallback.json ships all-fresh dynamic data, so nothing should be flagged.
+  assert.deepEqual(staleLabels(view.categories), []);
+});
+
+test("staleLabels: picks label for categories/altMeasures/weeklyPrices, item for avgPrices", () => {
+  assert.deepEqual(
+    staleLabels([{ label: "Gasoline", stale: true }, { label: "Clothing", stale: false }]),
+    ["Gasoline"],
+  );
+  assert.deepEqual(
+    staleLabels([{ item: "Eggs, Grade A Large", stale: true }, { item: "Whole Milk", stale: false }]),
+    ["Eggs, Grade A Large"],
+  );
+});
+
+test("staleLabels: tolerates an empty or missing list", () => {
+  assert.deepEqual(staleLabels([]), []);
+  assert.deepEqual(staleLabels(undefined), []);
+});
+
+test("staleLabels: works on single macro nodes passed as an ad-hoc list (headline/core)", () => {
+  const view = buildViewData(catalog, { ...dynamic, headline: { ...dynamic.headline, stale: true } });
+  assert.deepEqual(staleLabels([view.headline, view.core]), [HEADLINE.label]);
 });
