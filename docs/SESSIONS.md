@@ -85,3 +85,12 @@ python3 -m http.server 5190 --bind 127.0.0.1 --directory docs/superpowers/mockup
 cd ~/projects/inflation-reality && git pull && npm install && npm test   # expect 46 pass
 # Open both mockup artifact links above; then edit docs/superpowers/specs/2026-09-10-calculator-first-redesign-design.md
 ```
+
+#### Handoff — Spec revised: toned-down direction, profiles dropped, BLS key set
+
+**Done:** The user picked the **toned-down** mockup and **dropped the profiles row**, and added the BLS key (`gh secret list` shows `BLS_API_KEY` set 2026-09-14T19:13Z). The spec `docs/superpowers/specs/2026-09-10-calculator-first-redesign-design.md` was rewritten in one pass with those decisions and every accepted finding above. It gained new sections: Visual system (tokens), Design rules (testable not-AI criteria, including an automated Playwright audit and a 5-second test), Voice guide with key strings, Numbers (rounding with largest-remainder allocation), chart rules, link-preview meta, residual plausibility bound (3 points), and BLS key-expiry warnings. The spec self-review found and fixed three places where the spec broke its own rules (`·` strings in the dock column and tabs row, a muddled link-preview bullet).
+
+**Next:**
+1. **User reviews the revised spec.** Not yet reviewed.
+2. On approval, invoke `superpowers:writing-plans`. Phase 1 (pipeline) first; its Task 1 is the spec's "Verify in plan Task 1" list, and the BLS key is now available for those checks.
+3. BLS key renewal due by 2027-09-14.
