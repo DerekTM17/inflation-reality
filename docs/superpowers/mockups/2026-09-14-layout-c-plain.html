@@ -1,0 +1,689 @@
+<title>How Much More Are You Paying</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700;800&display=swap">
+<style>
+  :root {
+    --ground: #F3F5F4;
+    --surface: #FFFFFF;
+    --ink: #1F2933;
+    --ink-2: #56626E;
+    --ink-3: #66717D;
+    --rule: #D5DCDA;
+    --control: #FFFFFF;
+    --control-edge: #6B7682;
+    --control-hover: #EAF0ED;
+    --accent: #2E5E45;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #E3EDE7;
+    --bar-you: #2E5E45;
+    --bar-us: #7D8894;
+    --bar-line: #A3ADB5;
+    --dock: #1F2933;
+    --dock-ink: #FFFFFF;
+    --font: "Libre Franklin", "Franklin Gothic Medium", "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #161A1E; --surface: #1F252B; --ink: #E7ECEA; --ink-2: #AEB8C0; --ink-3: #9AA5AE; --rule: #353D44;
+      --control: #1F252B; --control-edge: #8B96A1; --control-hover: #29323A;
+      --accent: #8CC9A2; --accent-ink: #0F2219; --accent-soft: #22382C;
+      --bar-you: #8CC9A2; --bar-us: #8C97A2; --bar-line: #68737D;
+      --dock: #E7ECEA; --dock-ink: #161A1E;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #161A1E; --surface: #1F252B; --ink: #E7ECEA; --ink-2: #AEB8C0; --ink-3: #9AA5AE; --rule: #353D44;
+    --control: #1F252B; --control-edge: #8B96A1; --control-hover: #29323A;
+    --accent: #8CC9A2; --accent-ink: #0F2219; --accent-soft: #22382C;
+    --bar-you: #8CC9A2; --bar-us: #8C97A2; --bar-line: #68737D;
+    --dock: #E7ECEA; --dock-ink: #161A1E;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { scroll-padding-top: 16px; scroll-padding-bottom: 110px; }
+  body {
+    background: var(--ground); color: var(--ink);
+    font: 400 16px/1.55 var(--font);
+    padding-inline: 16px; padding-block: 0 120px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  .num, .line, .compare, .answer, .dock { font-variant-numeric: tabular-nums; }
+
+  .mock-note { max-width: 1080px; margin: 12px auto 0; font-size: 14px; color: var(--ink-2); border: 1px dashed var(--rule); border-radius: 6px; padding: 8px 12px; }
+
+  /* ── Header ── */
+  .site { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; padding-block: 18px 12px; border-bottom: 1px solid var(--rule); }
+  .brand { font-weight: 800; font-size: 20px; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tab {
+    font: 600 15px/1 var(--font); color: var(--ink-2); background: none; border: 0; border-radius: 6px;
+    padding: 12px 12px; min-height: 44px; cursor: pointer;
+  }
+  .tab:hover { color: var(--ink); background: var(--control-hover); }
+  .tab[aria-selected="true"] { color: var(--ink); box-shadow: inset 0 -3px 0 var(--ink); border-radius: 6px 6px 0 0; }
+
+  /* ── Layout ── */
+  .calc {
+    display: grid; gap: 30px; padding-block: 28px 0;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "intro" "questions" "result" "amounts";
+  }
+  .intro { grid-area: intro; display: grid; gap: 12px; }
+  .questions-area { grid-area: questions; display: grid; gap: 26px; }
+  .result-col { grid-area: result; align-self: start; }
+  .amounts { grid-area: amounts; }
+  @media (min-width: 900px) {
+    .calc { grid-template-columns: minmax(0, 1fr) 400px; column-gap: 56px; grid-template-areas: "intro result" "questions result" "amounts result"; align-items: start; }
+    .result-col { position: sticky; top: 16px; }
+    .dock { display: none !important; }
+    .toast { bottom: 24px !important; }
+  }
+
+  h1 { font-weight: 800; font-size: clamp(30px, 7.6vw, 44px); line-height: 1.08; letter-spacing: -0.02em; margin: 0; max-width: 17em; text-wrap: balance; }
+  .lede { margin: 0; font-size: 18px; color: var(--ink-2); max-width: 34em; }
+
+  /* ── Controls ── */
+  .text-btn {
+    font: 600 15px/1.3 var(--font); color: var(--ink); background: none; border: 0; padding: 6px 0; cursor: pointer;
+    text-decoration: underline; text-underline-offset: 3px; justify-self: start;
+  }
+  .text-btn:hover { text-decoration-thickness: 2px; }
+  .btn {
+    font: 600 16px/1.2 var(--font); color: var(--ink); background: var(--control);
+    border: 1.5px solid var(--control-edge); border-radius: 6px; padding: 11px 16px; min-height: 44px; cursor: pointer;
+  }
+  .btn:hover { background: var(--control-hover); border-color: var(--ink); }
+  .opts, .checks { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opt {
+    font: 600 16px/1.2 var(--font); color: var(--ink); background: var(--control);
+    border: 1.5px solid var(--control-edge); border-radius: 6px; padding: 11px 14px; min-height: 44px; cursor: pointer;
+  }
+  .opt:hover { background: var(--control-hover); border-color: var(--ink); }
+  .opt:active { background: var(--accent-soft); }
+  .opt[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .opt[aria-pressed="true"]::before { content: "\2713\00a0"; }
+  .opt.guess { border-style: dashed; border-color: var(--accent); background: var(--accent-soft); }
+  .guess-tag { font-weight: 500; font-size: 13px; color: var(--ink-2); margin-left: 6px; }
+  .check {
+    display: flex; align-items: center; gap: 10px; font: 600 16px/1.2 var(--font); color: var(--ink);
+    background: var(--control); border: 1.5px solid var(--control-edge); border-radius: 6px; padding: 10px 14px; min-height: 44px; cursor: pointer;
+  }
+  .check:hover { background: var(--control-hover); border-color: var(--ink); }
+  .check input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
+  .check:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+  .tab:focus-visible, .btn:focus-visible, .opt:focus-visible, .text-btn:focus-visible, .disclosure:focus-visible,
+  input:focus-visible, .check:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .check input:focus-visible { outline: none; }
+
+  .questions { display: grid; gap: 26px; }
+  fieldset.q { border: 0; margin: 0; padding: 0; min-width: 0; }
+  fieldset.q legend { font-weight: 700; font-size: 18px; padding: 0; margin-bottom: 10px; }
+  .help { margin: 10px 0 0; font-size: 15px; color: var(--ink-2); max-width: 36em; }
+  .saved { margin: 0; font-size: 14px; color: var(--ink-2); }
+  .saved .text-btn { font-size: 14px; padding: 0; margin-left: 6px; }
+
+  .summary { display: grid; gap: 10px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; }
+  .summary h2 { margin: 0; font-size: 18px; font-weight: 700; }
+  .summary p { margin: 0; }
+  .summary .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; }
+
+  /* ── Result ── */
+  .result { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 22px 20px 20px; }
+  .result h2 { margin: 0; font-size: 17px; font-weight: 700; }
+  .answer { margin: 6px 0 0; font-weight: 800; font-size: clamp(34px, 9.4vw, 46px); line-height: 1.04; letter-spacing: -0.02em; text-wrap: balance; }
+  .rates { margin: 10px 0 0; color: var(--ink-2); }
+  .compare { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; align-items: center; gap: 8px 12px; margin-top: 14px; font-size: 15px; }
+  .cmp { display: contents; }
+  .cmp-bar { display: block; height: 10px; border-radius: 0 3px 3px 0; width: var(--w); }
+  .cmp.you .cmp-bar { background: var(--bar-you); }
+  .cmp.us .cmp-bar { background: var(--bar-us); }
+  .cmp-val { text-align: right; font-weight: 700; }
+  .verdict { margin: 14px 0 0; font-size: 17px; font-weight: 600; line-height: 1.4; }
+  .basis { margin: 6px 0 0; font-size: 14px; color: var(--ink-2); }
+  .lines-title { margin: 22px 0 4px; font-size: 16px; font-weight: 700; }
+  .lines { list-style: none; margin: 0; padding: 0; }
+  .line { display: grid; grid-template-columns: minmax(0, 1fr) 4.4em 4.8em; column-gap: 12px; align-items: baseline; padding-block: 10px; border-top: 1px solid var(--rule); }
+  .line-name { font-weight: 500; overflow-wrap: anywhere; }
+  .line-note { display: block; font-size: 13px; font-weight: 400; color: var(--ink-3); }
+  .line-rate { text-align: right; color: var(--ink-2); }
+  .line-amt { text-align: right; font-weight: 700; }
+  .line-bar { grid-column: 1 / -1; height: 4px; margin-top: 8px; border-radius: 2px; background: var(--bar-line); width: var(--w); }
+  .line.quiet .line-name, .line.quiet .line-amt { color: var(--ink-2); font-weight: 500; }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 16px; }
+  .fine { margin: 16px 0 0; font-size: 13px; color: var(--ink-3); }
+
+  /* ── Amounts ── */
+  .disclosure {
+    display: flex; justify-content: space-between; align-items: center; width: 100%;
+    font: 700 18px/1.2 var(--font); color: var(--ink); background: var(--control);
+    border: 1.5px solid var(--control-edge); border-radius: 6px; padding: 12px 16px; min-height: 50px; cursor: pointer; text-align: left;
+  }
+  .disclosure:hover { background: var(--control-hover); border-color: var(--ink); }
+  .disclosure::after { content: "+"; font-size: 24px; font-weight: 500; line-height: 1; }
+  .disclosure[aria-expanded="true"]::after { content: "\2212"; }
+  .amounts-body { margin-top: 12px; }
+  .amounts-body > p { margin: 0 0 12px; color: var(--ink-2); max-width: 36em; }
+  .amt-list { display: grid; }
+  .amt-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding-block: 12px; border-top: 1px solid var(--rule); }
+  .amt-label { display: grid; font-weight: 600; min-width: 0; }
+  .amt-hint { font-weight: 400; font-size: 14px; color: var(--ink-2); }
+  .money { display: flex; align-items: center; gap: 6px; }
+  .money input {
+    width: 6.5em; font: 600 17px/1 var(--font); font-variant-numeric: tabular-nums; text-align: right;
+    color: var(--ink); background: var(--control); border: 1.5px solid var(--control-edge); border-radius: 6px; padding: 9px 10px; min-height: 44px;
+  }
+  .money input.pct { width: 4.4em; }
+  .per { font-size: 14px; color: var(--ink-2); }
+  .amt-sub { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 14px; color: var(--ink-2); }
+  .amt-fixed { font-weight: 600; }
+
+  /* ── Other tabs ── */
+  .other { padding-block: 40px; max-width: 40em; }
+  .other h1 { margin-bottom: 14px; }
+  .other p { color: var(--ink-2); font-size: 18px; margin: 0 0 12px; }
+
+  /* ── Phone dock + toast ── */
+  .dock {
+    position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 5;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--dock); color: var(--dock-ink); border-radius: 10px; padding: 10px 10px 10px 16px;
+    box-shadow: 0 6px 20px rgba(20, 25, 30, 0.28); transition: transform 200ms ease;
+  }
+  .dock-text { display: grid; line-height: 1.25; min-width: 0; }
+  .dock-label { font-size: 14px; }
+  .dock-amt { font-weight: 800; font-size: 20px; }
+  .dock-btn { font: 700 15px/1 var(--font); color: var(--dock); background: var(--dock-ink); border: 0; border-radius: 6px; padding: 12px 14px; min-height: 44px; cursor: pointer; white-space: nowrap; }
+  .dock-btn:focus-visible, .toast .text-btn:focus-visible { outline: 3px solid var(--dock-ink); outline-offset: 2px; }
+  .dock.away { transform: translateY(160%); }
+  .toast {
+    position: fixed; left: 12px; right: 12px; bottom: 86px; z-index: 6; max-width: 460px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--dock); color: var(--dock-ink); border-radius: 8px; padding: 10px 16px;
+  }
+  .toast .text-btn { color: var(--dock-ink); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (prefers-reduced-motion: reduce) { .dock { transition: none; } }
+</style>
+
+<p class="mock-note">Toned-down mockup, for comparison with the first version. Rates are BLS figures for July 2026. Rates marked * are placeholders in this mockup. Answers are saved only in this browser; reload to see the returning-visitor view.</p>
+
+<div class="wrap">
+  <header class="site">
+    <a class="brand" href="#">Inflation Reality</a>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button type="button" class="tab" role="tab" id="tab-you" data-tab="you" aria-selected="true">Your costs</button>
+      <button type="button" class="tab" role="tab" id="tab-national" data-tab="national" aria-selected="false">National numbers</button>
+      <button type="button" class="tab" role="tab" id="tab-prices" data-tab="prices" aria-selected="false">Price check</button>
+      <button type="button" class="tab" role="tab" id="tab-sources" data-tab="sources" aria-selected="false">Sources</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="calc" id="panel-you" role="tabpanel" aria-labelledby="tab-you">
+      <div class="intro">
+        <h1>How much more are you paying than a year ago?</h1>
+        <p class="lede" id="lede"></p>
+        <button type="button" class="text-btn" id="to-national">Just want the national numbers?</button>
+      </div>
+
+      <div class="questions-area" id="questions-area">
+        <div class="summary" id="summary" hidden>
+          <h2>Your answers</h2>
+          <p id="summary-text"></p>
+          <p class="saved">Saved in this browser only.</p>
+          <div class="row">
+            <button type="button" class="btn" id="summary-change">Change answers</button>
+            <button type="button" class="text-btn" id="summary-reset">Start over</button>
+          </div>
+        </div>
+        <div class="questions" id="questions"></div>
+        <p class="saved" id="saved-row" hidden>Your answers are saved in this browser only.<button type="button" class="text-btn" id="start-over">Start over</button></p>
+      </div>
+
+      <div class="result-col" id="result-col">
+        <div class="result" id="result"></div>
+      </div>
+
+      <section class="amounts" aria-label="Monthly amounts">
+        <button type="button" class="disclosure" id="amounts-toggle" aria-expanded="false" aria-controls="amounts-body"></button>
+        <div class="amounts-body" id="amounts-body" hidden>
+          <p id="amounts-intro"></p>
+          <div class="amt-list" id="amount-rows"></div>
+        </div>
+      </section>
+    </section>
+
+    <section class="other" id="panel-other" role="tabpanel" hidden>
+      <h1 id="other-title"></h1>
+      <p id="other-body"></p>
+      <p><em>Not built in this mockup.</em></p>
+    </section>
+  </main>
+</div>
+
+<p class="sr" id="announce" aria-live="polite"></p>
+
+<div class="dock" id="dock">
+  <div class="dock-text"><span class="dock-label" id="dock-label"></span><span class="dock-amt" id="dock-amt"></span></div>
+  <button type="button" class="dock-btn" id="dock-btn">See details</button>
+</div>
+
+<div class="toast" id="toast" role="status" hidden>
+  <span>Answers cleared.</span>
+  <button type="button" class="text-btn" id="undo">Undo</button>
+</div>
+
+<script>
+  const NATIONAL = 3.4;
+  const REF = "July 2026", PRIOR = "July 2025";
+  const STORE_KEY = "inflation-reality-mockup-plain-v1";
+
+  // Average household: CPI relative-importance shares at $6,000 a month. "Everything else" is
+  // the rest of the basket, its rate solved from the national rate (placeholder in this mockup).
+  const AVERAGE = [
+    { id: "housing", label: "Housing", rate: 3.2, monthly: 2184 },
+    { id: "groceries", label: "Groceries", rate: 2.7, monthly: 492 },
+    { id: "dining", label: "Eating out", rate: 3.4, monthly: 318 },
+    { id: "energy", label: "Home energy", rate: 5.0, monthly: 192 },
+    { id: "gasoline", label: "Gas for the car", rate: 24.6, monthly: 180 },
+    { id: "health", label: "Health care", rate: 1.7, monthly: 486 },
+    { id: "school", label: "School and childcare", rate: 2.7, monthly: 180 },
+    { id: "clothing", label: "Clothing", rate: 3.9, monthly: 150 },
+    { id: "fun", label: "Entertainment", rate: 2.6, monthly: 318 },
+    { id: "other", label: "Other goods and services", rate: 3.1, monthly: 216 },
+    { id: "rest", label: "Everything else", rate: 2.3, monthly: 1284, sample: true, quiet: true, note: "Estimated from the national rate" },
+  ];
+
+  // Personal lines. sample: placeholder rate in the mockup. renewal: rate comes from the person's renewal notice.
+  const LINES = {
+    rent: { label: "Rent", rate: 3.2, def: 1650 },
+    mortgage: { label: "Mortgage payment", rate: 0, def: 1900, note: "Fixed payment" },
+    homeIns: { label: "Home insurance", renewal: true, def: 140 },
+    upkeep: { label: "Home repairs", rate: 4.0, def: 130, sample: true, note: "Estimate" },
+    groceries: { label: "Groceries", rate: 2.7, def: 620 },
+    dining: { label: "Eating out", rate: 3.4, def: 220 },
+    gasoline: { label: "Gas for the car", rate: 24.6, def: 190, hint: "Drive less or work from home? Lower this." },
+    charging: { label: "Charging the car", rate: 5.0, def: 55 },
+    carIns: { label: "Car insurance", rate: 7.0, def: 160, sample: true },
+    carUpkeep: { label: "Car repairs", rate: 5.0, def: 60, sample: true },
+    transit: { label: "Bus and train fares", rate: 2.0, def: 90, sample: true },
+    electric: { label: "Electricity", rate: 5.0, def: 110 },
+    heatGas: { label: "Natural gas bill", rate: 6.0, def: 70, sample: true },
+    heatOil: { label: "Heating oil", rate: 3.0, def: 120, sample: true },
+    daycare: { label: "Daycare", rate: 4.5, def: 1100, sample: true },
+    tuition: { label: "College tuition", rate: 2.7, def: 900 },
+    health: { label: "Health insurance", renewal: true, def: 180 },
+    doctor: { label: "Doctor and pharmacy", rate: 1.7, def: 90 },
+    clothing: { label: "Clothing", rate: 3.9, def: 80 },
+    fun: { label: "Entertainment", rate: 2.6, def: 150 },
+    rest: { label: "Everything else", rate: 2.3, def: 250, sample: true, quiet: true, note: "Estimated from the national rate" },
+  };
+
+  const HEALTH_HELP = "Use the increase from your renewal notice. The government's health insurance index tracks what insurers keep, not what people pay, so we don't use it.";
+  const GROUPS = [
+    { id: "housing", legend: "Your home", options: [["rent", "Rent"], ["mortgage", "Mortgage, fixed rate"], ["owned", "Own it outright"]],
+      help: { mortgage: "A fixed-rate payment stays the same from year to year, so it adds nothing here. The official inflation rate leaves mortgage payments out too. Home insurance and repairs still go up.",
+              owned: "With no payment, your housing costs here are home insurance and repairs." } },
+    { id: "car", legend: "Getting around", options: [["gas", "Gas car"], ["hybrid", "Hybrid"], ["ev", "Electric car"], ["none", "No car"]],
+      help: { ev: "Most people charge at home, so we use the change in home electricity prices." } },
+    { id: "heat", legend: "Home heating", options: [["electric", "Electric"], ["gas", "Natural gas"], ["oil", "Heating oil"]] },
+    { id: "health", legend: "Health insurance", options: [["work", "Through work"], ["own", "I buy my own"], ["none", "I don't pay a premium"]],
+      help: { work: HEALTH_HELP, own: HEALTH_HELP } },
+  ];
+  const ALSO = [["daycare", "Daycare"], ["college", "College tuition"]];
+  const COMMON = { housing: "rent", car: "gas", heat: "gas", health: "work" };
+  const SUMMARY = {
+    housing: { rent: "rent", mortgage: "fixed-rate mortgage", owned: "own your home outright" },
+    car: { gas: "gas car", hybrid: "hybrid", ev: "electric car", none: "no car" },
+    heat: { electric: "electric heat", gas: "natural gas heat", oil: "heating oil" },
+    health: { work: "health insurance through work", own: "buy your own health insurance", none: "no health premium" },
+  };
+  const OTHER_TABS = {
+    national: ["National numbers", "Headline and core inflation, the month-over-month change, the 12-month trend, and how other official measures compare. Later, how the U.S. compares with other countries."],
+    prices: ["Price check", "Average prices for eggs, milk, gas and more, next to a year ago, plus the EIA's weekly gas and diesel prices."],
+    sources: ["Sources", "Where every number comes from, how the estimate is worked out, and the series IDs you can look up on FRED and the BLS site."],
+  };
+
+  const fresh = () => ({
+    mode: "average", choices: null, answered: {}, also: { daycare: false, college: false }, edits: {},
+    rates: { health: 6.0, homeIns: 6.0 }, rateEdited: {}, showAll: false, collapsed: false, returning: false, amountsOpen: false,
+  });
+  let state = fresh();
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+    if (saved && saved.mode === "personal" && saved.choices) state = { ...state, ...saved, collapsed: true, returning: true };
+  } catch (e) { /* storage blocked or unreadable: start fresh */ }
+
+  function save() {
+    try {
+      if (state.mode !== "personal") return localStorage.removeItem(STORE_KEY);
+      const { mode, choices, answered, also, edits, rates, rateEdited } = state;
+      localStorage.setItem(STORE_KEY, JSON.stringify({ mode, choices, answered, also, edits, rates, rateEdited }));
+    } catch (e) { /* not saved; the page still works */ }
+  }
+
+  const $ = (s) => document.querySelector(s);
+  const isAverage = () => state.mode === "average";
+  const round = (n, step) => Math.round(n / step) * step;
+  const dollars = (n) => "$" + Math.round(n).toLocaleString("en-US");
+  const pct = (n) => (n > 0 ? "+" : "") + n.toFixed(1) + "%";
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+  function activeLines() {
+    const c = state.choices, L = [];
+    if (c.housing === "rent") L.push("rent");
+    if (c.housing === "mortgage") L.push("mortgage", "homeIns", "upkeep");
+    if (c.housing === "owned") L.push("homeIns", "upkeep");
+    L.push("groceries", "dining");
+    if (c.car === "gas" || c.car === "hybrid") L.push("gasoline");
+    if (c.car === "ev") L.push("charging");
+    if (c.car === "none") L.push("transit"); else L.push("carIns", "carUpkeep");
+    L.push("electric");
+    if (c.heat === "gas") L.push("heatGas");
+    if (c.heat === "oil") L.push("heatOil");
+    if (state.also.daycare) L.push("daycare");
+    if (state.also.college) L.push("tuition");
+    if (c.health !== "none") L.push("health");
+    L.push("doctor", "clothing", "fun", "rest");
+    return L;
+  }
+  function defaultAmount(id) {
+    const c = state.choices;
+    let v = LINES[id].def;
+    if (id === "gasoline" && c.car === "hybrid") v *= 0.55;
+    if (id === "electric" && c.heat === "electric") v += 80;
+    if (id === "health" && c.health === "own") v = 650;
+    return Math.round(v);
+  }
+  const amountFor = (id) => state.edits[id] ?? defaultAmount(id);
+  const rateFor = (id) => (LINES[id].renewal ? state.rates[id] : LINES[id].rate);
+  function noteFor(id) {
+    if (LINES[id].renewal) return state.rateEdited[id] ? "Your renewal increase" : "National estimate, change to yours";
+    return LINES[id].note || "";
+  }
+
+  function compute() {
+    const src = isAverage()
+      ? AVERAGE.map((a) => ({ ...a }))
+      : activeLines().map((id) => ({ id, label: LINES[id].label, rate: rateFor(id) || 0, monthly: amountFor(id), sample: LINES[id].sample, quiet: LINES[id].quiet, note: noteFor(id) }));
+    const lines = src.map((l) => {
+      const annual = l.monthly * 12;
+      // Today's spending already includes the rise, so a year ago the same things cost annual / (1 + r).
+      return { ...l, annual, extra: annual * l.rate / (100 + l.rate) };
+    });
+    const now = lines.reduce((s, l) => s + l.annual, 0);
+    const extra = lines.reduce((s, l) => s + l.extra, 0);
+    const prior = now - extra;
+    const rate = prior > 0 ? (now / prior - 1) * 100 : 0;
+    const main = lines.filter((l) => !l.quiet).sort((a, b) => b.extra - a.extra);
+    const quiet = lines.filter((l) => l.quiet);
+    return { main, quiet, extra, prior, rate, monthlyTotal: now / 12 };
+  }
+
+  // ── Rendering ──
+  function renderIntro() {
+    $("#lede").textContent = state.returning && state.collapsed
+      ? `Updated with ${REF} prices.`
+      : `Prices overall rose ${NATIONAL}% in the year to ${REF}. How much that costs you depends on how you live. Answer four questions to see your estimate.`;
+    $("#to-national").hidden = state.collapsed;
+  }
+
+  function renderQuestionsOnce() {
+    $("#questions").innerHTML = GROUPS.map((g) => `
+      <fieldset class="q">
+        <legend>${g.legend}</legend>
+        <div class="opts">${g.options.map(([v, l]) =>
+          `<button type="button" class="opt" id="opt-${g.id}-${v}" data-group="${g.id}" data-value="${v}" data-label="${l}" aria-pressed="false">${l}</button>`).join("")}</div>
+        <p class="help" id="help-${g.id}" hidden></p>
+      </fieldset>`).join("") + `
+      <fieldset class="q">
+        <legend>Also paying for</legend>
+        <div class="checks">${ALSO.map(([k, l]) =>
+          `<label class="check" for="also-${k}"><input type="checkbox" id="also-${k}" data-also="${k}">${l}</label>`).join("")}</div>
+      </fieldset>`;
+  }
+
+  function renderQuestions() {
+    const avg = isAverage();
+    $("#summary").hidden = !state.collapsed;
+    $("#questions").hidden = state.collapsed;
+    $("#saved-row").hidden = avg || state.collapsed;
+    if (state.collapsed) {
+      const c = state.choices;
+      const parts = GROUPS.map((g) => SUMMARY[g.id][c[g.id]]);
+      const also = ALSO.filter(([k]) => state.also[k]).map(([, l]) => l.toLowerCase());
+      let text = parts.join(", ");
+      text = text.charAt(0).toUpperCase() + text.slice(1) + ".";
+      if (also.length) text += ` Paying for ${also.join(" and ")}.`;
+      text += ` About ${dollars(round(compute().monthlyTotal, 50))} a month.`;
+      $("#summary-text").textContent = text;
+    }
+    document.querySelectorAll("[data-group]").forEach((b) => {
+      const g = b.dataset.group, chosen = !avg && state.choices[g] === b.dataset.value;
+      const answered = chosen && state.answered[g];
+      const guessed = chosen && !state.answered[g];
+      b.setAttribute("aria-pressed", String(!!answered));
+      b.classList.toggle("guess", guessed);
+      b.innerHTML = b.dataset.label + (guessed ? '<span class="guess-tag">our guess</span>' : "");
+    });
+    GROUPS.forEach((g) => {
+      const el = document.getElementById("help-" + g.id);
+      const text = avg ? "" : (g.help?.[state.choices[g.id]] || "");
+      el.textContent = text;
+      el.hidden = !text;
+    });
+    document.querySelectorAll("[data-also]").forEach((i) => { i.checked = !!state.also[i.dataset.also]; });
+  }
+
+  let rowsKey = "";
+  function renderAmounts(force) {
+    const avg = isAverage();
+    const toggle = $("#amounts-toggle");
+    toggle.textContent = avg ? "See the monthly amounts" : "Adjust monthly amounts";
+    toggle.setAttribute("aria-expanded", String(state.amountsOpen));
+    $("#amounts-body").hidden = !state.amountsOpen;
+    $("#amounts-intro").textContent = avg
+      ? "Average monthly spending for U.S. households, about $6,000 in total. Answer the questions to use your own."
+      : "These start as estimates for a household like yours. Rough numbers are fine.";
+    const ids = avg ? [] : activeLines();
+    const key = avg ? "average" : ids.join();
+    if (!force && key === rowsKey) {
+      ids.forEach((id) => {
+        const el = document.getElementById("amt-" + id);
+        if (el && document.activeElement !== el && state.edits[id] == null) el.value = amountFor(id);
+      });
+      return;
+    }
+    rowsKey = key;
+    $("#amount-rows").innerHTML = avg
+      ? AVERAGE.map((a) => `
+        <div class="amt-row"><span class="amt-label">${a.label}</span><span class="amt-fixed num">${dollars(a.monthly)} <span class="per">a month</span></span></div>`).join("")
+      : ids.map((id) => {
+          const L = LINES[id];
+          const renewal = L.renewal ? `
+            <div class="amt-sub"><label for="rate-${id}">Increase on your renewal notice</label>
+              <span class="money"><input class="pct" id="rate-${id}" data-rate="${id}" inputmode="decimal" autocomplete="off" value="${state.rates[id]}"><span class="per">%</span></span>
+              <span>${state.rateEdited[id] ? "" : "Starts at a national estimate"}</span></div>` : "";
+          return `
+          <div class="amt-row">
+            <label class="amt-label" for="amt-${id}">${L.label}${L.hint ? `<span class="amt-hint">${L.hint}</span>` : ""}</label>
+            <div class="money"><span aria-hidden="true">$</span><input id="amt-${id}" data-line="${id}" inputmode="numeric" autocomplete="off" value="${amountFor(id)}"><span class="per">a month</span></div>
+            ${renewal}
+          </div>`;
+        }).join("");
+  }
+
+  const TOP_LINES = 6;   // keeps the total and the list in view on a laptop-height screen
+
+  // Round each line to `step` so the rounded lines add up exactly to the rounded total the
+  // reader sees (largest-remainder), instead of drifting $40 away from it.
+  function allocate(values, total, step) {
+    const out = values.map((v) => Math.floor(v / step) * step);
+    let left = Math.round((total - out.reduce((s, v) => s + v, 0)) / step);
+    const order = values.map((v, i) => [v - out[i], i]).sort((a, b) => b[0] - a[0]);
+    for (let k = 0; left > 0 && order.length; k = (k + 1) % order.length, left--) out[order[k][1]] += step;
+    for (let k = order.length - 1; left < 0 && k >= 0; k--) {
+      if (out[order[k][1]] >= step) { out[order[k][1]] -= step; left++; }
+    }
+    return out;
+  }
+  let lastAnnounce = "";
+  function renderResult() {
+    const avg = isAverage();
+    const { main, quiet, extra, rate } = compute();
+    const all = [...main, ...quiet];
+    const totalRounded = round(extra, 50);
+    allocate(all.map((l) => l.extra), totalRounded, 10).forEach((v, i) => { all[i].shownExtra = v; });
+    const maxExtra = Math.max(...all.map((l) => l.extra), 1);
+    const shown = state.showAll ? main : main.slice(0, TOP_LINES);
+    const hidden = main.slice(TOP_LINES);
+    const hiddenExtra = hidden.reduce((s, l) => s + l.shownExtra, 0);
+    const scale = Math.max(rate, NATIONAL, 1) * 1.1;
+    const diff = rate - NATIONAL;
+    const amount = dollars(totalRounded);
+
+    const title = avg ? `The average U.S. household vs. ${PRIOR}` : `Your costs vs. ${PRIOR}`;
+    const answer = `About ${amount} more a year`;
+    let verdict = "";
+    if (!avg) {
+      if (Math.abs(diff) < 0.05) verdict = "About the same as the national rate.";
+      else if (diff > 0) verdict = `More than the national rate, mainly because of ${main[0].label.toLowerCase()}.`;
+      else verdict = state.choices.housing === "mortgage"
+        ? "Less than the national rate, mainly because your mortgage payment didn't change."
+        : "Less than the national rate.";
+    }
+    let basis = "";
+    if (!avg) {
+      const guesses = GROUPS.filter((g) => !state.answered[g.id]).length;
+      const answers = GROUPS.length - guesses;
+      basis = guesses ? `Based on ${plural(answers, "answer", "answers")} and ${plural(guesses, "guess", "guesses")}. ` : "Based on your answers. ";
+      if (!Object.keys(state.edits).length) basis += "Monthly amounts are starting estimates.";
+    }
+
+    const lineRow = (l) => {
+      const amt = l.extra > 0 && l.shownExtra === 0 ? "under $10" : "+" + dollars(l.shownExtra);
+      return `
+        <li class="line${l.quiet ? " quiet" : ""}">
+          <span class="line-name">${l.label}${l.note ? `<span class="line-note">${l.note}</span>` : ""}</span>
+          <span class="line-rate">${l.rate === 0 ? "0%" : pct(l.rate)}${l.sample ? "*" : ""}</span>
+          <span class="line-amt">${amt}</span>
+          ${l.extra > 0 && !l.quiet ? `<span class="line-bar" style="--w:${(l.extra / maxExtra * 100).toFixed(1)}%"></span>` : ""}
+        </li>`;
+    };
+
+    $("#result").innerHTML = `
+      <h2>${title}</h2>
+      <p class="answer">${answer}</p>
+      <p class="rates">${avg ? `Prices overall rose ${NATIONAL}%.` : `Your costs rose ${rate.toFixed(1)}%. Prices overall rose ${NATIONAL}%.`}</p>
+      ${avg ? "" : `
+      <div class="compare" role="img" aria-label="Your costs rose ${rate.toFixed(1)} percent; prices overall rose ${NATIONAL} percent">
+        <div class="cmp you"><span>Your costs</span><span><span class="cmp-bar" style="--w:${(Math.max(rate, 0) / scale * 100).toFixed(1)}%"></span></span><span class="cmp-val">${rate.toFixed(1)}%</span></div>
+        <div class="cmp us"><span>National</span><span><span class="cmp-bar" style="--w:${(NATIONAL / scale * 100).toFixed(1)}%"></span></span><span class="cmp-val">${NATIONAL.toFixed(1)}%</span></div>
+      </div>
+      <p class="verdict">${verdict}</p>
+      <p class="basis">${basis}</p>`}
+      <h3 class="lines-title">Where the extra money goes</h3>
+      <ul class="lines">
+        ${shown.map(lineRow).join("")}
+        ${hidden.length && !state.showAll ? `<li class="line quiet"><span class="line-name">${plural(hidden.length, "smaller item", "smaller items")}</span><span class="line-rate"></span><span class="line-amt">+${dollars(round(hiddenExtra, 10))}</span></li>` : ""}
+        ${quiet.map(lineRow).join("")}
+      </ul>
+      <div class="actions">
+        ${avg ? `<button type="button" class="btn" id="to-questions">Answer the questions</button>` : `<button type="button" class="btn" id="to-questions">Change answers</button>`}
+        ${hidden.length ? `<button type="button" class="text-btn" id="show-all" aria-expanded="${state.showAll}">${state.showAll ? "Show fewer items" : `Show all ${main.length + quiet.length} items`}</button>` : ""}
+      </div>
+      <p class="fine">Estimates based on BLS consumer price data for ${REF}. Dollar amounts are rounded. * Placeholder rate in this mockup.</p>`;
+
+    $("#dock-label").textContent = avg ? "Average U.S. household" : "Your costs";
+    $("#dock-amt").textContent = answer;
+    const announce = `${title}: ${answer}. ${verdict}`;
+    if (announce !== lastAnnounce) { $("#announce").textContent = announce; lastAnnounce = announce; }
+  }
+
+  function renderAll(forceRows) {
+    renderIntro(); renderQuestions(); renderAmounts(forceRows); renderResult(); save();
+  }
+
+  // ── Actions ──
+  const smooth = () => (matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
+  function goToQuestions() {
+    showTab("you");
+    if (state.collapsed) { state.collapsed = false; renderAll(false); }
+    $("#questions-area").scrollIntoView({ behavior: smooth(), block: "start" });
+    const target = document.querySelector('#questions [aria-pressed="true"]') || document.querySelector("#questions .opt");
+    target?.focus({ preventScroll: true });
+  }
+  function becomePersonal() {
+    if (!isAverage()) return;
+    state = { ...state, mode: "personal", choices: { ...COMMON }, answered: {} };
+  }
+  let undoSnapshot = null, toastTimer = null;
+  function startOver() {
+    undoSnapshot = JSON.parse(JSON.stringify(state));
+    state = fresh();
+    renderAll(true);
+    window.scrollTo({ top: 0, behavior: smooth() });
+    $("#toast").hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { $("#toast").hidden = true; undoSnapshot = null; }, 8000);
+  }
+  function showTab(which) {
+    document.querySelectorAll("[data-tab]").forEach((t) => t.setAttribute("aria-selected", String(t.dataset.tab === which)));
+    const you = which === "you";
+    $("#panel-you").hidden = !you;
+    $("#panel-other").hidden = you;
+    $("#dock").hidden = !you;
+    if (!you) { $("#other-title").textContent = OTHER_TABS[which][0]; $("#other-body").textContent = OTHER_TABS[which][1]; }
+  }
+
+  $("#questions").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-group]");
+    if (!b) return;
+    becomePersonal();
+    state.choices[b.dataset.group] = b.dataset.value;
+    state.answered[b.dataset.group] = true;
+    renderAll(false);
+  });
+  $("#questions").addEventListener("change", (e) => {
+    const i = e.target.closest("[data-also]");
+    if (!i) return;
+    becomePersonal();
+    state.also[i.dataset.also] = i.checked;
+    renderAll(false);
+  });
+  $("#amount-rows").addEventListener("input", (e) => {
+    const t = e.target;
+    const n = parseFloat(t.value.replace(/[^0-9.]/g, ""));
+    const v = Number.isFinite(n) ? Math.min(Math.max(n, 0), 100000) : 0;
+    if (t.dataset.rate) { state.rates[t.dataset.rate] = v; state.rateEdited[t.dataset.rate] = true; }
+    else if (t.dataset.line) state.edits[t.dataset.line] = v;
+    else return;
+    renderResult(); save();
+  });
+  $("#amounts-toggle").addEventListener("click", () => { state.amountsOpen = !state.amountsOpen; renderAmounts(true); });
+  $("#result").addEventListener("click", (e) => {
+    if (e.target.id === "show-all") { state.showAll = !state.showAll; renderResult(); $("#show-all").focus(); }
+    if (e.target.id === "to-questions") goToQuestions();
+  });
+  $("#summary-change").addEventListener("click", goToQuestions);
+  $("#summary-reset").addEventListener("click", startOver);
+  $("#start-over").addEventListener("click", startOver);
+  $("#undo").addEventListener("click", () => {
+    if (!undoSnapshot) return;
+    state = undoSnapshot; undoSnapshot = null;
+    $("#toast").hidden = true;
+    renderAll(true);
+  });
+  $("#to-national").addEventListener("click", () => { showTab("national"); window.scrollTo({ top: 0, behavior: smooth() }); });
+  $("#dock-btn").addEventListener("click", () => $("#result-col").scrollIntoView({ behavior: smooth(), block: "start" }));
+  document.querySelectorAll("[data-tab]").forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
+
+  const dock = $("#dock");
+  new IntersectionObserver(([entry]) => dock.classList.toggle("away", entry.isIntersecting), { threshold: 0.15 }).observe($("#result"));
+
+  renderQuestionsOnce();
+  renderAll(true);
+</script>

@@ -48,3 +48,40 @@ cd ~/projects/inflation-reality && git pull && npm install && npm test   # expec
 # read docs/superpowers/specs/2026-09-10-calculator-first-redesign-design.md
 python3 -m http.server 5190 --bind 127.0.0.1 --directory docs/superpowers/mockups   # mockup at :5190/2026-09-10-layout-c.html
 ```
+
+## 2026-09-14
+
+#### Handoff — Critical review of the redesign spec; toned-down mockup for comparison
+
+**Goal:** Stress-test the 2026-09-10 spec and mockup for "does this look AI-made?" and UX problems, and build a toned-down alternative the user can compare before the spec is updated.
+
+**Done:**
+- Independent review by a fresh subagent (no session memory) that screenshotted the receipt mockup at 390×844 and 1280×900, light and dark, including the returning state (Python Playwright; temp screenshots in `/tmp/claude-1000/review/`, may be gone). Verdict: structure right; the receipt costume (torn edge, dashed cuts, mono caps, yellow highlighter, offset-shadow buttons, 3 typefaces) reads as current AI-generator house style; one tap turns guesses into "Your year, repriced" with exact dollars; the average household's number is easily mistaken for the visitor's own.
+- **Toned-down mockup published:** https://claude.ai/code/artifact/a59d8dd0-a0af-4f74-bec8-08e2d2ba04ed — committed copy `docs/superpowers/mockups/2026-09-14-layout-c-plain.html`. Original receipt mockup still at https://claude.ai/code/artifact/46d43157-14b7-48b3-be56-47cae54d2785.
+  - Design: one family (Libre Franklin), cool gray ground `#F3F5F4`, slate ink `#1F2933`, one accent banknote green `#2E5E45` (selection, "you", focus); the answer as a large sentence ("About $1,450 more a year"); flat bordered buttons, filled + ✓ when chosen, dashed + "our guess" when guessed; no profiles row; daycare/tuition as "Also paying for" checkboxes; amounts collapsed; rounding lines to $10 and total to $50 with largest-remainder so the lines add up to the total; Undo toast on Start over; persistent `aria-live` region.
+  - Verified: one desktop screenshot before publishing showed the lines summing to $2,390 against "About $2,350"; fixed with the allocation above. **The post-fix version was not re-viewed**, and the phone layout and dark mode were not looked at.
+- BLS key steps verified on bls.gov: register at https://data.bls.gov/registrationEngine/ (organization, email, CAPTCHA, terms), key arrives from labstat@bls.gov; v2 = 500 queries/day, 50 series and 20 years per query; **keys must be renewed at least yearly** (BACKLOG item added).
+
+**Next:**
+1. **User compares the two mockups** and decides: (a) visual direction, receipt vs toned-down (recommended: toned-down); (b) drop the profiles row (recommended; the toned-down mockup already drops it).
+2. **Update the spec in one pass** with that decision plus the accepted findings below, re-run the spec self-review, get user approval, then `superpowers:writing-plans`.
+3. User task still open: BLS API key → GitHub secret `BLS_API_KEY`.
+
+**Accepted review findings to fold into the spec:**
+- Trust: guessed answers styled as guesses + "Based on N answers and N guesses"; health **and home insurance** use the renewal-notice increase, default labeled "National estimate, change to yours"; home repairs labeled "Estimate"; nothing pre-selected on first load; phone dock says "Average U.S. household" until the first answer; "Everything else" always last, gray, "Estimated from the national rate", with a test bounding its rate (not just its weight); say "average", not "typical" (it's a mean).
+- Numbers: lines to $10, total to $50 with "About", allocated so lines sum to the total.
+- First screen: 4 questions (home, getting around, heating, health) + "Also paying for" checkboxes; commute becomes a hint on the gas amount; amounts collapsed behind "Adjust monthly amounts".
+- Copy: headline "How much more are you paying than a year ago?"; result title "Your costs vs. July 2025"; buttons "Change answers" / "Answer the questions"; returning lede "Updated with July 2026 prices."; verdict e.g. "Less than the national rate, mainly because your mortgage payment didn't change."; tab "National numbers" (not "The bigger picture"); explainers as plain sentences without bold lead-ins; no middle-dot separators; no em dashes in site copy.
+- Accessibility: contrast (no yellow on light, focus ring in the accent), persistent live region, `scroll-padding-bottom` for the dock, tabs wrap at 390px, Undo for Start over, neutral bars instead of red.
+- Spec gaps to add: voice guide with banned patterns; testable not-AI criteria (≤2 type families, no monospace, no letter-spaced caps labels, no decorative metaphor, no middle-dot meta strings, no → on links); a 5-second test with 5 non-designers on phones (user runs it); number-formatting rules; visual rules for the other tabs and charts; loading/stale visuals and font-fallback behavior; link-preview image, title and description; loud CI warning when the BLS key fails or expires.
+- **Rejected:** "one type family" as a hard rule (write "max two, no mono"); testing the site name is out of scope.
+
+**Gotchas:**
+- The user's design-quality memo ("Designed, Not Generated" artifact) lists tells beyond the obvious: cream + serif + terracotta, near-black + acid green, broadsheet hairline layouts, SaaS card kits, tracked-out caps eyebrows, `A · B · C` meta strings, `WORD — fragment` labels, mono data labels, `→` on buttons.
+- U.S. Web Design System blue + Public Sans would make the site look like an official .gov page, which is a credibility and impersonation risk for an independent site. Avoided.
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality && git pull && npm install && npm test   # expect 46 pass
+# Open both mockup artifact links above; then edit docs/superpowers/specs/2026-09-10-calculator-first-redesign-design.md
+```
