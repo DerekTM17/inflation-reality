@@ -94,3 +94,11 @@ cd ~/projects/inflation-reality && git pull && npm install && npm test   # expec
 1. **User reviews the revised spec.** Not yet reviewed.
 2. On approval, invoke `superpowers:writing-plans`. Phase 1 (pipeline) first; its Task 1 is the spec's "Verify in plan Task 1" list, and the BLS key is now available for those checks.
 3. BLS key renewal due by 2027-09-14.
+
+#### Handoff — Spec revision 3 and the Phase 1 plan
+
+**Done:** A second independent review (technical + UX) found the average-household basket underspecified and its residual about 0.7 points off (December relative-importance weights must be rolled forward to the reference month), a BLS parsing trap (a null value becomes a real zero through `parseObservations`), lines not actually anchored to the reference month outside a `yoyGap`, unspecified negative rates, a missing fallback for new lines, and an undefined verdict rule. Nearly everything was accepted and folded into the spec (revision 3). Verified directly on bls.gov: December 2025 relative importance (Physicians' services 1.684, Prescription drugs 0.973, basket values match) and CE 2024 ($78,535 − $9,797 = $68,738 a year → $5,750 a month). Wrote `docs/superpowers/plans/2026-09-14-calculator-phase1-pipeline.md` (6 tasks: catalog manifest, BLS parser, weight math, assemble lines/basket, fetch + CI gate + push/verify, fallback refresh + docs).
+
+**Not accepted from the review:** a user-facing note for the 3-point residual gap (warning only, per the review's own "consider"); timestamps on saved renewal rates.
+
+**Next:** The user chooses how to run the Phase 1 plan: subagent-driven (recommended) or inline. Task 5 pushes to `main` (invisible to the UI) and must be verified against production before Task 6. After Phase 1: write the Phase 2a plan (shell + Your costs).
