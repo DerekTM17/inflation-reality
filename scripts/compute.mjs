@@ -35,6 +35,9 @@ function round1(n) { return Math.round(n * 10) / 10; }
 
 // The monthly functions below take an optional `anchor` (a YYYY-MM-01 date) to compute
 // for a specific month instead of the latest one — see yoyAnchorDate.
+// Sibling: yoyAt (below) does the same lookup/guard/formula for the calculator lines, but
+// stores 6 decimals instead of rounding to 1, and never falls back past its exact `date` —
+// a rule changed here (e.g. the Oct-2025 gap handling) likely needs the same change there.
 export function computeYoY(observations, anchor) {
   const map = toMap(observations);
   const d = anchor ?? latestDate(observations);
@@ -157,7 +160,9 @@ export function referenceMonthLabel(dateStr) {
 }
 
 // ── Calculator weights ────────────────────────────────────────────────────
-export function round6(n) { return Math.round(n * 1e6) / 1e6; }
+// null, never zero: Math.round(null * 1e6) is 0, so an unguarded round6 would turn a missing
+// component into a published 0.000000% instead of staying null.
+export function round6(n) { return n == null ? null : Math.round(n * 1e6) / 1e6; }
 
 export function valueAt(observations, date) {
   const v = toMap(observations).get(date);
@@ -165,6 +170,10 @@ export function valueAt(observations, date) {
 }
 
 // Unrounded 12-month change at exactly `date` (no fallback to another month).
+// Sibling: computeYoY (above) does the same lookup/guard/formula for the display categories,
+// but rounds to 1 decimal and falls back to latestDate() when no anchor is given — this one
+// is stored to 6 decimals and always anchored, because the basket residual math needs the
+// same reference month as every other line, not each series' own latest month.
 export function yoyAt(observations, date) {
   const map = toMap(observations);
   const now = map.get(date);
@@ -177,7 +186,7 @@ export function yoyAt(observations, date) {
 // its December weight moved by its own price change relative to all items:
 //   w_i(t) = w_i(Dec) × (I_i,t / I_i,Dec) ÷ (I_all,t / I_all,Dec)
 // Using December weights unrolled was off by 0.7 points for the basket residual in Aug 2026.
-export function rolledWeights(parts, { allDec, allT }) {
+export function rolledWeights(parts, { allDec, allT } = {}) {
   if (!(allDec > 0) || !(allT > 0)) return null;
   const allMove = allT / allDec;
   const out = {};

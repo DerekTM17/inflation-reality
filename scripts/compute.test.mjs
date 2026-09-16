@@ -175,6 +175,8 @@ test("valueAt and yoyAt read one exact month; null when either side is missing",
   close(yoyAt(obs, "2026-03-01"), (104.3 / 101.0 - 1) * 100);
   assert.equal(yoyAt(obs, "2026-10-01"), null);
   assert.equal(round6(1.23456789), 1.234568);
+  // null, never zero: Math.round(null * 1e6) is 0 without the guard.
+  assert.equal(round6(null), null);
 });
 
 test("rolledWeights moves December weights by each part's price change relative to all items", () => {
@@ -191,6 +193,9 @@ test("rolledWeights moves December weights by each part's price change relative 
   assert.equal(rolledWeights([{ key: "x", riDec: 1, levelDec: 1, levelT: 1 }], { allDec: null, allT: 1 }), null);
   // a null riDec must not coerce to 0 and silently drop the part from the basket
   assert.equal(rolledWeights([{ key: "x", riDec: null, levelDec: 100, levelT: 120 }], { allDec: 300, allT: 309 }), null);
+  // called with no second argument (e.g. a caller that forgot allDec/allT) must return
+  // null, not throw destructuring undefined
+  assert.equal(rolledWeights([{ key: "x", riDec: 1, levelDec: 1, levelT: 1 }]), null);
 });
 
 test("combineRates weights 12-month changes by current-month shares (harmonic)", () => {
