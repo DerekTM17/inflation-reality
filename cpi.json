@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T19:49:45.508Z",
+  "generatedAt": "2026-09-16T15:33:02.447Z",
   "referenceMonth": "2026-08",
   "referenceMonthLabel": "August 2026",
   "headline": {
@@ -149,16 +149,16 @@
   },
   "weeklyPrices": {
     "gasoline": {
-      "current": 4.157,
-      "yearAgo": 3.192,
-      "asOf": "2026-09-07",
-      "asOfLabel": "Sep 7, 2026"
+      "current": 4.319,
+      "yearAgo": 3.168,
+      "asOf": "2026-09-14",
+      "asOfLabel": "Sep 14, 2026"
     },
     "diesel": {
-      "current": 5.967,
-      "yearAgo": 3.766,
-      "asOf": "2026-09-07",
-      "asOfLabel": "Sep 7, 2026"
+      "current": 6.285,
+      "yearAgo": 3.739,
+      "asOf": "2026-09-14",
+      "asOfLabel": "Sep 14, 2026"
     }
   },
   "trend": [
@@ -211,5 +211,81 @@
       "month": "Aug 26",
       "headline": 3.4
     }
-  ]
+  ],
+  "lines": {
+    "rent": {
+      "yoy": 2.749776
+    },
+    "upkeep": {
+      "yoy": 1.981848
+    },
+    "groceries": {
+      "yoy": 2.190663
+    },
+    "dining": {
+      "yoy": 3.36677
+    },
+    "gasoline": {
+      "yoy": 27.404926
+    },
+    "carIns": {
+      "yoy": -5.127534
+    },
+    "carUpkeep": {
+      "yoy": 5.237484
+    },
+    "transit": {
+      "yoy": -3.69725
+    },
+    "electric": {
+      "yoy": 3.788939
+    },
+    "heatGas": {
+      "yoy": 4.385845
+    },
+    "heatOil": {
+      "yoy": 52.039475
+    },
+    "daycare": {
+      "yoy": 3.985052
+    },
+    "tuition": {
+      "yoy": 2.815313
+    },
+    "clothing": {
+      "yoy": 3.608634
+    },
+    "fun": {
+      "yoy": 2.681868
+    },
+    "doctor": {
+      "yoy": 0.194294
+    }
+  },
+  "basket": {
+    "month": "2026-08",
+    "weights": {
+      "housing": 35.322438,
+      "groceries": 8.202357,
+      "dining": 5.30412,
+      "energy": 3.442446,
+      "gasoline": 3.85317,
+      "health": 8.229578,
+      "clothing": 2.445064,
+      "fun": 5.062939
+    },
+    "rates": {
+      "housing": 3.041144,
+      "groceries": 2.190663,
+      "dining": 3.36677,
+      "energy": 5.047394,
+      "gasoline": 27.404926,
+      "health": 1.563348,
+      "clothing": 3.608634,
+      "fun": 2.681868
+    },
+    "restWeight": 28.137887,
+    "residualYoy": 2.014252,
+    "headlineYoy": 3.396548
+  }
 }
