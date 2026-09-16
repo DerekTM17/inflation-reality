@@ -182,6 +182,7 @@ export function rolledWeights(parts, { allDec, allT }) {
   const allMove = allT / allDec;
   const out = {};
   for (const p of parts) {
+    if (p.riDec == null || !(p.riDec >= 0)) return null;
     if (!(p.levelDec > 0) || !(p.levelT > 0)) return null;
     out[p.key] = p.riDec * (p.levelT / p.levelDec) / allMove;
   }
@@ -205,6 +206,7 @@ export function combineRates(weights, rates) {
 // The rate for "everything else" (weight 100 − Σ visible) that makes the visible parts plus the
 // rest reproduce the headline: 1+r_rest = s_rest ÷ (1/(1+R) − Σ s_i/(1+r_i)).
 export function residualRate(headlinePct, weights, rates, minRest = 10) {
+  if (headlinePct == null) return null;
   const keys = Object.keys(weights);
   const rest = 100 - keys.reduce((s, k) => s + weights[k], 0);
   if (rest < minRest) return null;

@@ -189,6 +189,8 @@ test("rolledWeights moves December weights by each part's price change relative 
   close(w.rent, 30);                                   // rose exactly as much as all items
   assert.equal(rolledWeights([{ key: "x", riDec: 1, levelDec: null, levelT: 1 }], { allDec: 1, allT: 1 }), null);
   assert.equal(rolledWeights([{ key: "x", riDec: 1, levelDec: 1, levelT: 1 }], { allDec: null, allT: 1 }), null);
+  // a null riDec must not coerce to 0 and silently drop the part from the basket
+  assert.equal(rolledWeights([{ key: "x", riDec: null, levelDec: 100, levelT: 120 }], { allDec: 300, allT: 309 }), null);
 });
 
 test("combineRates weights 12-month changes by current-month shares (harmonic)", () => {
@@ -211,4 +213,6 @@ test("residualRate refuses a rest under 10, a missing rate, or an impossible sol
   assert.equal(residualRate(3, { a: 50 }, { a: null }), null);
   // the visible half alone already implies a deflator above the headline's
   assert.equal(residualRate(0, { a: 50 }, { a: -60 }), null);
+  // a null headline must not be treated as a 0% headline
+  assert.equal(residualRate(null, { a: 40 }, { a: 5 }), null);
 });
