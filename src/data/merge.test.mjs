@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, WEEKLY_PRICES, CALC_LINES, CALC_COMBOS } from "./catalog.js";
+import { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, WEEKLY_PRICES, CALC_LINES, CALC_COMBOS, BASKET } from "./catalog.js";
 import { buildViewData, staleLabels } from "./merge.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -10,6 +10,7 @@ const dynamic = JSON.parse(
   readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "fallback.json"), "utf8"),
 );
 const catalog = { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, WEEKLY_PRICES };
+const fullCatalog = { ...catalog, CALC_LINES, CALC_COMBOS, BASKET };
 
 test("buildViewData merges static metadata with dynamic values", () => {
   const view = buildViewData(catalog, dynamic);
@@ -105,4 +106,66 @@ test("fallback.json is a healthy production snapshot with every calculator line 
   }
   assert.equal(typeof dynamic.basket?.residualYoy, "number");
   assert.notEqual(dynamic.basket.stale, true);
+});
+
+test("buildViewData forwards every calculator line, keyed by id, from the payload", () => {
+  const view = buildViewData(fullCatalog, dynamic);
+  const ids = [...CALC_LINES.map(l => l.id), ...CALC_COMBOS.map(c => c.id)];
+  assert.deepEqual(Object.keys(view.lines).sort(), [...ids].sort());
+  assert.equal(ids.length, 16);
+  const gasoline = view.lines.gasoline;
+  assert.equal(gasoline.yoy, dynamic.lines.gasoline.yoy);
+  assert.equal(gasoline.yoy, 27.404926);               // literal, pinned to the production fixture
+  assert.equal(gasoline.label, "Gas for the car");      // from catalog
+  assert.equal(gasoline.source, "fred");
+  assert.equal(gasoline.stale, false);
+  assert.equal(view.lines.doctor.yoy, dynamic.lines.doctor.yoy);
+  assert.equal(view.lines.doctor.label, "Doctor and pharmacy");
+});
+
+test("buildViewData lines: stale is carried; a missing line is null, never 0", () => {
+  const { rent, ...withoutRent } = dynamic.lines;
+  const view = buildViewData(fullCatalog, {
+    ...dynamic,
+    lines: { ...withoutRent, carIns: { yoy: -5.1, stale: true } },
+  });
+  assert.deepEqual(
+    { yoy: view.lines.carIns.yoy, stale: view.lines.carIns.stale },
+    { yoy: -5.1, stale: true },
+  );
+  assert.equal(view.lines.rent.yoy, null);
+  assert.equal(view.lines.rent.stale, false);
+});
+
+test("buildViewData forwards the basket as ordered items plus the residual", () => {
+  const view = buildViewData(fullCatalog, dynamic);
+  assert.deepEqual(view.basket.items.map(i => i.id), BASKET.visible.map(v => v.id));
+  const housing = view.basket.items.find(i => i.id === "housing");
+  assert.equal(housing.label, "Housing");                          // from catalog
+  assert.equal(housing.weight, dynamic.basket.weights.housing);
+  assert.equal(housing.rate, dynamic.basket.rates.housing);
+  assert.equal(view.basket.restWeight, 28.137887);                 // literal, production fixture
+  assert.equal(view.basket.residualYoy, dynamic.basket.residualYoy);
+  assert.equal(view.basket.headlineYoy, dynamic.basket.headlineYoy);
+  assert.equal(view.basket.month, dynamic.basket.month);
+  assert.equal(view.basket.stale, false);
+});
+
+test("buildViewData basket: a bare { stale: true } has null fields, never 0", () => {
+  const view = buildViewData(fullCatalog, { ...dynamic, basket: { stale: true } });
+  assert.equal(view.basket.stale, true);
+  assert.equal(view.basket.items.length, BASKET.visible.length);
+  assert.ok(view.basket.items.every(i => i.weight === null && i.rate === null));
+  assert.equal(view.basket.restWeight, null);
+  assert.equal(view.basket.residualYoy, null);
+  assert.equal(view.basket.headlineYoy, null);
+  assert.equal(view.basket.month, null);
+});
+
+test("buildViewData without calculator catalog entries or payload keys returns empty lines and basket", () => {
+  const view = buildViewData(catalog, { trend: [], categories: {} });
+  assert.deepEqual(view.lines, {});
+  assert.deepEqual(view.basket.items, []);
+  assert.equal(view.basket.residualYoy, null);
+  assert.equal(view.basket.stale, false);
 });

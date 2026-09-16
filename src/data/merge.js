@@ -2,7 +2,10 @@
 // into render-ready objects for the app. Pure; no side effects.
 
 export function buildViewData(catalog, dynamic) {
-  const { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, WEEKLY_PRICES } = catalog;
+  const {
+    HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, WEEKLY_PRICES,
+    CALC_LINES, CALC_COMBOS, BASKET,
+  } = catalog;
 
   const macro = (spec, node = {}) => ({
     ...spec,
@@ -40,6 +43,36 @@ export function buildViewData(catalog, dynamic) {
     stale: dynamic.weeklyPrices?.[w.key]?.stale ?? false,
   }));
 
+  // Calculator lines, keyed by id (CALC_LINES plus combos such as "doctor"). A line
+  // with no published value has yoy null, never 0. Values stay at stored precision
+  // (6 decimals); display rounds.
+  const lines = Object.fromEntries(
+    [...(CALC_LINES || []), ...(CALC_COMBOS || [])].map((l) => [l.id, {
+      id: l.id,
+      label: l.label,
+      source: l.source,
+      yoy: dynamic.lines?.[l.id]?.yoy ?? null,
+      stale: dynamic.lines?.[l.id]?.stale ?? false,
+    }]),
+  );
+
+  // Average-household basket. The payload keys weights and rates by visible id; a
+  // stale basket may be a bare { stale: true }, so every field defaults to null.
+  const b = dynamic.basket ?? {};
+  const basket = {
+    month: b.month ?? null,
+    items: (BASKET?.visible || []).map((v) => ({
+      id: v.id,
+      label: v.label,
+      weight: b.weights?.[v.id] ?? null,
+      rate: b.rates?.[v.id] ?? null,
+    })),
+    restWeight: b.restWeight ?? null,
+    residualYoy: b.residualYoy ?? null,
+    headlineYoy: b.headlineYoy ?? null,
+    stale: b.stale ?? false,
+  };
+
   return {
     generatedAt: dynamic.generatedAt ?? null,
     referenceMonth: dynamic.referenceMonth ?? null,
@@ -52,6 +85,8 @@ export function buildViewData(catalog, dynamic) {
     altMeasures,
     weeklyPrices,
     trend: dynamic.trend ?? [],
+    lines,
+    basket,
   };
 }
 
