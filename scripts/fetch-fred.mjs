@@ -39,15 +39,28 @@ async function fetchBls(ids, registrationKey) {
 }
 
 // What production serves right now: fresher last-known values than the bundled snapshot.
+// Three distinct ways this can come back null read identically in a build log unless each
+// is named: the site being unreachable or its JSON unparseable, an HTTP error, and a response
+// that parses but isn't a cpi.json we recognize (also the shape of a healthy first run, before
+// anything has ever deployed). Never log the response body itself, just which case this was.
 async function loadDeployedPayload() {
+  let json;
   try {
     const res = await fetch(DEPLOYED_CPI_URL, { signal: AbortSignal.timeout(15_000) });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json && typeof json === "object" && json.headline ? json : null;
-  } catch {
+    if (!res.ok) {
+      warn("Deployed cpi.json", `HTTP ${res.status} from the deployed site. Falling back to the bundled snapshot only.`);
+      return null;
+    }
+    json = await res.json();
+  } catch (err) {
+    warn("Deployed cpi.json", `Fetch or parse failed: ${err.message}. Falling back to the bundled snapshot only.`);
     return null;
   }
+  if (!(json && typeof json === "object" && json.headline)) {
+    warn("Deployed cpi.json", "Response has no headline field — not a cpi.json we recognize, or the site has never deployed. Falling back to the bundled snapshot only.");
+    return null;
+  }
+  return json;
 }
 
 async function fetchSeries(id, apiKey) {
@@ -131,7 +144,7 @@ async function main() {
   mkdirSync(resolve(ROOT, "public"), { recursive: true });
   writeFileSync(resolve(ROOT, "public/cpi.json"), JSON.stringify(payload, null, 2) + "\n");
   console.log(`Wrote public/cpi.json — reference month ${payload.referenceMonth}, ${successes + blsLive}/${series.length + blsIds.length} series live (FRED + BLS).`);
-  for (const message of calculatorWarnings(payload)) warn("Calculator data", message);
+  for (const message of calculatorWarnings(payload, catalog, observationsBySeries)) warn("Calculator data", message);
   if (payload.yoyGap) {
     console.log(`Note: ${payload.yoyGap.latestMonthLabel} has no year-ago figure (${payload.yoyGap.missingMonthLabel} was never published), so CPI figures are for ${payload.referenceMonthLabel}.`);
   }
