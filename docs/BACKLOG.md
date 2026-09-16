@@ -33,6 +33,7 @@ Items we want to tackle in the near term but aren't started yet.
 - [ ] **[ops]** Yearly (after BLS publishes December relative importance, around February, and the Consumer Expenditure release): update BASKET and CALC_COMBOS riDec values, riYear, and ceMonthlyMean in src/data/catalog.js, and re-run the basket tests. Stale weights make the Everything else rate drift. <!-- added 2026-09-16 -->
 - [ ] **[feat]** Phase 2 decision: when one of the 8 basket series is missing, the whole basket falls back to last month (rolledWeights is all-or-nothing) while each calculator line fails on its own. Decide with the spec whether to drop the missing series and fold its weight into Everything else (changes what the visible items mean) or keep the whole-basket fallback. The warning already names the series. <!-- added 2026-09-16 -->
 - [ ] **[tech-debt]** Test the fallback layering order in scripts/fetch-fred.mjs ({...bundledFallback, ...deployed}): it decides which number is published when both sources have one, and fetch-fred.mjs has no tests at all. Extract the merge into a pure function and test it. Also: check-lines.mjs parses public/cpi.json unguarded, so a bad file gives a stack trace instead of an ::error:: annotation. <!-- added 2026-09-16 -->
+- [ ] **[data]** Sanity-check the large live rates against a second source before the calculator shows them: gasoline +27.4% and heating oil +52.0% year over year (August 2026). EIA weekly fuel is already in the payload (weeklyPrices) and makes a quick cross-check. <!-- added 2026-09-16 -->
 
 ## Someday
 
