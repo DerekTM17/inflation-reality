@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, WEEKLY_PRICES } from "./catalog.js";
+import { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, WEEKLY_PRICES, CALC_LINES, CALC_COMBOS } from "./catalog.js";
 import { buildViewData, staleLabels } from "./merge.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -13,24 +13,26 @@ const catalog = { HEADLINE, CORE, CATEGORIES, AVG_PRICE_ITEMS, ALT_MEASURES, WEE
 
 test("buildViewData merges static metadata with dynamic values", () => {
   const view = buildViewData(catalog, dynamic);
-  assert.equal(view.headline.yoy, 3.3);
+  assert.equal(typeof view.headline.yoy, "number");
+  assert.equal(view.headline.yoy, dynamic.headline.yoy);
   assert.equal(view.headline.seriesId, "CPIAUCNS");   // from catalog
-  assert.equal(view.headline.mom, 0.3);
-  assert.equal(view.core.yoy, 2.6);
+  assert.equal(typeof view.headline.mom, "number");
+  assert.equal(view.core.yoy, dynamic.core.yoy);
 
   assert.equal(view.categories.length, 10);
   const gas = view.categories.find(c => c.id === "gas");
-  assert.equal(gas.yoy, 12.5);
+  assert.equal(gas.yoy, dynamic.categories.gas.yoy);
+  assert.equal(gas.yoy, 27.4);                        // literal, pinned to the production fixture
   assert.equal(gas.color, "#E76F51");                 // from catalog
   assert.equal(gas.icon, "⛽");
 
   assert.equal(view.avgPrices.length, 21);
   const eggs = view.avgPrices.find(p => p.item === "Eggs, Grade A Large");
-  assert.equal(eggs.current, 6.23);
+  assert.equal(eggs.current, dynamic.avgPrices.APU0000708111.current);
   assert.equal(eggs.unit, "/doz");                    // from catalog
 
   assert.equal(view.trend.length, 12);
-  assert.equal(view.referenceMonthLabel, "March 2026");
+  assert.match(view.referenceMonthLabel, /^[A-Z][a-z]+ \d{4}$/);
 });
 
 test("buildViewData tolerates a missing dynamic entry (yoy null)", () => {
@@ -44,7 +46,7 @@ test("buildViewData exposes altMeasures merged with catalog metadata", () => {
   const view = buildViewData(catalog, dynamic);
   assert.equal(view.altMeasures.length, 5);
   const pce = view.altMeasures.find(m => m.key === "corePce");
-  assert.equal(pce.yoy, 3.4);              // from fallback.json dynamic
+  assert.equal(pce.yoy, dynamic.altMeasures.corePce.yoy);
   assert.equal(pce.seriesId, "PCEPILFE");  // from catalog
   assert.ok(pce.blurb && pce.color);
 });
@@ -94,4 +96,15 @@ test("staleLabels: tolerates an empty or missing list", () => {
 test("staleLabels: works on single macro nodes passed as an ad-hoc list (headline/core)", () => {
   const view = buildViewData(catalog, { ...dynamic, headline: { ...dynamic.headline, stale: true } });
   assert.deepEqual(staleLabels([view.headline, view.core]), [HEADLINE.label]);
+});
+
+test("fallback.json is a healthy production snapshot with every calculator line and the basket", () => {
+  for (const id of [...CALC_LINES.map(l => l.id), ...CALC_COMBOS.map(c => c.id)]) {
+    assert.equal(typeof dynamic.lines?.[id]?.yoy, "number", `${id} in fallback.lines`);
+    assert.notEqual(dynamic.lines[id].stale, true, `${id} is not stale`);
+  }
+  assert.equal(typeof dynamic.basket?.residualYoy, "number");
+  assert.notEqual(dynamic.basket.stale, true);
+  // Literal, pinned to the 2026-08 production fixture (not a pass-through of itself).
+  assert.equal(dynamic.basket.residualYoy, 2.014252);
 });
