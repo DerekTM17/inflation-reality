@@ -89,6 +89,73 @@ export const WEEKLY_PRICES = [
     blurb: "EIA's weekly retail diesel price, all types. Diesel moves freight, so it feeds through into the price of most physical goods a few months later." },
 ];
 
+// ── Calculator (redesign, Phase 1) ─────────────────────────────────────────
+// The 12-month rate behind each line of the "Your costs" calculator. source "fred" series are
+// fetched with FRED_API_KEY like everything above. source "bls" series are NOT mirrored on FRED
+// (checked 2026-09-10/14) and come from the BLS Public Data API v2 with BLS_API_KEY.
+// Lines without a series (mortgage = 0%, insurance = the person's renewal increase, charging =
+// the electricity rate, everything else = the basket residual) are handled in the front end.
+export const CALC_LINES = [
+  { id: "rent",      label: "Rent",                seriesId: "CUUR0000SEHA",   source: "fred" },
+  { id: "upkeep",    label: "Home repairs",        seriesId: "CUUR0000SAH3",   source: "fred" },
+  { id: "groceries", label: "Groceries",           seriesId: "CUUR0000SAF11",  source: "fred" },
+  { id: "dining",    label: "Eating out",          seriesId: "CUUR0000SEFV",   source: "fred" },
+  { id: "gasoline",  label: "Gas for the car",     seriesId: "CUUR0000SETB01", source: "fred" },
+  { id: "carIns",    label: "Car insurance",       seriesId: "CUUR0000SETE",   source: "bls" },
+  { id: "carUpkeep", label: "Car repairs",         seriesId: "CUUR0000SETD",   source: "fred" },
+  { id: "transit",   label: "Bus and train fares", seriesId: "CUUR0000SETG02", source: "bls" },
+  { id: "electric",  label: "Electricity",         seriesId: "CUUR0000SEHF01", source: "fred" },
+  { id: "heatGas",   label: "Natural gas bill",    seriesId: "CUUR0000SEHF02", source: "fred" },
+  { id: "heatOil",   label: "Heating oil",         seriesId: "CUUR0000SEHE01", source: "bls" },
+  { id: "daycare",   label: "Daycare",             seriesId: "CUUR0000SEEB03", source: "bls" },
+  { id: "tuition",   label: "College tuition",     seriesId: "CUUR0000SEEB01", source: "bls" },
+  { id: "clothing",  label: "Clothing",            seriesId: "CPIAPPNS",       source: "fred" },
+  { id: "fun",       label: "Entertainment",       seriesId: "CPIRECNS",       source: "fred" },
+];
+
+// Lines built from several series, combined with weights rolled forward from December
+// relative importance (BLS, December 2025) — see combineRates in scripts/compute.mjs.
+export const CALC_COMBOS = [
+  {
+    id: "doctor", label: "Doctor and pharmacy", source: "bls",
+    parts: [
+      { seriesId: "CUUR0000SEMC01", label: "Physicians' services", riDec: 1.684 },
+      { seriesId: "CUUR0000SEMF01", label: "Prescription drugs",   riDec: 0.973 },
+    ],
+  },
+];
+
+// The average U.S. household: visible lines with December 2025 relative importance (percent of
+// all items, 2024 weights). Everything else is the remaining weight, and its rate is solved so
+// the basket reproduces the headline (residualRate in scripts/compute.mjs). Update yearly.
+export const BASKET = {
+  riYear: 2025,
+  riSourceUrl: "https://www.bls.gov/cpi/tables/relative-importance/2025.htm",
+  visible: [
+    { id: "housing",   label: "Housing",         seriesId: "CUUR0000SAH1",   riDec: 35.625 },
+    { id: "groceries", label: "Groceries",       seriesId: "CUUR0000SAF11",  riDec: 8.325 },
+    { id: "dining",    label: "Eating out",      seriesId: "CUUR0000SEFV",   riDec: 5.373 },
+    { id: "energy",    label: "Home energy",     seriesId: "CUUR0000SAH21",  riDec: 3.402 },
+    { id: "gasoline",  label: "Gas for the car", seriesId: "CUUR0000SETB01", riDec: 2.895 },
+    { id: "health",    label: "Health care",     seriesId: "CPIMEDNS",       riDec: 8.423 },
+    { id: "clothing",  label: "Clothing",        seriesId: "CPIAPPNS",       riDec: 2.368 },
+    { id: "fun",       label: "Entertainment",   seriesId: "CPIRECNS",       riDec: 5.137 },
+  ],
+  // Consumer Expenditure Survey 2024: $78,535 average annual expenditures minus $9,797 personal
+  // insurance and pensions = $68,738 a year, rounded to $5,750 a month.
+  ceYear: 2024,
+  ceSourceUrl: "https://www.bls.gov/news.release/cesan.nr0.htm",
+  ceMonthlyMean: 5750,
+};
+
+// BLS-only series ids the fetch script requests from the BLS API (never from FRED).
+export function blsSeries() {
+  const ids = new Set();
+  for (const l of CALC_LINES) if (l.source === "bls") ids.add(l.seriesId);
+  for (const c of CALC_COMBOS) if (c.source === "bls") for (const p of c.parts) ids.add(p.seriesId);
+  return [...ids];
+}
+
 // The de-duplicated list of FRED series the fetch script must request.
 // kind "level"   → used for YoY / trend / avg-price (NSA levels)
 // kind "levelSA" → used for MoM (seasonally adjusted levels)
@@ -104,5 +171,7 @@ export function allSeries() {
   for (const p of AVG_PRICE_ITEMS) add(p.seriesId, "level");
   for (const m of ALT_MEASURES) add(m.seriesId, m.kind === "index" ? "level" : "rate");
   for (const w of WEEKLY_PRICES) add(w.seriesId, "level");
+  for (const l of CALC_LINES) if (l.source === "fred") add(l.seriesId, "level");
+  for (const v of BASKET.visible) add(v.seriesId, "level");
   return [...seen.values()];
 }
