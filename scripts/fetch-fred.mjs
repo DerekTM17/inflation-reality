@@ -3,7 +3,8 @@
 import { writeFileSync, readFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
-import { assemblePayload, staleMacroKeys } from "./assemble.mjs";
+import { assemblePayload, staleMacroKeys, calculatorWarnings } from "./assemble.mjs";
+import { BLS_API_URL, blsRequestBody, parseBlsResponse } from "./bls.mjs";
 // Import the whole catalog namespace and pass it straight through, so adding a new
 // catalog export (e.g. a new measure group) can never be silently dropped here.
 import * as catalog from "../src/data/catalog.js";
@@ -11,6 +12,43 @@ import * as catalog from "../src/data/catalog.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 const OBSERVATION_START = "2019-01-01"; // enough history for trailing-12 YoY on any month
+
+const DEPLOYED_CPI_URL = "https://derektm17.github.io/inflation-reality/cpi.json";
+
+// GitHub Actions annotation: shows on the run summary, not only in the log.
+const warn = (title, message) => console.log(`::warning title=${title}::${message}`);
+
+// BLS-only series in one POST. Never throws: a failed request returns ok:false and every id
+// missing, so those lines fall back and check-lines.mjs turns the run red after deploy.
+async function fetchBls(ids, registrationKey) {
+  const year = new Date().getUTCFullYear();
+  // Reach back to the basket's December weights month as well as a full year of history.
+  const startYear = Math.min(year - 2, catalog.BASKET.riYear);
+  try {
+    const res = await fetch(BLS_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(blsRequestBody(ids, { startYear, endYear: year, registrationKey })),
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}`, bySeries: {}, missing: [...ids] };
+    return parseBlsResponse(await res.json(), ids);
+  } catch (err) {
+    return { ok: false, error: err.message, bySeries: {}, missing: [...ids] };
+  }
+}
+
+// What production serves right now: fresher last-known values than the bundled snapshot.
+async function loadDeployedPayload() {
+  try {
+    const res = await fetch(DEPLOYED_CPI_URL, { signal: AbortSignal.timeout(15_000) });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json && typeof json === "object" && json.headline ? json : null;
+  } catch {
+    return null;
+  }
+}
 
 async function fetchSeries(id, apiKey) {
   const url = `https://api.stlouisfed.org/fred/series/observations`
@@ -29,7 +67,7 @@ async function main() {
     process.exit(1);
   }
 
-  const fallback = JSON.parse(readFileSync(resolve(ROOT, "src/data/fallback.json"), "utf8"));
+  const bundledFallback = JSON.parse(readFileSync(resolve(ROOT, "src/data/fallback.json"), "utf8"));
   const series = catalog.allSeries();
   const observationsBySeries = {};
   let successes = 0;
@@ -48,6 +86,24 @@ async function main() {
     console.error("FATAL: every FRED request failed. Not overwriting cpi.json.");
     process.exit(1);
   }
+
+  // BLS-only calculator series (not mirrored on FRED). Non-fatal here by design.
+  const blsIds = catalog.blsSeries();
+  let blsLive = 0;
+  const blsKey = process.env.BLS_API_KEY;
+  if (!blsKey) {
+    warn("BLS API", "BLS_API_KEY is not set, so BLS calculator lines will use last known values.");
+  } else {
+    const bls = await fetchBls(blsIds, blsKey);
+    if (!bls.ok) warn("BLS API", `Request failed: ${bls.error}. BLS keys must be renewed every year.`);
+    else if (bls.missing.length) warn("BLS API", `No data for ${bls.missing.join(", ")}.`);
+    for (const id of blsIds) observationsBySeries[id] = bls.bySeries[id] || [];
+    blsLive = blsIds.length - bls.missing.length;
+  }
+
+  // Last known values: production's current cpi.json layered over the bundled snapshot.
+  const deployed = await loadDeployedPayload();
+  const fallback = { ...bundledFallback, ...(deployed || {}) };
 
   const payload = assemblePayload({
     observationsBySeries,
@@ -74,7 +130,8 @@ async function main() {
 
   mkdirSync(resolve(ROOT, "public"), { recursive: true });
   writeFileSync(resolve(ROOT, "public/cpi.json"), JSON.stringify(payload, null, 2) + "\n");
-  console.log(`Wrote public/cpi.json — reference month ${payload.referenceMonth}, ${successes}/${series.length} series live.`);
+  console.log(`Wrote public/cpi.json — reference month ${payload.referenceMonth}, ${successes + blsLive}/${series.length + blsIds.length} series live (FRED + BLS).`);
+  for (const message of calculatorWarnings(payload)) warn("Calculator data", message);
   if (payload.yoyGap) {
     console.log(`Note: ${payload.yoyGap.latestMonthLabel} has no year-ago figure (${payload.yoyGap.missingMonthLabel} was never published), so CPI figures are for ${payload.referenceMonthLabel}.`);
   }

@@ -32,10 +32,11 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Fetch FRED data
+      - name: Fetch price data (FRED + BLS)
         run: node scripts/fetch-fred.mjs
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          BLS_API_KEY: ${{ secrets.BLS_API_KEY }}
 
       - name: Build
         run: npm run build
@@ -45,3 +46,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+
+      - name: Check calculator BLS lines are live
+        # After deploy on purpose: the site ships with last known values, but the run turns red.
+        run: node scripts/check-lines.mjs
