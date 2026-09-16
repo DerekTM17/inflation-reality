@@ -6,6 +6,12 @@ also include **Tradeoffs / Alternatives considered**.
 
 Curated, not exhaustive — `git log` has every commit.
 
+## 2026-09-16
+
+### Calculator price lines and average-household basket in the pipeline
+
+**Why:** The calculator-first redesign needs a 12-month rate for every spending line and an average household that matches the headline. cpi.json now carries lines (16 ids, 7 from the BLS API because FRED does not mirror them) and a basket whose Everything else rate is solved from the headline with December 2025 relative-importance weights rolled forward to the reference month (unrolled weights were 0.7 points off). Lines and basket are always pinned to the reference month; BLS "-" months parse as missing, not zero. The build falls back to production cpi.json before the bundled snapshot, annotates problems, and a post-deploy check turns the run red if any BLS line is stale. Invisible to the current UI; Phase 2 builds on it.
+
 ## 2026-09-10
 
 ### Year-over-year anchored past a missing year-ago month
