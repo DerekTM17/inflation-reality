@@ -5,6 +5,7 @@ import {
   parseObservations, shiftMonths, computeYoY, computeMoM,
   computeMoMAnnualized, buildTrend, avgPrice, monthLabel, referenceMonthLabel,
   latestValue, weeklyPrice, weekLabel, yoyAnchorDate,
+  valueAt, yoyAt, round6, rolledWeights, combineRates, residualRate,
 } from "./compute.mjs";
 
 // 14 monthly points; Oct/Nov 2025 missing (".") to exercise gap handling.
@@ -161,4 +162,53 @@ test("compute functions honour an explicit anchor month", () => {
   assert.equal(computeMoMAnnualized(obs, "2026-09-01"), 11.3);
   assert.deepEqual(avgPrice(obs, "2026-09-01"), { current: 113, yearAgo: 101 });
   assert.equal(buildTrend(obs, 12, "2026-09-01").at(-1).month, "Sep 26");
+});
+
+// ── Calculator weights ────────────────────────────────────────────────────
+const close = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} ≈ ${b}`);
+
+test("valueAt and yoyAt read one exact month; null when either side is missing", () => {
+  const obs = parseObservations(raw);
+  assert.equal(valueAt(obs, "2026-03-01"), 104.3);
+  assert.equal(valueAt(obs, "2025-10-01"), null);      // "." in the fixture
+  assert.equal(valueAt(obs, "2030-01-01"), null);      // not in the series at all
+  close(yoyAt(obs, "2026-03-01"), (104.3 / 101.0 - 1) * 100);
+  assert.equal(yoyAt(obs, "2026-10-01"), null);
+  assert.equal(round6(1.23456789), 1.234568);
+});
+
+test("rolledWeights moves December weights by each part's price change relative to all items", () => {
+  const w = rolledWeights(
+    [
+      { key: "gas", riDec: 10, levelDec: 100, levelT: 120 },
+      { key: "rent", riDec: 30, levelDec: 200, levelT: 206 },
+    ],
+    { allDec: 300, allT: 309 },
+  );
+  close(w.gas, 10 * (120 / 100) / (309 / 300));
+  close(w.rent, 30);                                   // rose exactly as much as all items
+  assert.equal(rolledWeights([{ key: "x", riDec: 1, levelDec: null, levelT: 1 }], { allDec: 1, allT: 1 }), null);
+  assert.equal(rolledWeights([{ key: "x", riDec: 1, levelDec: 1, levelT: 1 }], { allDec: null, allT: 1 }), null);
+});
+
+test("combineRates weights 12-month changes by current-month shares (harmonic)", () => {
+  // equal shares of a flat part and a doubled part: 1 / (0.5/1 + 0.5/2) − 1 = 33.33%
+  close(combineRates({ a: 1, b: 1 }, { a: 0, b: 100 }), 100 / 3);
+  close(combineRates({ a: 3, b: 1 }, { a: -10, b: 10 }), (1 / (0.75 / 0.9 + 0.25 / 1.1) - 1) * 100);
+  assert.equal(combineRates({ a: 1 }, { a: null }), null);
+  assert.equal(combineRates({}, {}), null);
+});
+
+test("residualRate solves everything else so the basket reproduces the headline", () => {
+  const weights = { gas: 20, food: 30 };               // rest = 50
+  const rates = { gas: 25, food: 4 };
+  const headline = (1 / (0.2 / 1.25 + 0.3 / 1.04 + 0.5 / 1.025) - 1) * 100;
+  close(residualRate(headline, weights, rates), 2.5);
+});
+
+test("residualRate refuses a rest under 10, a missing rate, or an impossible solution", () => {
+  assert.equal(residualRate(3, { a: 95 }, { a: 3 }), null);
+  assert.equal(residualRate(3, { a: 50 }, { a: null }), null);
+  // the visible half alone already implies a deflator above the headline's
+  assert.equal(residualRate(0, { a: 50 }, { a: -60 }), null);
 });

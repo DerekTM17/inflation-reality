@@ -155,3 +155,65 @@ export function referenceMonthLabel(dateStr) {
   const [y, m] = dateStr.split("-").map(Number);
   return `${MONTHS_LONG[m - 1]} ${y}`;
 }
+
+// ── Calculator weights ────────────────────────────────────────────────────
+export function round6(n) { return Math.round(n * 1e6) / 1e6; }
+
+export function valueAt(observations, date) {
+  const v = toMap(observations).get(date);
+  return v == null ? null : v;
+}
+
+// Unrounded 12-month change at exactly `date` (no fallback to another month).
+export function yoyAt(observations, date) {
+  const map = toMap(observations);
+  const now = map.get(date);
+  const prior = map.get(shiftMonths(date, -12));
+  if (now == null || prior == null || prior === 0) return null;
+  return (now / prior - 1) * 100;
+}
+
+// BLS publishes relative importance for December. A component's weight in a later month t is
+// its December weight moved by its own price change relative to all items:
+//   w_i(t) = w_i(Dec) × (I_i,t / I_i,Dec) ÷ (I_all,t / I_all,Dec)
+// Using December weights unrolled was off by 0.7 points for the basket residual in Aug 2026.
+export function rolledWeights(parts, { allDec, allT }) {
+  if (!(allDec > 0) || !(allT > 0)) return null;
+  const allMove = allT / allDec;
+  const out = {};
+  for (const p of parts) {
+    if (!(p.levelDec > 0) || !(p.levelT > 0)) return null;
+    out[p.key] = p.riDec * (p.levelT / p.levelDec) / allMove;
+  }
+  return out;
+}
+
+// Combine parts' 12-month changes using their current-month shares: 1/(1+R) = Σ s_i/(1+r_i).
+// Exact for a fixed basket across the window; approximate when it crosses January's reweighting.
+export function combineRates(weights, rates) {
+  const keys = Object.keys(weights);
+  const total = keys.reduce((s, k) => s + weights[k], 0);
+  if (!(total > 0)) return null;
+  let inverse = 0;
+  for (const k of keys) {
+    if (rates[k] == null) return null;
+    inverse += (weights[k] / total) / (1 + rates[k] / 100);
+  }
+  return (1 / inverse - 1) * 100;
+}
+
+// The rate for "everything else" (weight 100 − Σ visible) that makes the visible parts plus the
+// rest reproduce the headline: 1+r_rest = s_rest ÷ (1/(1+R) − Σ s_i/(1+r_i)).
+export function residualRate(headlinePct, weights, rates, minRest = 10) {
+  const keys = Object.keys(weights);
+  const rest = 100 - keys.reduce((s, k) => s + weights[k], 0);
+  if (rest < minRest) return null;
+  let visibleInverse = 0;
+  for (const k of keys) {
+    if (rates[k] == null) return null;
+    visibleInverse += (weights[k] / 100) / (1 + rates[k] / 100);
+  }
+  const restInverse = 1 / (1 + headlinePct / 100) - visibleInverse;
+  if (!(restInverse > 0)) return null;
+  return ((rest / 100) / restInverse - 1) * 100;
+}
