@@ -212,7 +212,9 @@ test("lines: 12-month rates at the reference month, 6 decimals, negatives kept",
   near(p.lines.carIns.yoy, (287 / 299 - 1) * 100);   // Mar 2026 vs Mar 2025
   assert.equal(p.lines.carIns.stale, undefined);
   near(p.lines.rent.yoy, (207.8 / 200.6 - 1) * 100);
-  assert.equal(p.lines.carIns.yoy, Math.round(p.lines.carIns.yoy * 1e6) / 1e6);
+  // literal, not a self-comparison: -12/299*100 has far more than 6 decimals unrounded
+  // (-4.013377926421402), so this actually exercises round6 rather than passing for any input.
+  assert.equal(p.lines.carIns.yoy, -4.013378);
 });
 
 test("lines: a combo uses shares rolled from December by each part's own prices", () => {
@@ -291,4 +293,31 @@ test("calculatorWarnings: stale lines, a stale basket, an implausible residual",
   assert.match(w[0], /carIns/);
   assert.match(w[1], /basket/);
   assert.match(calculatorWarnings({ lines: {}, basket: { residualYoy: 7.5, headlineYoy: 3.4 } })[0], /more than 3 points/);
+});
+
+test("calculatorWarnings: given catalog + observations, names the series that broke the basket", () => {
+  const brokenObs = { ...calcObs, CUUR0000SETB01: [] };  // gasoline unreadable; housing fine
+  const p = assemblePayload({ observationsBySeries: brokenObs, catalog: calcCatalog, fallback: null, generatedAt: "T" });
+  assert.equal(p.basket.stale, true);
+  const w = calculatorWarnings(p, calcCatalog, brokenObs);
+  const basketWarning = w.find((m) => /basket/.test(m));
+  assert.match(basketWarning, /CUUR0000SETB01/);
+  assert.doesNotMatch(basketWarning, /CUUR0000SEHA/);
+});
+
+test("calculatorWarnings: a null riDec (not just a missing level) also names its series", () => {
+  // null >= 0 is true in JS, so the failure check needs its own null guard on riDec.
+  const nullRiCatalog = {
+    ...calcCatalog,
+    BASKET: { ...calcCatalog.BASKET, visible: [
+      { id: "gasoline", label: "Gas for the car", seriesId: "CUUR0000SETB01", riDec: null },
+      { id: "housing", label: "Housing", seriesId: "CUUR0000SEHA", riDec: 40 },
+    ] },
+  };
+  const p = assemblePayload({ observationsBySeries: calcObs, catalog: nullRiCatalog, fallback: null, generatedAt: "T" });
+  assert.equal(p.basket.stale, true);
+  const w = calculatorWarnings(p, nullRiCatalog, calcObs);
+  const basketWarning = w.find((m) => /basket/.test(m));
+  assert.match(basketWarning, /CUUR0000SETB01/);
+  assert.doesNotMatch(basketWarning, /CUUR0000SEHA/);
 });

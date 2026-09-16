@@ -88,7 +88,7 @@ export function assemblePayload({ observationsBySeries, catalog, fallback, gener
     else weeklyPrices[w.key] = { current, yearAgo, asOf, asOfLabel: weekLabel(asOf) };
   }
 
-  const lines = catalog.CALC_LINES || catalog.CALC_COMBOS
+  const lines = (catalog.CALC_LINES || catalog.CALC_COMBOS)
     ? calculatorLines(obs, catalog, refDate, fb.lines)
     : null;
   const basket = catalog.BASKET ? averageBasket(obs, catalog.BASKET, refDate, headObs, fb.basket) : null;
@@ -124,6 +124,10 @@ function calculatorLines(obs, catalog, refDate, fbLines) {
   };
   for (const l of catalog.CALC_LINES || []) set(l.id, refDate ? yoyAt(obs(l.seriesId), refDate) : null);
 
+  // Combos roll their parts' December weights forward the same way the basket does, so they
+  // need BASKET.riYear for the December date. A catalog with CALC_COMBOS but no BASKET leaves
+  // decDate null, so every combo falls back permanently (set() below) with no warning that
+  // distinguishes "catalog missing BASKET" from "series unreadable" — a manifest bug, not a data one.
   const decDate = catalog.BASKET ? `${catalog.BASKET.riYear}-12-01` : null;
   for (const c of catalog.CALC_COMBOS || []) {
     let yoy = null;
@@ -188,14 +192,44 @@ export function staleBlsLines(payload, catalog) {
   return ids.filter((id) => !payload?.lines?.[id] || payload.lines[id].stale === true);
 }
 
+// Diagnostic-only re-check of what rolledWeights/residualRate needed for the basket, run
+// independently of averageBasket so a stale basket's warning can name which series caused it
+// without averageBasket itself dropping the all-or-nothing rule (see the comment there) or any
+// published number being touched. `getObs` is the same `obs(id)` accessor assemblePayload uses.
+function basketFailureIds(getObs, basket, catalog, refDate, headObs) {
+  if (!refDate) return [];
+  const decDate = `${basket.riYear}-12-01`;
+  const ids = [];
+  if (!(valueAt(headObs, decDate) > 0) || !(valueAt(headObs, refDate) > 0)) ids.push(catalog.HEADLINE.seriesId);
+  for (const v of basket.visible) {
+    // Mirror rolledWeights' own guards exactly: `null >= 0` is true in JS, so riDec needs its
+    // own null check first or a missing weight reads as valid here.
+    const ok = v.riDec != null && v.riDec >= 0
+      && valueAt(getObs(v.seriesId), decDate) > 0 && valueAt(getObs(v.seriesId), refDate) > 0;
+    if (!ok) ids.push(v.seriesId);
+  }
+  return ids;
+}
+
 // Build-log warnings for calculator data; fetch-fred.mjs prints each as a ::warning:: annotation.
-export function calculatorWarnings(payload, maxResidualGap = 3) {
+// `catalog`/`observationsBySeries` are optional (older calls, and most tests, still get the
+// generic message) — pass both to have a stale basket name the series that caused it.
+export function calculatorWarnings(payload, catalog, observationsBySeries, maxResidualGap = 3) {
   const out = [];
   const stale = Object.entries(payload?.lines || {}).filter(([, v]) => v.stale).map(([id]) => id);
   if (stale.length) out.push(`Calculator lines on a last known value: ${stale.join(", ")}`);
   const b = payload?.basket;
   if (!b || b.stale) {
-    out.push("Average-household basket fell back to a last known value");
+    let ids = [];
+    if (catalog?.BASKET && observationsBySeries && payload?.referenceMonth) {
+      const getObs = (id) => parseObservations(observationsBySeries[id] || []);
+      ids = basketFailureIds(getObs, catalog.BASKET, catalog, `${payload.referenceMonth}-01`, getObs(catalog.HEADLINE.seriesId));
+    }
+    out.push(
+      ids.length
+        ? `Average-household basket fell back to a last known value (unreadable: ${ids.join(", ")})`
+        : "Average-household basket fell back to a last known value",
+    );
   } else if (Math.abs(b.residualYoy - b.headlineYoy) > maxResidualGap) {
     out.push(`Everything else rate ${b.residualYoy.toFixed(2)}% is more than ${maxResidualGap} points from the headline ${b.headlineYoy.toFixed(2)}%`);
   }
