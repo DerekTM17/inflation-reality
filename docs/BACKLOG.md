@@ -30,6 +30,7 @@ Items we want to tackle in the near term but aren't started yet.
 - [ ] **[feat]** international comparison tab: US inflation vs other countries (OECD/IMF, via FRED where mirrored). Separate spec after the redesign lands; verify sources and comparability (HICP vs CPI) first. <!-- added 2026-09-10 -->
 - [ ] **[bug]** Biggest Movers bar colors can land on the wrong bars — the Cell color list is built from a list that does not drop null-yoy items, so indices drift from the chart data. Fix in the redesign. <!-- added 2026-09-10 -->
 - [ ] **[ops]** BLS API keys must be renewed at least once a year (bls.gov/developers/api_faqs.htm). An expired BLS_API_KEY would quietly turn the 6 BLS-only calculator lines stale (non-fatal by design), so fetch should log a loud ::warning:: annotation when BLS returns a key/threshold error, and set a yearly reminder from the date the key is registered. <!-- added 2026-09-10 -->
+- [ ] **[ops]** Yearly (after BLS publishes December relative importance, around February, and the Consumer Expenditure release): update BASKET and CALC_COMBOS riDec values, riYear, and ceMonthlyMean in src/data/catalog.js, and re-run the basket tests. Stale weights make the Everything else rate drift. <!-- added 2026-09-16 -->
 
 ## Someday
 
