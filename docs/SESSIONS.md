@@ -102,3 +102,32 @@ cd ~/projects/inflation-reality && git pull && npm install && npm test   # expec
 **Not accepted from the review:** a user-facing note for the 3-point residual gap (warning only, per the review's own "consider"); timestamps on saved renewal rates.
 
 **Next:** The user chooses how to run the Phase 1 plan: subagent-driven (recommended) or inline. Task 5 pushes to `main` (invisible to the UI) and must be verified against production before Task 6. After Phase 1: write the Phase 2a plan (shell + Your costs).
+
+## 2026-09-16
+
+#### Handoff — Phase 1 pipeline shipped
+
+**Done:** All 6 tasks of `docs/superpowers/plans/2026-09-14-calculator-phase1-pipeline.md` are implemented and Task 5 verified live in production before Task 6 touched anything, per the plan's own gate.
+
+**Commits (catalog manifest → fallback refresh):**
+- `a0ddd8e` feat(catalog): calculator lines, doctor combo and average-household basket manifest
+- `a837111` feat(pipeline): parse BLS API v2 responses into FRED-shaped observations
+- `ee43ea1` feat(pipeline): rolled relative-importance weights, combined rates and basket residual
+- `e0a4da7` fix(pipeline): guard null riDec and headlinePct in weight math
+- `4b4e0e5` feat(pipeline): assemble calculator lines and the average-household basket
+- `e51697d` feat(pipeline): fetch BLS-only series, fall back to production, gate stale BLS lines
+- `822b0fd` docs(changelog): ship via ledger — Calculator price lines and average-household basket in the pipeline
+- `b97cbd9` docs(backlog): add item via ledger (Soon)
+- `034847c` chore(data): refresh bundled fallback from production with calculator lines and basket
+
+**Task 5 production numbers (verified live, deploy run `35116045213`, `generatedAt` 2026-09-16T15:33:02.447Z, `referenceMonth` 2026-08, 54/54 series live, zero stale nodes):**
+- Line rates (yoy %): rent 2.749776, upkeep 1.981848, groceries 2.190663, dining 3.36677, gasoline 27.404926, carIns −5.127534, carUpkeep 5.237484, transit −3.69725, electric 3.788939, heatGas 4.385845, heatOil 52.039475, daycare 3.985052, tuition 2.815313, clothing 3.608634, fun 2.681868, doctor (combo) 0.194294.
+- Basket: `restWeight` 28.137887, `residualYoy` 2.014252, `headlineYoy` 3.396548 — a gap of 1.3823 points, inside the 3-point tolerance.
+
+**Task 6:** Refetched the same live `cpi.json` independently (fresh curl, matched the numbers above exactly, 0 stale nodes, 16/16 lines numeric) and wrote it into `src/data/fallback.json` as the new bundled snapshot (was the March 2026 seed: `generatedAt` 2026-03-01, `referenceMonth` 2026-03, no `lines`/`basket` keys at all). Updated `src/data/merge.test.mjs` per the plan: loosened several assertions to pass-through checks against the fixture (proving the merge layer forwards new fields), added a new test asserting every `CALC_LINES`/`CALC_COMBOS` id has a numeric, non-stale `yoy` in the fallback plus a non-stale numeric `basket.residualYoy`. `npm test` → 69/69 pass; `npm run build` succeeds.
+
+**Deviated from the plan:**
+- Did not run `git push` (Steps 5 and 6) — orchestrator instruction reserves pushes to `main` for the user. All work is committed locally on `main`, 3 commits ahead of `origin/main` (`822b0fd`, `b97cbd9`, `034847c`); the user pushes when ready.
+- Added one extra literal-value assertion beyond the brief's exact test text: `assert.equal(gas.yoy, 27.4)` in the first test and `assert.equal(dynamic.basket.residualYoy, 2.014252)` in the new fallback-health test, both pinned to the refreshed production fixture. The brief's other loosened assertions compare a merged field only to its own source field, which would pass under any pass-through implementation; a reviewing pass ruled at least one assertion needed a hard-coded expected number so the file can fail for a real reason.
+
+**Next: write the Phase 2a plan (shell + Your costs) from the spec.**
