@@ -4,6 +4,7 @@ import {
   parseObservations, computeYoY, computeMoM, computeMoMAnnualized,
   buildTrend, avgPrice, latestValue, referenceMonthLabel, weeklyPrice, weekLabel,
   yoyAnchorDate, shiftMonths,
+  valueAt, yoyAt, round6, rolledWeights, combineRates, residualRate,
 } from "./compute.mjs";
 
 // latestDateLabel isn't exported by compute; derive reference month from the headline series here.
@@ -87,6 +88,11 @@ export function assemblePayload({ observationsBySeries, catalog, fallback, gener
     else weeklyPrices[w.key] = { current, yearAgo, asOf, asOfLabel: weekLabel(asOf) };
   }
 
+  const lines = catalog.CALC_LINES || catalog.CALC_COMBOS
+    ? calculatorLines(obs, catalog, refDate, fb.lines)
+    : null;
+  const basket = catalog.BASKET ? averageBasket(obs, catalog.BASKET, refDate, headObs, fb.basket) : null;
+
   return {
     generatedAt,
     referenceMonth,
@@ -99,7 +105,101 @@ export function assemblePayload({ observationsBySeries, catalog, fallback, gener
     altMeasures,
     weeklyPrices,
     trend,
+    ...(lines ? { lines } : {}),
+    ...(basket ? { basket } : {}),
   };
+}
+
+// ── Calculator lines and the average-household basket ─────────────────────
+// Unlike categories (pinned to the reference month only when there is a yoyGap), these are
+// ALWAYS computed at the reference month: the basket residual combines them with the headline,
+// so every rate must describe the same month — BLS can post a month before FRED mirrors it.
+// No value for that month (or its year-ago) means stale, carrying the last known value.
+function calculatorLines(obs, catalog, refDate, fbLines) {
+  const lines = {};
+  const set = (id, yoy) => {
+    lines[id] = yoy == null
+      ? { yoy: fbLines?.[id]?.yoy ?? null, stale: true }
+      : { yoy: round6(yoy) };
+  };
+  for (const l of catalog.CALC_LINES || []) set(l.id, refDate ? yoyAt(obs(l.seriesId), refDate) : null);
+
+  const decDate = catalog.BASKET ? `${catalog.BASKET.riYear}-12-01` : null;
+  for (const c of catalog.CALC_COMBOS || []) {
+    let yoy = null;
+    if (refDate && decDate) {
+      // The parts form one aggregate, so the all-items factor cancels: roll by their own prices.
+      const weights = rolledWeights(
+        c.parts.map((p) => ({
+          key: p.seriesId,
+          riDec: p.riDec,
+          levelDec: valueAt(obs(p.seriesId), decDate),
+          levelT: valueAt(obs(p.seriesId), refDate),
+        })),
+        { allDec: 1, allT: 1 },
+      );
+      const rates = Object.fromEntries(c.parts.map((p) => [p.seriesId, yoyAt(obs(p.seriesId), refDate)]));
+      yoy = weights ? combineRates(weights, rates) : null;
+    }
+    set(c.id, yoy);
+  }
+  return lines;
+}
+
+const mapValues = (o, f) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, f(v)]));
+
+function averageBasket(obs, basket, refDate, headObs, fbBasket) {
+  if (refDate) {
+    const decDate = `${basket.riYear}-12-01`;
+    const weights = rolledWeights(
+      basket.visible.map((v) => ({
+        key: v.id,
+        riDec: v.riDec,
+        levelDec: valueAt(obs(v.seriesId), decDate),
+        levelT: valueAt(obs(v.seriesId), refDate),
+      })),
+      { allDec: valueAt(headObs, decDate), allT: valueAt(headObs, refDate) },
+    );
+    const rates = Object.fromEntries(basket.visible.map((v) => [v.id, yoyAt(obs(v.seriesId), refDate)]));
+    const headlineYoy = yoyAt(headObs, refDate);
+    const residualYoy = weights && headlineYoy != null ? residualRate(headlineYoy, weights, rates) : null;
+    if (residualYoy != null) {
+      const visibleTotal = Object.values(weights).reduce((s, w) => s + w, 0);
+      return {
+        month: refDate.slice(0, 7),
+        weights: mapValues(weights, round6),
+        rates: mapValues(rates, round6),
+        restWeight: round6(100 - visibleTotal),
+        residualYoy: round6(residualYoy),
+        headlineYoy: round6(headlineYoy),
+      };
+    }
+  }
+  return { ...(fbBasket || {}), stale: true };
+}
+
+// Ids of BLS-sourced calculator lines that are stale or missing. scripts/check-lines.mjs fails
+// the run (after deploy) when this is non-empty, so an expired BLS key can't go unnoticed.
+export function staleBlsLines(payload, catalog) {
+  const ids = [
+    ...(catalog.CALC_LINES || []).filter((l) => l.source === "bls").map((l) => l.id),
+    ...(catalog.CALC_COMBOS || []).filter((c) => c.source === "bls").map((c) => c.id),
+  ];
+  return ids.filter((id) => !payload?.lines?.[id] || payload.lines[id].stale === true);
+}
+
+// Build-log warnings for calculator data; fetch-fred.mjs prints each as a ::warning:: annotation.
+export function calculatorWarnings(payload, maxResidualGap = 3) {
+  const out = [];
+  const stale = Object.entries(payload?.lines || {}).filter(([, v]) => v.stale).map(([id]) => id);
+  if (stale.length) out.push(`Calculator lines on a last known value: ${stale.join(", ")}`);
+  const b = payload?.basket;
+  if (!b || b.stale) {
+    out.push("Average-household basket fell back to a last known value");
+  } else if (Math.abs(b.residualYoy - b.headlineYoy) > maxResidualGap) {
+    out.push(`Everything else rate ${b.residualYoy.toFixed(2)}% is more than ${maxResidualGap} points from the headline ${b.headlineYoy.toFixed(2)}%`);
+  }
+  return out;
 }
 
 // Which macro nodes (headline/core) are running on a fallback value rather than
