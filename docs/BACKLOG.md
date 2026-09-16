@@ -31,6 +31,7 @@ Items we want to tackle in the near term but aren't started yet.
 - [ ] **[bug]** Biggest Movers bar colors can land on the wrong bars — the Cell color list is built from a list that does not drop null-yoy items, so indices drift from the chart data. Fix in the redesign. <!-- added 2026-09-10 -->
 - [ ] **[ops]** BLS API keys must be renewed at least once a year (bls.gov/developers/api_faqs.htm). An expired BLS_API_KEY would quietly turn the 6 BLS-only calculator lines stale (non-fatal by design), so fetch should log a loud ::warning:: annotation when BLS returns a key/threshold error, and set a yearly reminder from the date the key is registered. <!-- added 2026-09-10 -->
 - [ ] **[ops]** Yearly (after BLS publishes December relative importance, around February, and the Consumer Expenditure release): update BASKET and CALC_COMBOS riDec values, riYear, and ceMonthlyMean in src/data/catalog.js, and re-run the basket tests. Stale weights make the Everything else rate drift. <!-- added 2026-09-16 -->
+- [ ] **[feat]** Phase 2 decision: when one of the 8 basket series is missing, the whole basket falls back to last month (rolledWeights is all-or-nothing) while each calculator line fails on its own. Decide with the spec whether to drop the missing series and fold its weight into Everything else (changes what the visible items mean) or keep the whole-basket fallback. The warning already names the series. <!-- added 2026-09-16 -->
 
 ## Someday
 
