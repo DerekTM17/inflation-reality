@@ -73,7 +73,7 @@ test("no literal colors outside tokens.css in the new UI", () => {
       if (/\.(css|jsx|js)$/.test(f) && f !== "tokens.css") files.push(join(full, f));
     }
   }
-  for (const f of ["views/YourCosts.jsx"]) {
+  for (const f of ["views/YourCosts.jsx", "App.jsx"]) {
     if (existsSync(join(src, f))) files.push(join(src, f));
   }
   for (const file of files) {
