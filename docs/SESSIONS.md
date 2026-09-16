@@ -105,35 +105,42 @@ cd ~/projects/inflation-reality && git pull && npm install && npm test   # expec
 
 ## 2026-09-16
 
-#### Handoff — Phase 1 pipeline shipped
+#### Handoff — Calculator Phase 1 (data pipeline) shipped and verified in production
 
-**Done:** All 6 tasks of `docs/superpowers/plans/2026-09-14-calculator-phase1-pipeline.md` are implemented and Task 5 verified live in production before Task 6 touched anything, per the plan's own gate.
+**Goal:** Run `docs/superpowers/plans/2026-09-14-calculator-phase1-pipeline.md` (6 tasks, subagent-driven, a review after every task plus a whole-branch review) so `public/cpi.json` carries a 12-month rate for every calculator line and an average-household basket, with no visible change to the live site.
 
-**Commits (catalog manifest → fallback refresh):**
-- `a0ddd8e` feat(catalog): calculator lines, doctor combo and average-household basket manifest
-- `a837111` feat(pipeline): parse BLS API v2 responses into FRED-shaped observations
-- `ee43ea1` feat(pipeline): rolled relative-importance weights, combined rates and basket residual
-- `e0a4da7` fix(pipeline): guard null riDec and headlinePct in weight math
-- `4b4e0e5` feat(pipeline): assemble calculator lines and the average-household basket
-- `e51697d` feat(pipeline): fetch BLS-only series, fall back to production, gate stale BLS lines
-- `822b0fd` docs(changelog): ship via ledger — Calculator price lines and average-household basket in the pipeline
-- `b97cbd9` docs(backlog): add item via ledger (Soon)
-- `034847c` chore(data): refresh bundled fallback from production with calculator lines and basket
+**Done — all 6 tasks, deployed twice, `main` at `c72685a` in sync with origin, nothing uncommitted.**
+- Commits: `a0ddd8e` catalog manifest · `a837111` BLS parser · `ee43ea1` weight math · `e0a4da7` null guards (riDec, headlinePct) · `4b4e0e5` assemble lines/basket · `e51697d` BLS fetch + fallback + post-deploy gate · `822b0fd` changelog · `b97cbd9` backlog · `034847c` fallback refresh · `0126b5c` drop a test assertion that ran no code · `9c7c196` `ef5e2af` `f192c23` `c72685a` final-review fixes.
+- **Verified by:** `npm test` → 71/71 pass (run directly, not just reported by a subagent). Deploy runs `35116045213` and `35137212694` both succeeded, including the new `Check calculator BLS lines are live` step; log: `54/54 series live (FRED + BLS)`, `Calculator BLS lines are live.`, zero `::warning`/`::error`. Live `cpi.json` after the second deploy: `generatedAt` 2026-09-16T18:53:54Z, `referenceMonth` 2026-08, 16 lines with no null rate, 0 stale nodes, no basket rate exactly 0; basket `restWeight` 28.137887, `residualYoy` 2.014252, `headlineYoy` 3.396548 (gap 1.38 points, tolerance 3). Numbers identical across both deploys — the final fixes changed no published value.
+- Live line rates (yoy %): rent 2.75, upkeep 1.98, groceries 2.19, dining 3.37, gasoline 27.40, carIns −5.13, carUpkeep 5.24, transit −3.70, electric 3.79, heatGas 4.39, heatOil 52.04, daycare 3.99, tuition 2.82, clothing 3.61, fun 2.68, doctor 0.19.
+- `src/data/fallback.json` is now a copy of that live payload (was the March 2026 seed with no `lines`/`basket`), so a build that loses both BLS and the deployed payload still degrades to August 2026 values marked stale.
+- **The UI does not read any of it yet.** `buildViewData` in `src/data/merge.js` returns a fixed 11-key object with no `lines` and no `basket`. Wiring them through is Phase 2's job.
 
-**Task 5 production numbers (verified live, deploy run `35116045213`, `generatedAt` 2026-09-16T15:33:02.447Z, `referenceMonth` 2026-08, 54/54 series live, zero stale nodes):**
-- Line rates (yoy %): rent 2.749776, upkeep 1.981848, groceries 2.190663, dining 3.36677, gasoline 27.404926, carIns −5.127534, carUpkeep 5.237484, transit −3.69725, electric 3.788939, heatGas 4.385845, heatOil 52.039475, daycare 3.985052, tuition 2.815313, clothing 3.608634, fun 2.681868, doctor (combo) 0.194294.
-- Basket: `restWeight` 28.137887, `residualYoy` 2.014252, `headlineYoy` 3.396548 — a gap of 1.3823 points, inside the 3-point tolerance.
+**Next:** Write the Phase 2a implementation plan (the page shell + the "Your costs" section) from `docs/superpowers/specs/2026-09-10-calculator-first-redesign-design.md`, using `superpowers:writing-plans`. Phase 2 goes on a branch (the earlier split: Phase 1 on `main`, Phase 2 front end on a branch). Its first task should extend `merge.js` to forward `lines` and `basket`, with tests against `buildViewData`'s output (not the raw fixture).
 
-**Task 6:** Refetched the same live `cpi.json` independently (fresh curl, matched the numbers above exactly, 0 stale nodes, 16/16 lines numeric) and wrote it into `src/data/fallback.json` as the new bundled snapshot (was the March 2026 seed: `generatedAt` 2026-03-01, `referenceMonth` 2026-03, no `lines`/`basket` keys at all). Updated `src/data/merge.test.mjs` per the plan: loosened several assertions to pass-through checks against the fixture, added a new test asserting every `CALC_LINES`/`CALC_COMBOS` id has a numeric, non-stale `yoy` in the fallback plus a non-stale numeric `basket.residualYoy`. **This is Phase 1 landing the payload in `public/cpi.json`/`fallback.json` only — `buildViewData` in `src/data/merge.js` still returns its fixed 11-key object and does not forward `lines` or `basket`; the loosened assertions check the raw fixture, not `buildViewData`'s output. Wiring `lines`/`basket` through `merge.js` is Phase 2's to do.** `npm test` → 69/69 pass; `npm run build` succeeds.
+**Decisions (made during execution; don't re-open without a reason):**
+- **Only the user pushes.** The plan had Task 6 push twice; every push to `main` deploys, so subagents only commit locally.
+- **One missing basket series still stales the whole basket** (`rolledWeights` is all-or-nothing, while each calculator line fails on its own). The final review suggested dropping the missing series and redistributing its weight into "Everything else". Not done: that silently changes what the visible items and "Everything else" mean. It's a spec decision for Phase 2. Instead the stale-basket warning now names the unreadable series.
+- **`yoyAt` and `computeYoY` stay separate copies**, with comments pointing at each other. `computeYoY` feeds the already-live category figures; merging them risked changing live numbers. A change to the year-ago lookup rule must be made in both.
+- `loadDeployedPayload` now warns on each failure path (HTTP error, fetch/parse failure, unrecognized shape) instead of failing silently. The plan asked for silence; overridden.
+- Two ledger-tool commits (`822b0fd`, `b97cbd9`) lack the `Co-Authored-By` line. Left as-is rather than rewrite history.
 
-**Deviated from the plan:**
-- Did not run `git push` (Steps 5 and 6) — orchestrator instruction reserves pushes to `main` for the user. All work is committed locally on `main`, 3 commits ahead of `origin/main` (`822b0fd`, `b97cbd9`, `034847c`); the user pushes when ready.
-- Added one extra literal-value assertion beyond the brief's exact test text: `assert.equal(gas.yoy, 27.4)` in the first test and `assert.equal(dynamic.basket.residualYoy, 2.014252)` in the new fallback-health test, both pinned to the refreshed production fixture. The brief's other loosened assertions compare a merged field only to its own source field, which would pass under any pass-through implementation; a reviewing pass ruled at least one assertion needed a hard-coded expected number so the file can fail for a real reason.
+**Gotchas:**
+- **`null >= 0` is `true` in JavaScript.** It nearly reintroduced the missing-data-becomes-zero bug twice: once in a reviewer's suggested guard, once in a fix-wave draft. Use `x != null && x >= 0`.
+- `round6(null)` used to return `0`, and it WAS reachable: a basket component with a valid weight but no year-ago reading published `0.000000%`. Fixed in `9c7c196`; `round6` now returns `null`.
+- For Phase 2, not discoverable from `merge.js`:
+  - `categories.gas` and `lines.gasoline` use the same series but different month-anchoring, so they can disagree by a month.
+  - A stale `basket` can be a bare `{stale: true}` with no `month`/`weights`/`rates`; guard for missing fields.
+  - `lines[id].yoy` is stored to 6 decimals; the page must round.
+  - A stale value carries no age; only the post-deploy gate (`scripts/check-lines.mjs`) bounds how long one persists.
+- The BLS key (`BLS_API_KEY` secret) expires yearly; renew by 2027-09-14. When it lapses the site still deploys with last-known values and the run goes red.
+- `gh run view <id> --log | grep -E "::warning|::error|series live|Calculator BLS lines"` is the fastest way to read a deploy.
+- Gasoline +27.4% and heating oil +52.0% are large and were not checked against a second source.
 
-**Note for Phase 2 — not discoverable from `merge.js`, because it never mentions `lines`/`basket`:**
-- `categories.gas` and `lines.gasoline` come from the same underlying series but use different anchoring (`computeYoY`'s latest-month fallback vs `yoyAt`'s hard anchor to the reference month), so the two can disagree by a month.
-- A stale `basket` may be a bare `{stale: true}` with no `month`, `weights` or `rates` — the fallback-of-a-fallback case when there is no prior basket at all. Guard for absent fields, not just `stale === true`.
-- `lines[id].yoy` is stored to 6 decimals (for the residual math); display code must round it itself.
-- A stale value carries no age: `{yoy: 2.75, stale: true}` looks identical whether it went stale one month ago or two years ago. The post-deploy gate (`check-lines.mjs`) is what bounds this in practice, not the payload itself.
-
-**Next: write the Phase 2a plan (shell + Your costs) from the spec.**
+**Resume:**
+```bash
+cd ~/projects/inflation-reality
+git pull && npm ci && npm test          # expect 71/71
+gh run list --workflow="Deploy to GitHub Pages" --limit 3
+curl -s https://derektm17.github.io/inflation-reality/cpi.json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const p=JSON.parse(s);console.log(p.referenceMonth,Object.keys(p.lines).length,"lines",p.basket.residualYoy)})'
+```
