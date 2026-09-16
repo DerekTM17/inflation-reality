@@ -8,6 +8,10 @@ Curated, not exhaustive — `git log` has every commit.
 
 ## 2026-09-16
 
+### Missing basket data can no longer publish as 0%; stale-basket warnings name the series
+
+**Why:** A final whole-branch review of the calculator pipeline found round6(null) returned 0, and a basket component with a valid weight but no year-ago reading reached it, publishing 0.000000% instead of no data. round6 now returns null. The stale-basket warning names the unreadable series, and loadDeployedPayload warns on each failure path instead of failing silently. One missing basket series still stales the whole basket; redistributing its weight into Everything else was rejected as a spec decision for Phase 2. Deploy run 35137212694 verified: published numbers unchanged, 0 stale nodes, 71/71 tests.
+
 ### Calculator price lines and average-household basket in the pipeline
 
 **Why:** The calculator-first redesign needs a 12-month rate for every spending line and an average household that matches the headline. cpi.json now carries lines (16 ids, 7 from the BLS API because FRED does not mirror them) and a basket whose Everything else rate is solved from the headline with December 2025 relative-importance weights rolled forward to the reference month (unrolled weights were 0.7 points off). Lines and basket are always pinned to the reference month; BLS "-" months parse as missing, not zero. The build falls back to production cpi.json before the bundled snapshot, annotates problems, and a post-deploy check turns the run red if any BLS line is stale. Invisible to the current UI; Phase 2 builds on it.
