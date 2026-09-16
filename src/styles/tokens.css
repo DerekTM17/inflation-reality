@@ -1,0 +1,78 @@
+/* Visual system tokens (spec "Visual system"). Components never use literal colors:
+   every color below is the only place it is written. Light first, then dark for
+   the system setting, then dark for an explicit data-theme="dark". The two dark
+   blocks must stay identical (tokens.test.mjs checks). */
+:root {
+  --ground: #F3F5F4;
+  --surface: #FFFFFF;
+  --ink: #1F2933;
+  --ink-2: #56626E;
+  --ink-3: #66717D;
+  --rule: #D5DCDA;
+  --control-edge: #6B7682;
+  --control-hover: #EAF0ED;
+  --accent: #2E5E45;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E3EDE7;
+  --bar-us: #7D8894;
+  --bar-line: #87919A;
+  --dock: #1F2933;
+  --dock-ink: #FFFFFF;
+  --shadow: 0 6px 20px rgba(20, 25, 30, 0.28);
+  --font: "Libre Franklin", "Franklin Gothic Medium", "Helvetica Neue", Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #161A1E;
+    --surface: #1F252B;
+    --ink: #E7ECEA;
+    --ink-2: #AEB8C0;
+    --ink-3: #9AA5AE;
+    --rule: #353D44;
+    --control-edge: #8B96A1;
+    --control-hover: #29323A;
+    --accent: #8CC9A2;
+    --accent-ink: #0F2219;
+    --accent-soft: #22382C;
+    --bar-us: #8C97A2;
+    --bar-line: #7A858F;
+    --dock: #E7ECEA;
+    --dock-ink: #161A1E;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: #161A1E;
+  --surface: #1F252B;
+  --ink: #E7ECEA;
+  --ink-2: #AEB8C0;
+  --ink-3: #9AA5AE;
+  --rule: #353D44;
+  --control-edge: #8B96A1;
+  --control-hover: #29323A;
+  --accent: #8CC9A2;
+  --accent-ink: #0F2219;
+  --accent-soft: #22382C;
+  --bar-us: #8C97A2;
+  --bar-line: #7A858F;
+  --dock: #E7ECEA;
+  --dock-ink: #161A1E;
+}
+
+html {
+  scroll-padding-top: 16px;
+  scroll-padding-bottom: 110px; /* keeps focused controls clear of the phone dock */
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font: 400 16px/1.55 var(--font);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
