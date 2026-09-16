@@ -1,8 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { emptyAnswers, personalRows, averageRows } from "./model.js";
+import { emptyAnswers, personalRows, averageRows, effectiveChoices, activeLines, computeResult } from "./model.js";
 import { panelModel, ledeText, summaryText, finePrint, TOP_ROWS } from "./panel.js";
 import { fakeData } from "./testdata.mjs";
+import { QUESTIONS, ALSO, LINES } from "./config.js";
 
 const MINUS = "−";
 const answersWith = (patch) => ({ ...emptyAnswers(), ...patch });
@@ -142,6 +143,64 @@ test("finePrint: month, stale lines, missing data, yoyGap", () => {
     "Estimates based on BLS consumer price data for August 2026. Dollar amounts are rounded.",
     "Using the last known value for the average household.",
   ]);
+});
+
+test("panel: every line missing (no data at all) says price data unavailable, not the amounts prompt", () => {
+  const rows = [
+    { id: "rent", label: "Rent", monthly: 1650, rate: null, note: "", stale: false, missing: "data" },
+    { id: "groceries", label: "Groceries", monthly: 620, rate: null, note: "", stale: false, missing: "data" },
+  ];
+  const m = panelModel({ mode: "personal", rows, headlinePct: 3.4, referenceMonth: "2026-08", answers: emptyAnswers() });
+  assert.equal(m.zero, true);
+  assert.equal(m.answer, "Price data is not available right now.");
+  assert.equal(m.ratesLine, "Prices overall rose 3.4%.");
+  assert.deepEqual(m.top, []);
+  assert.equal(m.rest, null);
+  assert.equal(m.verdict, null);
+});
+
+// Deterministic LCG so the property test below is reproducible without a new dependency.
+function lcg(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+test("allocateRounded property: 500 random personal households add up and never misplace a dollar", () => {
+  const rand = lcg(0xcafe2a);
+  const pick = (arr) => arr[Math.floor(rand() * arr.length)];
+  for (let n = 0; n < 500; n++) {
+    const answers = emptyAnswers();
+    for (const q of QUESTIONS) {
+      if (rand() < 0.85) answers.answered[q.id] = pick(q.options).id;
+    }
+    for (const a of ALSO) answers.also[a.id] = rand() < 0.4;
+    const choices = effectiveChoices(answers);
+    const ids = activeLines(choices, answers.also);
+    for (const id of ids) {
+      if (rand() < 0.4) answers.amounts[id] = rand() < 0.15 ? 0 : Math.round(rand() * 2000);
+      if (LINES[id]?.renewal && rand() < 0.5) answers.renewals[id] = Math.round((rand() * 30 - 10) * 10) / 10;
+    }
+
+    const data = fakeData();
+    const rows = personalRows(answers, data);
+    const m = personalModel(answers, data);
+    if (m.zero) continue;
+
+    assert.equal(shownSum(m), m.total, `household ${n}: rows don't add up to the total`);
+
+    const byId = Object.fromEntries(computeResult(rows).lines.map((l) => [l.id, l]));
+    for (const row of [...m.main, ...(m.rest ? [m.rest] : [])]) {
+      const line = byId[row.id];
+      if (!line) continue;
+      if (line.extra === 0) assert.equal(row.dollars, 0, `household ${n}, ${row.id}: $0 line got dollars`);
+      if (row.dollars !== 0) {
+        assert.equal(Math.sign(row.dollars), Math.sign(line.extra), `household ${n}, ${row.id}: sign flip`);
+      }
+    }
+  }
 });
 
 test("panel copy obeys the voice guide's banned characters", () => {

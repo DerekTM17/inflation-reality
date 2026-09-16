@@ -40,9 +40,11 @@ export function panelModel({ mode, rows, headlinePct, referenceMonth, answers })
   const basisText = personal ? basis(answers) : null;
 
   if (result.totalAnnual === 0) {
+    const dataMissing = result.lines.length === 0 && result.excluded.some((r) => r.missing === "data");
     return {
       ...empty, prompts, basis: basisText, zero: true,
-      answer: "Enter your monthly amounts to see your estimate.", ratesLine: nationalLine,
+      answer: dataMissing ? "Price data is not available right now." : "Enter your monthly amounts to see your estimate.",
+      ratesLine: nationalLine,
     };
   }
 

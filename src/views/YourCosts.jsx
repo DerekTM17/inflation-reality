@@ -15,6 +15,10 @@ import LiveRegion from "../components/LiveRegion.jsx";
 const withPeriod = (s) => (s.endsWith(".") ? s : `${s}.`);
 const prefersReducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
+// Fold on the first mount of a page load only; a later remount (tab switch, since
+// App unmounts this view on route change) must not re-fold and lose an open toast.
+let foldedThisLoad = false;
+
 /**
  * The Your costs tab. States (spec "States"): Average until any answer or checkbox,
  * then Personal; a load with saved personal answers starts folded (Returning).
@@ -24,7 +28,11 @@ export default function YourCosts({ data, base, onNavigate }) {
   const storage = useMemo(getStorage, []);
   const canSave = useMemo(() => storageAvailable(storage), [storage]);
   const [answers, setAnswers] = useState(() => loadAnswers(storage) ?? emptyAnswers());
-  const [folded, setFolded] = useState(() => isPersonal(answers));
+  const [folded, setFolded] = useState(() => {
+    if (foldedThisLoad) return false;
+    foldedThisLoad = true;
+    return isPersonal(answers);
+  });
   const [amountsOpen, setAmountsOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [cleared, setCleared] = useState(null); // { answers, key } while the Undo toast is up
@@ -57,18 +65,27 @@ export default function YourCosts({ data, base, onNavigate }) {
     return () => io.disconnect();
   }, []);
 
-  // Move focus after the render that makes the target exist (unfolded questions, opened amounts).
+  // Move focus after the render that makes the target exist (unfolded questions,
+  // opened amounts, the Undo toast). The toast case skips scrollIntoView so
+  // pressing Start over on a phone doesn't jump the page.
   useEffect(() => {
     if (!pendingFocus) return;
     const el = document.getElementById(pendingFocus);
     if (el) {
       el.focus({ preventScroll: true });
-      el.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
+      if (pendingFocus !== "undo-button") {
+        el.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
+      }
     }
     setPendingFocus(null);
   }, [pendingFocus]);
 
-  const update = (fn) => setAnswers((prev) => fn(prev));
+  // Any real change to the answers closes a pending Undo toast, so Undo can never
+  // silently overwrite newer answers with the cleared ones.
+  const update = (fn) => {
+    setAnswers((prev) => fn(prev));
+    setCleared(null);
+  };
   const onAnswer = (qid, option) => update((a) => ({ ...a, answered: { ...a.answered, [qid]: option } }));
   const onAlso = (id, checked) => update((a) => ({ ...a, also: { ...a.also, [id]: checked } }));
   const onAmount = (id, value) => update((a) => ({ ...a, amounts: { ...a.amounts, [id]: value } }));
@@ -83,12 +100,21 @@ export default function YourCosts({ data, base, onNavigate }) {
     setAnswers(emptyAnswers());
     setFolded(false);
     setShowAll(false);
+    setPendingFocus("undo-button");
   };
   const undo = () => {
     if (cleared) setAnswers(cleared.answers);
     setCleared(null);
+    setPendingFocus("questions");
   };
-  const closeToast = useCallback(() => setCleared(null), []);
+  // Also covers the toast closing on its own (its timer never runs while focus is
+  // inside it, but this stays correct if that ever changes): don't strand focus on
+  // a node that's about to unmount.
+  const closeToast = useCallback(() => {
+    const insideToast = document.activeElement?.closest?.(".toast");
+    setCleared(null);
+    if (insideToast) setPendingFocus("questions");
+  }, []);
   const openRenewal = (id) => {
     setAmountsOpen(true);
     setPendingFocus(`renewal-${id}`);

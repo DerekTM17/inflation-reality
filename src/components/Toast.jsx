@@ -48,7 +48,7 @@ export default function Toast({ onUndo, onClose, duration = 8000 }) {
       onBlur={set(focused, false)}
     >
       <span>Answers cleared.</span>
-      <button type="button" className="text-btn" onClick={onUndo}>Undo</button>
+      <button type="button" id="undo-button" className="text-btn" onClick={onUndo}>Undo</button>
     </div>
   );
 }

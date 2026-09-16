@@ -52,13 +52,30 @@ test("allocateRounded sums exactly with mixed signs", () => {
 
 test("allocateRounded handles leftovers larger than the list and negative leftovers", () => {
   const over = allocateRounded([49, 49, -73], 50); // floors sum to 0, needs +5 steps over 3 values
-  assert.equal(sum(over), 50);
+  assert.deepEqual(over, [60, 60, -70]); // pinned: the -73 entry must stay negative
   const under = allocateRounded([21, 21, 21], 50); // floors sum to 60, needs −1 step
   assert.deepEqual(under, [20, 20, 10]);
   const negative = allocateRounded([-26, -26], -50);
   assert.deepEqual(negative, [-20, -30]);
   assert.deepEqual(allocateRounded([], 0), []);
   assert.ok(allocateRounded([0.4], 0).every((v) => Object.is(v, 0)));
+});
+
+test("allocateRounded: zeros always stay zero, never take leftover steps", () => {
+  const out = allocateRounded([480, 0, -300, 0], 200); // sum(180) rounded to step 50 -> 200
+  assert.deepEqual([out[1], out[3]], [0, 0]);
+  assert.equal(sum(out), 200);
+});
+
+test("allocateRounded: a tiny value never flips sign or gets dollars when bigger entries exist", () => {
+  const out = allocateRounded([104, -0.4, 0.4, 12], 100); // sum(116) rounded to step 50 -> 100
+  assert.deepEqual([out[1], out[2]], [0, 0]);
+  assert.equal(sum(out), 100);
+});
+
+test("allocateRounded: all-tiny fallback still sums to the total", () => {
+  const out = allocateRounded([4.5, 4.5, 4.5, 4.5, 4.5, 4.5], 50); // no entry >= step/2
+  assert.equal(sum(out), 50);
 });
 
 test("barGeometry: all positive starts at zero; negatives extend left", () => {

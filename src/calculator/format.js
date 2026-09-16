@@ -51,20 +51,57 @@ export function roundToStep(n, step) {
 /**
  * Largest-remainder allocation: round each value to `step` so the results sum
  * exactly to `total` (already a multiple of `step`). Works with mixed signs.
- * Floors every value, then hands the leftover steps to the largest fractional
- * parts (or takes them from the smallest when the floors overshoot). Ties go to
- * the earlier index.
+ *
+ * Entries that are exactly 0 always stay 0. Entries that display "under $10"
+ * (|value| < step/2, non-zero) also stay 0 and take no leftover steps, unless
+ * every non-zero entry is that small, in which case they carry the total (the
+ * exact-sum guarantee always wins). The remaining "eligible" entries floor
+ * toward zero and then receive/lose leftover steps by largest/smallest
+ * fractional remainder, same as before, but wrapping only across themselves.
+ * Adding or removing a step prefers not to flip an eligible entry's sign
+ * (removal takes from positive entries first, addition avoids pushing a
+ * negative entry positive); when every preference is exhausted the sum
+ * guarantee still wins. Ties go to the earlier index (later index for removal,
+ * matching the original tie-break).
  */
 export function allocateRounded(values, total, step = 10) {
+  const n = values.length;
+  if (n === 0) return [];
+  const half = step / 2;
+  const isZero = values.map((v) => v === 0);
+  const isTiny = values.map((v, i) => !isZero[i] && Math.abs(v) < half);
+  const anyBig = values.some((v, i) => !isZero[i] && !isTiny[i]);
+  const eligible = [];
+  for (let i = 0; i < n; i++) {
+    if (isZero[i]) continue;
+    if (isTiny[i] && anyBig) continue; // a bigger entry exists to carry the leftover instead
+    eligible.push(i);
+  }
+
   const units = values.map((v) => v / step);
-  const out = units.map(Math.floor);
-  if (out.length === 0) return out;
-  const order = units
-    .map((u, i) => ({ i, frac: u - out[i] }))
-    .sort((a, b) => b.frac - a.frac || a.i - b.i);
-  let k = Math.round(total / step) - out.reduce((s, u) => s + u, 0);
-  for (let j = 0; k > 0; j++, k--) out[order[j % order.length].i] += 1;
-  for (let j = 0; k < 0; j++, k++) out[order[order.length - 1 - (j % order.length)].i] -= 1;
+  const floor = units.map(Math.floor);
+  const frac = (i) => units[i] - floor[i];
+  const out = new Array(n).fill(0);
+  for (const i of eligible) out[i] = floor[i];
+
+  let k = Math.round(total / step) - eligible.reduce((s, i) => s + floor[i], 0);
+  if (k > 0) {
+    // Largest remainder first; keep a negative-valued entry from going positive
+    // as long as some other candidate can take the step instead.
+    const order = eligible.slice().sort((a, b) => frac(b) - frac(a) || a - b);
+    const safe = order.filter((i) => values[i] >= 0 || (out[i] + 1) * step <= 0);
+    const risky = order.filter((i) => !(values[i] >= 0 || (out[i] + 1) * step <= 0));
+    const queue = [...safe, ...risky, ...order];
+    for (let j = 0; k > 0; j++, k--) out[queue[j % queue.length]] += 1;
+  } else if (k < 0) {
+    // Smallest remainder first; prefer taking from positive-valued entries so a
+    // negative entry doesn't get pushed further negative unnecessarily.
+    const order = eligible.slice().sort((a, b) => frac(a) - frac(b) || b - a);
+    const safe = order.filter((i) => values[i] > 0);
+    const risky = order.filter((i) => values[i] <= 0);
+    const queue = [...safe, ...risky, ...order];
+    for (let j = 0; k < 0; j++, k++) out[queue[j % queue.length]] -= 1;
+  }
   return out.map((u) => (u === 0 ? 0 : u * step));
 }
 
