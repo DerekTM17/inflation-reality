@@ -144,3 +144,31 @@ git pull && npm ci && npm test          # expect 71/71
 gh run list --workflow="Deploy to GitHub Pages" --limit 3
 curl -s https://derektm17.github.io/inflation-reality/cpi.json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const p=JSON.parse(s);console.log(p.referenceMonth,Object.keys(p.lines).length,"lines",p.basket.residualYoy)})'
 ```
+
+#### Handoff — Calculator Phase 2a (shell + Your costs) merged to local main, NOT pushed
+
+**Goal:** Run `docs/superpowers/plans/2026-09-16-calculator-phase2a-your-costs.md` (9 tasks, subagent-driven) to build the calculator-first Your costs tab and the new shell.
+
+**Done — merged locally into `main` (fast-forward), `main` is 13 commits ahead of origin, nothing pushed, working tree clean.**
+- Commits: `e281839` merge forwards lines/basket · `089c4e1` format.js · `92b8466` config + model · `a89593a` panel.js · `6f38206` storage.js · `91fedb0` tokens/controls/font · `65e8cc0` shell, hash routing, old dashboard → `src/views/LegacyDashboard.jsx` · `ea01fa4` Your costs tab · `656534c` final-review fixes (zero lines no longer get dollars, Start over/Undo keyboard focus, no re-fold on tab return, no-data message, Undo can't overwrite newer answers) · `9ffbf5c` plan · 3 backlog commits.
+- **Verified by:** `npm test` → 132/132 on merged main (run by controller); `npx vite build` ok; a Python Playwright smoke script (30 checks: Average panel, mortgage answer → guesses/verdict/basis, banned-string scan, renewal prompt focus, save → reload → folded summary, Start over → Undo, section links + Back + unknown hash, desktop sticky layout, no horizontal scroll at 390px, zero console errors) passed on `656534c`; dark scheme computes the dark tokens; reduced motion disables the dock transition. Every task passed its review; the final opus review's two Important findings were fixed and re-reviewed.
+
+**Next (in this order):**
+1. **Do not push `main` yet unless you want the redesign live.** Pushing deploys it: Your costs becomes the first screen and the other three sections show the OLD dashboard views (LegacyDashboard) until Phase 2b. The plan intended no merge before 2b; the owner chose to merge locally on 2026-09-16.
+2. Fix the parked rounding bug (BACKLOG, tag redesign): `allocateRounded` k<0 can show a +$5–$9 line as −$10 in a household whose total is negative. Repros: `[-300,8,-40]` total −350 → `[-300,-10,-40]`; `[-1069,0,0,5,-11]` total −1100. Fix = take removed steps from negative entries first, then positive entries with ≥ 2 units; mirror for k>0; add repros as tests.
+3. Write the Phase 2b plan (National numbers, Price check, Sources, .xlsx export, committed audit script `scripts/audit/ui-audit.py`, link previews + og image), then delete LegacyDashboard. Owner owes the 5-second test before the redesign ships.
+
+**Decisions:** Legacy views serve the three other sections until 2b. Parked (in BACKLOG or accepted): unchecking the last checkbox clears saved amount edits; the live region announces once on load; read-only Average amounts don't sum exactly to $5,750; route-change focus/title, Show-all aria-controls, legacy views in dark mode → 2b. The whole-basket fallback decision is still open.
+
+**Gotchas:**
+- The Playwright MCP browser is shared with other sessions ("Browser is already in use"); use Python Playwright (`from playwright.sync_api import sync_playwright`) against `npx vite preview --port 4719 --strictPort` instead.
+- There is no local `public/cpi.json`, so preview uses `fallback.json` and logs a cpi.json 404 warning (expected).
+- Validating the plan's end state missed an ordering bug (a test scanned `App.jsx` before Task 7 replaced it); and default-amount smoke tests can't catch rounding bugs on $0 or tiny lines — probe with random amounts including 0.
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality
+git status -sb            # main ahead of origin by 13, clean
+npm test                  # expect 132/132
+npx vite build && npx vite preview --port 4719 --strictPort   # open /inflation-reality/
+```
