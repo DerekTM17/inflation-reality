@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import * as catalog from "../data/catalog.js";
 import { buildViewData } from "../data/merge.js";
-import { QUESTIONS, COMMON, LINES } from "./config.js";
+import { QUESTIONS, COMMON, LINES, EXPLANATIONS } from "./config.js";
 import {
   emptyAnswers, isPersonal, effectiveChoices, activeLines, defaultAmount, lineRate,
   personalRows, averageRows, monthlyTotal, computeResult, verdict, basis,
@@ -21,6 +21,19 @@ test("config: labels match the catalog, common answers are real options", () => 
   }
   for (const q of QUESTIONS) {
     assert.ok(q.options.some((o) => o.id === COMMON[q.id]), `common answer for ${q.id}`);
+  }
+});
+
+test("explanations obey the voice guide and cover both owner answers", () => {
+  const texts = Object.values(EXPLANATIONS).flatMap((q) => Object.values(q));
+  for (const text of texts) {
+    for (const banned of ["\u2014", "\u00B7", "\u2192", "!", "CPI", "YoY", "relative importance"]) {
+      assert.ok(!text.includes(banned), `${banned} in "${text}"`);
+    }
+  }
+  // Owners and mortgage holders both need to know property taxes are not in the estimate.
+  for (const answer of ["mortgage", "owned"]) {
+    assert.match(EXPLANATIONS.home[answer], /Property taxes are left out/, answer);
   }
 });
 

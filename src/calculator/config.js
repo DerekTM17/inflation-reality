@@ -57,10 +57,17 @@ const HEALTH_HELP =
   "Use the increase from your renewal notice. The government's health insurance index measures insurance company earnings instead of premiums, so we don't use it.";
 
 /** One or two sentences shown under a question for the chosen (or guessed) option. */
+// Property taxes have no published national rate (they turn on your county and your
+// reassessment), so owners are told what is left out instead of being asked for a number.
+const LOCAL_HOME_COSTS =
+  "Property taxes are left out because they depend on where you live, and home insurance counts only if you add your renewal increase.";
+
 export const EXPLANATIONS = {
   home: {
     mortgage:
-      "A fixed-rate payment stays the same from year to year, so it adds nothing here. The official inflation rate leaves mortgage payments out too. Home insurance and repairs still go up.",
+      `A fixed-rate payment stays the same from year to year, so it adds nothing here. The official inflation rate leaves mortgage payments out too. ${LOCAL_HOME_COSTS}`,
+    owned:
+      `With no mortgage payment, your home costs here are repairs and insurance. ${LOCAL_HOME_COSTS}`,
   },
   car: { electric: "Most people charge at home, so we use the change in home electricity prices." },
   health: { work: HEALTH_HELP, own: HEALTH_HELP },

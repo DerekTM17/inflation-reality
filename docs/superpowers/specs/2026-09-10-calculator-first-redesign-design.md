@@ -109,7 +109,9 @@ Checked by the Playwright audit in *Testing* unless marked (review).
 | Rates line | Prices overall rose 3.4%. / Your costs rose 2.9%. Prices overall rose 3.4%. |
 | Verdict | More than the national rate, mainly because of gas prices. / Less than the national rate, mainly because of your fixed mortgage payment. / Less than the national rate. / About the same as the national rate. |
 | Basis | Based on 1 answer and 3 guesses. / Based on 4 guesses. / Based on your answers. (+ "Monthly amounts are starting estimates." until any amount is edited) |
-| Mortgage explanation | A fixed-rate payment stays the same from year to year, so it adds nothing here. The official inflation rate leaves mortgage payments out too. Home insurance and repairs still go up. |
+| Mortgage explanation | A fixed-rate payment stays the same from year to year, so it adds nothing here. The official inflation rate leaves mortgage payments out too. {local home costs} |
+| Owner explanation (home = owned) | With no mortgage payment, your home costs here are repairs and insurance. {local home costs} |
+| {local home costs} (2026-09-17) | Property taxes are left out because they depend on where you live, and home insurance counts only if you add your renewal increase. |
 | Electric car explanation | Most people charge at home, so we use the change in home electricity prices. |
 | Health insurance explanation | Use the increase from your renewal notice. The government's health insurance index measures insurance company earnings instead of premiums, so we don't use it. |
 | Empty renewal prompt (panel row) | Health insurance: add your renewal increase / Home insurance: add your renewal increase |
@@ -174,6 +176,7 @@ totalExtra = Σ extra
 
 - **Fixed-rate mortgage:** `r = 0` ([BLS OER factsheet](https://www.bls.gov/cpi/factsheets/owners-equivalent-rent-and-rent.htm): mortgage interest is "not treated as consumption").
 - **Insurance:** `r` = the person's renewal increase (defaults in Decisions). An empty renewal input keeps that line off the total and shows a prompt row.
+- **Property taxes are out of scope** (2026-09-17): there is no published national rate, and asking for a local figure is homework most people cannot do from memory. Mortgage and owned answers say so in their explanation instead. Owners who own outright see a *higher percentage on a smaller budget* while their dollar total falls; the national rate they are compared against includes owners' equivalent rent, which they do not pay in cash. Making that comparison fair is an open design question, not a data one.
 - **Charging the car** uses the Electricity line's rate. **Heating included in my rent** adds no heating line.
 
 ### Verdict rule
