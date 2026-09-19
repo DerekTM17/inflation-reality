@@ -1,4 +1,4 @@
-# inflation-reality — Backlog
+# Inflation Reality — Backlog
 
 Open work organized by horizon (Now / Soon / Someday) with `[tag]` for
 domain. Markdown checkboxes; edit by hand. Shipped items go to
@@ -7,8 +7,10 @@ domain. Markdown checkboxes; edit by hand. Shipped items go to
 ## Now
 
 Items we're actively working on or planning to do imminently.
-- [ ] **[feat]** calculator-first redesign: "how inflation hits you" reframe, dollar inputs + household situation choices (housing, getting around, commute, heating, daycare, tuition, health insurance via your own renewal increase), non-generic visual identity, real buttons with pressed/focus states. Brainstorm in progress 2026-09-10; spec to docs/superpowers/specs/. <!-- added 2026-09-10 -->
-- [ ] **[bug]** live site: the "BLS Default" spending profile shows 3.9% vs the 3.4% headline and labels an average household "+0.5 above headline" — the 10 CATEGORIES cover only ~79% of CPI relative importance, so default weights cannot reproduce the headline. Fixed by the redesign (derived "Everything else" residual, see 2026-09-10 spec); if the redesign slips, relabel or hide the delta for the default profile. <!-- added 2026-09-10 -->
+- [ ] **[feat]** Redesign the site around a calculator that shows how inflation hits you, using your own dollar amounts and situation <!-- added 2026-09-10 -->
+  calculator-first redesign: "how inflation hits you" reframe, dollar inputs + household situation choices (housing, getting around, commute, heating, daycare, tuition, health insurance via your own renewal increase), non-generic visual identity, real buttons with pressed/focus states. Brainstorm in progress 2026-09-10; spec to docs/superpowers/specs/.
+- [ ] **[bug]** The "BLS Default" spending profile shows 3.9%, not the 3.4% headline, and wrongly calls an average household 0.5 points above it <!-- added 2026-09-10 -->
+  live site: the "BLS Default" spending profile shows 3.9% vs the 3.4% headline and labels an average household "+0.5 above headline" — the 10 CATEGORIES cover only ~79% of CPI relative importance, so default weights cannot reproduce the headline. Fixed by the redesign (derived "Everything else" residual, see 2026-09-10 spec); if the redesign slips, relabel or hide the delta for the default profile.
 
 ## Soon
 
