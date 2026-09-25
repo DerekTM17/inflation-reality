@@ -6,6 +6,12 @@ also include **Tradeoffs / Alternatives considered**.
 
 Curated, not exhaustive — `git log` has every commit.
 
+## 2026-09-24
+
+### Your costs calculator is live on the first screen
+
+**Why:** The old first screen buried the point. Now the page opens with the average U.S. household, and one tap gives you your own estimate in dollars, with guesses marked and the sources named.
+
 ## 2026-09-16
 
 ### Gaps in the household spending data no longer show up as 0%
