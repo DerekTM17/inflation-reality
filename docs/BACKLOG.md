@@ -35,6 +35,8 @@ Items we want to tackle in the near term but aren't started yet.
 - [ ] **[redesign]** Owed before merging the redesign: the owner's 5-second test (5 non-designers, first phone screen: 'What does this page do?' and 'Is that number yours?'; at least 4 of 5 answer both correctly). <!-- added 2026-09-16 -->
 - [ ] **[redesign]** Decide whether to drop the Home insurance line <!-- added 2026-09-24 -->
   It starts empty and only shows a prompt row asking for a renewal increase, which is homework most people skip; the same reasoning that kept property taxes out (2026-09-17 spec note) may apply to it. Alternative: keep it but drop the prompt row.
+- [ ] **[redesign]** Make the national comparison fair for people who own their home outright <!-- added 2026-09-24 -->
+  The national rate includes owners' equivalent rent, which an outright owner does not pay in cash, so the verdict can read 'More than the national rate' right after they say they own outright, while their dollar total actually falls (3.92% on $2,310/mo vs 3.48% on $3,830/mo renting). Options: lead with dollars, soften or drop the comparison for owners, or explain the mismatch in one sentence. Needs a spec change to the verdict rule.
 
 ## Someday
 
