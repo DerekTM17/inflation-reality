@@ -8,6 +8,10 @@ Curated, not exhaustive — `git log` has every commit.
 
 ## 2026-09-24
 
+### Owners are told which home costs are left out
+
+**Why:** Owning outright drops the rent line, so the rate goes up on a much smaller budget. Property taxes have no national number and home insurance starts blank. The page now says what is missing instead of asking for bills people rarely have on hand.
+
 ### Your costs calculator is live on the first screen
 
 **Why:** The old first screen buried the point. Now the page opens with the average U.S. household, and one tap gives you your own estimate in dollars, with guesses marked and the sources named.
