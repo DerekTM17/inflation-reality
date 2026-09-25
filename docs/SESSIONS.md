@@ -172,3 +172,39 @@ git status -sb            # main ahead of origin by 13, clean
 npm test                  # expect 132/132
 npx vite build && npx vite preview --port 4719 --strictPort   # open /inflation-reality/
 ```
+
+#### Handoff — Calculator Phase 2a is LIVE (supersedes the "NOT pushed" handoff above)
+
+**Goal:** Run the Phase 2a plan (shell + Your costs calculator), then answer the owner's question about what "Own it outright" does to the number.
+
+**Done — Phase 2a is deployed and verified in production.**
+- Merged `redesign/calculator-first` into `main` fast-forward and pushed it (deploy run `35169680134`, green). Branch deleted. Commits `e281839` merge forwards lines/basket · `089c4e1` format.js · `92b8466` config + model · `a89593a` panel.js · `6f38206` storage.js · `91fedb0` tokens/controls/font · `65e8cc0` shell + hash routing + old dashboard → `src/views/LegacyDashboard.jsx` · `ea01fa4` the tab · `656534c` final-review fixes · `2edb70b` handoff.
+- Then `337f2d8` (deploy run `35292990025`, green): mortgage and "own it outright" answers now end with "Property taxes are left out because they depend on where you live, and home insurance counts only if you add your renewal increase." The spec's copy table and a scope note were updated in the same commit.
+- **Verified by:** `npm test` → 133/133; `npx vite build` ok; the 30-check Python Playwright smoke script run **against the live site** (https://derektm17.github.io/inflation-reality/) passed after both deploys, with zero console errors; both deploys logged `54/54 series live` and `Calculator BLS lines are live.` with no warnings.
+- Live behavior today: Your costs is the first screen; National numbers, Price check and Sources still render the OLD dashboard views (LegacyDashboard) until Phase 2b.
+- **`main` is 2 commits ahead of origin** (`ea6f2c8`, `de5fff7`), both docs-only, and NOT written by this session — probably a parallel session's ledger tidy. Read them before pushing; pushing redeploys (harmless for docs).
+
+**Next (in this order):**
+1. **Fix the rounding sign flip** (BACKLOG, tag redesign). `allocateRounded` in `src/calculator/format.js`: when leftover steps are removed (k < 0) it can take a step from a small positive line whose floor is 0, showing e.g. a +$8 line as −$10. Repros with real totals: `[-300, 8, -40]` total −350 → `[-300, -10, -40]`; `[-1069, 0, 0, 5, -11]` total −1100 → `[-1070, 0, 0, -10, -20]`. Fix: take removed steps from negative-valued eligible entries first (removing can never flip them), then positive entries with at least 2 units; mirror the headroom check on the k > 0 branch; add both repros plus `[104, 7, 12]` (total 100) as tests. Needs a negative household total, so it is rare but real.
+2. **Decide the two owner-framing questions the owner raised** (see Decisions): whether to drop the Home insurance line, and how the rate/verdict should read for someone who owns outright.
+3. **Write the Phase 2b plan** (National numbers, Price check, Sources, .xlsx export, the committed audit script `scripts/audit/ui-audit.py`, link previews + og image), then delete LegacyDashboard. The owner still owes the 5-second test.
+
+**Decisions:**
+- **Property taxes stay out of the calculator** (spec updated 2026-09-17). There is no published national rate; the only honest figure is the person's own bill, and that is homework most people cannot do from memory. The explanation says so instead.
+- **Why "Own it outright" raises the percentage:** it removes the $1,650 rent line (rent is up only 2.75%), so the remaining spending leans toward faster risers, mainly gas at +27.4%. With live data and the other three questions guessed: rent 3.48% / $1,550 a year on $3,830 a month; mortgage 2.11% / $1,050 on $4,210; owned 3.92% / $1,050 on $2,310. The dollars fall, the rate rises. **Open:** the national rate includes owners' equivalent rent, which an outright owner does not pay in cash, so "More than the national rate" is an unfair comparison for them. Not yet fixed.
+- Phase 2a merged to main and shipped before Phase 2b, at the owner's explicit request (the plan had assumed it would wait).
+- Parked from the final review (all in BACKLOG or accepted): unchecking the last checkbox clears saved amount edits; the live region announces once on load; read-only Average amounts don't sum to exactly $5,750; route-change focus/title, "Show all" `aria-controls`, and the legacy views' light styling in dark mode → Phase 2b.
+
+**Gotchas:**
+- The Playwright MCP browser is shared with other sessions and often busy ("Browser is already in use"). Use Python Playwright (`from playwright.sync_api import sync_playwright`) instead; it is installed.
+- The smoke script is not committed. It lives in the session scratchpad; recreate it from the plan's Task 9 (`docs/superpowers/plans/2026-09-16-calculator-phase2a-your-costs.md`) or point it at the live URL. Phase 2b is supposed to commit the real audit as `scripts/audit/ui-audit.py`.
+- There is no local `public/cpi.json`, so `vite preview` logs a cpi.json 404 and falls back to `src/data/fallback.json` (expected).
+- Validating a plan only against its end state missed an ordering bug (a test scanned `App.jsx` before Task 7 replaced it), and default-amount browser checks cannot catch rounding bugs on $0 or tiny lines. Probe with random amounts including 0.
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality
+git status -sb                      # expect main ahead of origin by 2 (docs only), clean
+npm test                            # expect 133/133
+npx vite build && npx vite preview --port 4719 --strictPort   # then open /inflation-reality/
+```
