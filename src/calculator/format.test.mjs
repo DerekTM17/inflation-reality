@@ -61,6 +61,38 @@ test("allocateRounded handles leftovers larger than the list and negative leftov
   assert.ok(allocateRounded([0.4], 0).every((v) => Object.is(v, 0)));
 });
 
+// A shown amount may round to 0, but must never show the opposite sign of its line.
+const noSignFlip = (values, out) => values.every((v, i) => out[i] === 0 || Math.sign(out[i]) === Math.sign(v));
+
+test("allocateRounded never flips a small positive line negative when removing steps", () => {
+  for (const [values, total] of [[[-300, 8, -40], -350], [[-1069, 0, 0, 5, -11], -1100]]) {
+    const out = allocateRounded(values, total);
+    assert.equal(sum(out), total);
+    assert.ok(noSignFlip(values, out), `${values} -> ${out}`);
+  }
+});
+
+test("allocateRounded removes a step from a line that can spare it", () => {
+  assert.deepEqual(allocateRounded([104, 7, 12], 100), [100, 0, 0]);
+});
+
+test("allocateRounded keeps signs and the exact sum for random households", () => {
+  let seed = 17;
+  const rand = () => ((seed = (seed * 1103515245 + 12345) % 2 ** 31) / 2 ** 31);
+  for (let trial = 0; trial < 5000; trial++) {
+    const values = Array.from({ length: 1 + Math.floor(rand() * 8) }, () => {
+      const r = rand();
+      if (r < 0.15) return 0;
+      const mag = r < 0.5 ? rand() * 30 : rand() * 1500;
+      return Math.round((rand() < 0.4 ? -mag : mag) * 100) / 100;
+    });
+    const total = roundToStep(sum(values), 50);
+    const out = allocateRounded(values, total);
+    assert.equal(sum(out), total, `sum ${values}`);
+    assert.ok(noSignFlip(values, out), `${values} -> ${out}`);
+  }
+});
+
 test("allocateRounded: zeros always stay zero, never take leftover steps", () => {
   const out = allocateRounded([480, 0, -300, 0], 200); // sum(180) rounded to step 50 -> 200
   assert.deepEqual([out[1], out[3]], [0, 0]);

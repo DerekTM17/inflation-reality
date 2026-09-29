@@ -58,10 +58,9 @@ export function roundToStep(n, step) {
  * exact-sum guarantee always wins). The remaining "eligible" entries floor
  * toward zero and then receive/lose leftover steps by largest/smallest
  * fractional remainder, same as before, but wrapping only across themselves.
- * Adding or removing a step prefers not to flip an eligible entry's sign
- * (removal takes from positive entries first, addition avoids pushing a
- * negative entry positive); when every preference is exhausted the sum
- * guarantee still wins. Ties go to the earlier index (later index for removal,
+ * Adding or removing a step never carries an eligible entry past zero to the
+ * opposite sign (a +$8 line may show $0, never −$10) while any other entry can
+ * take the step; only when none can does the sum guarantee win. Ties go to the earlier index (later index for removal,
  * matching the original tie-break).
  */
 export function allocateRounded(values, total, step = 10) {
@@ -85,22 +84,31 @@ export function allocateRounded(values, total, step = 10) {
   for (const i of eligible) out[i] = floor[i];
 
   let k = Math.round(total / step) - eligible.reduce((s, i) => s + floor[i], 0);
-  if (k > 0) {
-    // Largest remainder first; keep a negative-valued entry from going positive
-    // as long as some other candidate can take the step instead.
-    const order = eligible.slice().sort((a, b) => frac(b) - frac(a) || a - b);
-    const safe = order.filter((i) => values[i] >= 0 || (out[i] + 1) * step <= 0);
-    const risky = order.filter((i) => !(values[i] >= 0 || (out[i] + 1) * step <= 0));
-    const queue = [...safe, ...risky, ...order];
-    for (let j = 0; k > 0; j++, k--) out[queue[j % queue.length]] += 1;
-  } else if (k < 0) {
-    // Smallest remainder first; prefer taking from positive-valued entries so a
-    // negative entry doesn't get pushed further negative unnecessarily.
-    const order = eligible.slice().sort((a, b) => frac(a) - frac(b) || b - a);
-    const safe = order.filter((i) => values[i] > 0);
-    const risky = order.filter((i) => values[i] <= 0);
-    const queue = [...safe, ...risky, ...order];
-    for (let j = 0; k < 0; j++, k++) out[queue[j % queue.length]] -= 1;
+  if (k === 0) return out.map((u) => (u === 0 ? 0 : u * step));
+  const dir = Math.sign(k);
+  // Adding: largest remainder first. Removing: smallest remainder first.
+  const order = dir > 0
+    ? eligible.slice().sort((a, b) => frac(b) - frac(a) || a - b)
+    : eligible.slice().sort((a, b) => frac(a) - frac(b) || b - a);
+  // A step is safe if it can't carry the entry past zero to the opposite sign.
+  // Checked before every step, not once up front: an entry at -1 can safely
+  // take one added step (to 0) but not a second one on a later pass.
+  const safe = (i) => Math.sign(values[i]) === dir || Math.sign(out[i] + dir) !== -Math.sign(values[i]);
+  let forced = 0;
+  while (k !== 0) {
+    let moved = false;
+    for (const i of order) {
+      if (k === 0) break;
+      if (!safe(i)) continue;
+      out[i] += dir;
+      k -= dir;
+      moved = true;
+    }
+    // Every entry is out of headroom: the exact-sum guarantee wins.
+    if (!moved) {
+      out[order[forced++ % order.length]] += dir;
+      k -= dir;
+    }
   }
   return out.map((u) => (u === 0 ? 0 : u * step));
 }
