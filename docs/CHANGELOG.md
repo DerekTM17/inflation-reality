@@ -6,6 +6,12 @@ also include **Tradeoffs / Alternatives considered**.
 
 Curated, not exhaustive — `git log` has every commit.
 
+## 2026-09-28
+
+### Line amounts in Your costs never show the wrong sign
+
+**Why:** When your total costs went down, a small line that rose could show as a drop, like +$8 showing as -$10. Now a line can round to $0 but never flips. The total still adds up exactly.
+
 ## 2026-09-24
 
 ### Owners are told which home costs are left out
