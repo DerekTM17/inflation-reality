@@ -25,10 +25,10 @@ export function pctChange(current, yearAgo) {
   return (current / yearAgo - 1) * 100;
 }
 
-/** "$2.27"; prices under $1 keep a third decimal ("$0.183") so small changes still show. */
-export function formatPrice(n) {
+/** "$2.27", cents for every unit; only a kilowatt-hour keeps a third decimal ("$0.196"). */
+export function formatPrice(n, unit) {
   if (n == null) return "";
-  return `$${n.toFixed(Math.abs(n) < 1 ? 3 : 2)}`;
+  return `$${n.toFixed(unit === "/kWh" ? 3 : 2)}`;
 }
 
 /** Average prices grouped by catalog category, in catalog order. */
@@ -42,8 +42,8 @@ export function avgPriceGroups(data) {
       seriesId: p.seriesId,
       item: p.item,
       unitText: unitWords(p.unit),
-      nowText: p.current == null ? "Not available" : formatPrice(p.current),
-      yearAgoText: p.yearAgo == null ? "Not available" : formatPrice(p.yearAgo),
+      nowText: p.current == null ? "Not available" : formatPrice(p.current, p.unit),
+      yearAgoText: p.yearAgo == null ? "Not available" : formatPrice(p.yearAgo, p.unit),
       change,
       changeText: change == null ? "" : formatRate(change),
     });
@@ -73,19 +73,19 @@ export function fuelRows(data) {
     const bls = data.avgPrices.find((p) => p.seriesId === w.blsSeriesId);
     let yearAgoText = "";
     if (w.yearAgo != null) {
-      yearAgoText = `A year earlier: ${formatPrice(w.yearAgo)}`;
+      yearAgoText = `A year earlier: ${formatPrice(w.yearAgo, w.unit)}`;
       if (change != null) yearAgoText += ` (${formatRate(change)})`;
       yearAgoText += ".";
     }
     return {
       key: w.key,
       label: w.label,
-      nowText: w.current == null ? "Not available" : `${formatPrice(w.current)} ${unit}`,
+      nowText: w.current == null ? "Not available" : `${formatPrice(w.current, w.unit)} ${unit}`,
       weekText: w.current != null && w.asOfLabel ? `Week ending ${w.asOfLabel}.` : "",
       yearAgoText,
       monthlyText: bls?.current == null || !data.referenceMonthLabel
         ? ""
-        : `Government monthly average for ${data.referenceMonthLabel}: ${formatPrice(bls.current)} ${unit}.`,
+        : `Government monthly average for ${data.referenceMonthLabel}: ${formatPrice(bls.current, bls.unit)} ${unit}.`,
       blurb: w.blurb,
     };
   });

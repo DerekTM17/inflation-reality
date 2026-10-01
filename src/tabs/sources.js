@@ -39,7 +39,7 @@ export function seriesGroups(catalog, data) {
   return [
     {
       id: "household",
-      title: "Your costs lines",
+      title: "Lines on Your costs",
       rows: [
         ...household.map((l) => row(l.label, l.seriesId, l.source, lineYoy(l.id))),
         ...CALC_COMBOS.flatMap((c) => c.parts.map((p) => row(`${c.label}: ${p.label.toLowerCase()}`, p.seriesId, c.source))),

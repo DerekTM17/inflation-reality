@@ -115,7 +115,7 @@ test("round trip through the real xlsx package", () => {
   assert.deepEqual(back.SheetNames, SHEET_NAMES);
   const prices = XLSX.utils.sheet_to_json(back.Sheets["Price changes"], { header: 1 });
   assert.ok(prices.some((r) => r[2] === "CUUR0000SA0L2" && r[0] === "What we compare you with"));
-  assert.ok(!prices.some((r) => r[2] === "CUUR0000SA0L2" && r[0] === "Your costs lines"));
+  assert.ok(!prices.some((r) => r[2] === "CUUR0000SA0L2" && r[0] === "Lines on Your costs"));
   const trend = XLSX.utils.sheet_to_json(back.Sheets["Monthly trend"], { header: 1 });
   assert.ok(trend.some((r) => r[0] === "October 2025" && r[2] === "Not published"));
 });

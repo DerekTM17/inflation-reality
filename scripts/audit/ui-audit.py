@@ -15,7 +15,8 @@ By default cpi.json is answered with scripts/audit/fixture-cpi.json, so results 
 move with each month's data. Google Fonts requests are stubbed either way. The page
 runs on Playwright's fake clock so the Undo toast's 8-second timer can be tested.
 Uses its own browser: the Playwright MCP browser is shared with other sessions.
-Every check runs; the exit code is 1 if any failed.
+A failed check is reported and the run continues; the exit code is 1 if any failed. A missing
+element stops the run at once with exit code 1.
 """
 import argparse
 import random

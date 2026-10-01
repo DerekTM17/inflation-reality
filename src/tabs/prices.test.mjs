@@ -17,9 +17,12 @@ test("pctChange: null, never Infinity or NaN, when a price is missing or zero", 
   assert.equal(pctChange(3, 0), null);
 });
 
-test("formatPrice: two decimals, three under $1", () => {
+test("formatPrice: cents everywhere, three decimals only for a kilowatt-hour", () => {
   assert.equal(formatPrice(3.587), "$3.59");
-  assert.equal(formatPrice(0.183), "$0.183");
+  assert.equal(formatPrice(0.548), "$0.55");
+  assert.equal(formatPrice(6.92), "$6.92");
+  assert.equal(formatPrice(0.9996), "$1.00");
+  assert.equal(formatPrice(0.196, "/kWh"), "$0.196");
   assert.equal(formatPrice(null), "");
 });
 

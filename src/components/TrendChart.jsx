@@ -20,10 +20,11 @@ export default function TrendChart({ points }) {
             <XAxis
               dataKey="short" tick={TICK} tickLine={false} axisLine={{ stroke: "var(--rule)" }}
               interval="preserveStartEnd" minTickGap={24}
+              padding={{ left: 8, right: 32 }} tickMargin={8}
             />
             <YAxis
               width={44} tick={TICK} tickLine={false} axisLine={false}
-              tickFormatter={(v) => `${v}%`}
+              tickFormatter={(v) => `${v}%`} tickMargin={8}
               domain={[(min) => Math.min(0, Math.floor(min)), (max) => Math.max(0, Math.ceil(max))]}
             />
             <ReferenceLine y={0} stroke="var(--control-edge)" />
