@@ -63,19 +63,21 @@ for (const [name, t] of [["light", light], ["dark", darkAttr]]) {
   });
 }
 
-// "Components never use literal colors." Scans the new UI files that exist so far.
+// "Components never use literal colors." Scans the new UI files.
 test("no literal colors outside tokens.css in the new UI", () => {
   const files = [];
-  for (const dir of ["styles", "components"]) {
+  for (const dir of ["styles", "components", "tabs"]) {
     const full = join(src, dir);
     if (!existsSync(full)) continue;
     for (const f of readdirSync(full)) {
       if (/\.(css|jsx|js)$/.test(f) && f !== "tokens.css") files.push(join(full, f));
     }
   }
-  for (const f of ["views/YourCosts.jsx", "App.jsx"]) {
-    if (existsSync(join(src, f))) files.push(join(src, f));
+  // Every view except the old dashboard, which Task 10 deletes (and drops this exception).
+  for (const f of readdirSync(join(src, "views"))) {
+    if (/\.(jsx|js)$/.test(f) && f !== "LegacyDashboard.jsx") files.push(join(src, "views", f));
   }
+  if (existsSync(join(src, "App.jsx"))) files.push(join(src, "App.jsx"));
   for (const file of files) {
     const text = readFileSync(file, "utf8");
     assert.ok(!/#[0-9A-Fa-f]{3,8}\b|rgba?\(|hsla?\(/.test(text), `literal color in ${file}`);

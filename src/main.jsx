@@ -5,6 +5,7 @@ import "./index.css";
 import "./styles/tokens.css";
 import "./styles/controls.css";
 import "./styles/calculator.css";
+import "./styles/tabs.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
