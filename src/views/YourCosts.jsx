@@ -47,7 +47,7 @@ export default function YourCosts({ data, base, onNavigate }) {
     [personal, answers, data],
   );
   const model = useMemo(
-    () => panelModel({ mode, rows, headlinePct: data.headline.yoy, referenceMonth: data.referenceMonth, answers }),
+    () => panelModel({ mode, rows, headlinePct: data.headline.yoy, exShelterPct: data.lines.exShelter?.yoy ?? null, referenceMonth: data.referenceMonth, answers }),
     [mode, rows, data, answers],
   );
   const fine = useMemo(() => finePrint({ mode, rows, data }), [mode, rows, data]);

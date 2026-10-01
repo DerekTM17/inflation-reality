@@ -162,12 +162,12 @@ const r1 = (n) => Math.round(n * 10) / 10;
  * c_i = share of year-ago spending × (r_i − R) in the direction of d, if it
  * explains at least 40% of d.
  */
-export function verdict(result, headlinePct) {
+export function verdict(result, headlinePct, yardstick = "the national rate") {
   if (result.rate == null || headlinePct == null) return null;
   const R = r1(headlinePct);
   const d = r1(r1(result.rate) - R);
-  if (Math.abs(d) <= 0.2) return "About the same as the national rate.";
-  const lead = d > 0 ? "More than the national rate" : "Less than the national rate";
+  if (Math.abs(d) <= 0.2) return `About the same as ${yardstick}.`;
+  const lead = d > 0 ? `More than ${yardstick}` : `Less than ${yardstick}`;
   let best = null;
   for (const l of result.lines) {
     if (l.id === "rest") continue;

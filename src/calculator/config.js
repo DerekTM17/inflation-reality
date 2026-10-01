@@ -61,13 +61,17 @@ const HEALTH_HELP =
 // reassessment), so owners are told what is left out instead of being asked for a number.
 const LOCAL_HOME_COSTS =
   "Property taxes are left out because they depend on where you live, and home insurance counts only if you add your renewal increase.";
+// The national rate counts what owners would pay to rent their own home; owners never
+// pay that in cash, so the panel compares them with prices other than housing instead.
+const OWNER_YARDSTICK =
+  "We compare you with prices other than housing, because the national rate counts rent that owners don't pay.";
 
 export const EXPLANATIONS = {
   home: {
     mortgage:
-      `A fixed-rate payment stays the same from year to year, so it adds nothing here. The official inflation rate leaves mortgage payments out too. ${LOCAL_HOME_COSTS}`,
+      `A fixed-rate payment stays the same from year to year, so it adds nothing here. The official inflation rate leaves mortgage payments out too. ${LOCAL_HOME_COSTS} ${OWNER_YARDSTICK}`,
     owned:
-      `With no mortgage payment, your home costs here are repairs and insurance. ${LOCAL_HOME_COSTS}`,
+      `With no mortgage payment, your home costs here are repairs and insurance. ${LOCAL_HOME_COSTS} ${OWNER_YARDSTICK}`,
   },
   car: { electric: "Most people charge at home, so we use the change in home electricity prices." },
   health: { work: HEALTH_HELP, own: HEALTH_HELP },

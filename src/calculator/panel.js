@@ -19,10 +19,11 @@ const UNAVAILABLE = "Average household figures are not available right now.";
  * @param {"average"|"personal"} p.mode
  * @param {object[]|null} p.rows  personalRows() or averageRows() output; null = basket unusable
  * @param {number|null} p.headlinePct  data.headline.yoy
+ * @param {number|null} [p.exShelterPct]  data.lines.exShelter.yoy — owners' yardstick
  * @param {string|null} p.referenceMonth  "YYYY-MM"
  * @param {object} p.answers
  */
-export function panelModel({ mode, rows, headlinePct, referenceMonth, answers }) {
+export function panelModel({ mode, rows, headlinePct, exShelterPct = null, referenceMonth, answers }) {
   const personal = mode === "personal";
   const title = `${personal ? "Your costs" : "The average U.S. household"} vs. ${monthLabel(referenceMonth, -1)}`;
   const nationalLine = headlinePct == null ? "" : `Prices overall ${movePhrase(headlinePct)}.`;
@@ -53,8 +54,15 @@ export function panelModel({ mode, rows, headlinePct, referenceMonth, answers })
     total > 0 ? `About ${formatDollars(total)} more a year`
     : total < 0 ? `About ${formatDollars(total)} less a year`
     : "About the same as a year ago";
+  // The national rate counts what owners would pay to rent their own home, a cost
+  // owners never pay in cash, so owners are measured against prices other than housing.
+  const home = personal ? effectiveChoices(answers).home : null;
+  const owner = (home === "owned" || home === "mortgage") && exShelterPct != null;
+  const yard = owner
+    ? { pct: exShelterPct, line: `Prices other than housing ${movePhrase(exShelterPct)}.`, name: "prices other than housing", label: "Outside housing" }
+    : { pct: headlinePct, line: nationalLine, name: "the national rate", label: "National" };
   const ratesLine = personal && result.rate != null
-    ? `Your costs ${movePhrase(result.rate)}. ${nationalLine}`.trim()
+    ? `Your costs ${movePhrase(result.rate)}. ${yard.line}`.trim()
     : nationalLine;
 
   const dollars = allocateRounded(result.lines.map((l) => l.extra), total);
@@ -84,11 +92,12 @@ export function panelModel({ mode, rows, headlinePct, referenceMonth, answers })
   };
 
   let compare = null;
-  if (personal && result.rate != null && headlinePct != null) {
-    const [you, us] = barGeometry([result.rate, headlinePct]);
+  if (personal && result.rate != null && yard.pct != null) {
+    const [you, us] = barGeometry([result.rate, yard.pct]);
     compare = {
       you: { text: formatRate(result.rate), bar: you },
-      us: { text: formatRate(headlinePct), bar: us },
+      us: { text: formatRate(yard.pct), bar: us },
+      usLabel: yard.label,
     };
   }
 
@@ -99,7 +108,7 @@ export function panelModel({ mode, rows, headlinePct, referenceMonth, answers })
     zero: false,
     total,
     compare,
-    verdict: personal ? verdict(result, headlinePct) : null,
+    verdict: personal ? verdict(result, yard.pct, yard.name) : null,
     basis: basisText,
     top: main.slice(0, TOP_ROWS),
     main,

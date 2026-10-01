@@ -41,7 +41,7 @@ const ResultPanel = forwardRef(function ResultPanel(
           <span>Your costs</span>
           <Bar bar={model.compare.you.bar} kind="you" />
           <span className="cmp-val">{model.compare.you.text}</span>
-          <span>National</span>
+          <span>{model.compare.usLabel}</span>
           <Bar bar={model.compare.us.bar} kind="us" />
           <span className="cmp-val">{model.compare.us.text}</span>
         </div>

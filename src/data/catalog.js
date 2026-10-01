@@ -111,6 +111,8 @@ export const CALC_LINES = [
   { id: "tuition",   label: "College tuition",     seriesId: "CUUR0000SEEB01", source: "bls" },
   { id: "clothing",  label: "Clothing",            seriesId: "CPIAPPNS",       source: "fred" },
   { id: "fun",       label: "Entertainment",       seriesId: "CPIRECNS",       source: "fred" },
+  // Not a household line: the yardstick owners are compared with (all items less shelter).
+  { id: "exShelter", label: "Prices other than housing", seriesId: "CUUR0000SA0L2", source: "fred", yardstick: true },
 ];
 
 // Lines built from several series, combined with weights rolled forward from December

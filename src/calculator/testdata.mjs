@@ -5,6 +5,7 @@ const LINE_RATES = {
   rent: 3.0, upkeep: 2.0, groceries: 2.2, dining: 3.4, gasoline: 27.4, carIns: -5.1,
   carUpkeep: 5.2, transit: -3.7, electric: 3.8, heatGas: 4.4, heatOil: 52.0,
   daycare: 4.0, tuition: 2.8, clothing: 3.6, fun: 2.7, doctor: 0.2,
+  exShelter: 3.6, // yardstick for owners, not a household line
 };
 
 const BASKET_ITEMS = [

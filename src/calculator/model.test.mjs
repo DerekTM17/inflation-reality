@@ -17,6 +17,7 @@ const answersWith = (patch) => ({ ...emptyAnswers(), ...patch });
 
 test("config: labels match the catalog, common answers are real options", () => {
   for (const l of [...catalog.CALC_LINES, ...catalog.CALC_COMBOS]) {
+    if (l.yardstick) continue; // a comparison rate, never a household line
     assert.equal(LINES[l.id]?.label, l.label, `label for ${l.id}`);
   }
   for (const q of QUESTIONS) {
@@ -153,6 +154,17 @@ test("verdict: reason in the direction of the gap", () => {
     { id: "groceries", monthly: 500, rate: 2.2 },
   ]); // your rate 0.4
   assert.equal(verdict(mortgage, 3.4), "Less than the national rate, mainly because of your fixed mortgage payment.");
+});
+
+test("verdict names the yardstick it was given", () => {
+  const gas = computeResult([
+    { id: "gasoline", monthly: 200, rate: 27.4 },
+    { id: "groceries", monthly: 800, rate: 2.2 },
+  ]); // your rate 6.4
+  assert.equal(verdict(gas, 3.6, "prices other than housing"),
+    "More than prices other than housing, mainly because of gas prices.");
+  assert.equal(verdict(computeResult([{ id: "groceries", monthly: 500, rate: 3.5 }]), 3.6, "prices other than housing"),
+    "About the same as prices other than housing.");
 });
 
 test("verdict: about the same within 0.2; no reason under 40% of the gap; Everything else never a reason", () => {

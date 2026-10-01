@@ -112,7 +112,7 @@ test("buildViewData forwards every calculator line, keyed by id, from the payloa
   const view = buildViewData(fullCatalog, dynamic);
   const ids = [...CALC_LINES.map(l => l.id), ...CALC_COMBOS.map(c => c.id)];
   assert.deepEqual(Object.keys(view.lines).sort(), [...ids].sort());
-  assert.equal(ids.length, 16);
+  assert.equal(ids.length, 17); // 16 household lines + the owners' yardstick
   const gasoline = view.lines.gasoline;
   assert.equal(gasoline.yoy, dynamic.lines.gasoline.yoy);
   assert.equal(gasoline.yoy, 27.404926);               // literal, pinned to the production fixture

@@ -11,7 +11,7 @@ const answersWith = (patch) => ({ ...emptyAnswers(), ...patch });
 function personalModel(answers, data = fakeData()) {
   return panelModel({
     mode: "personal", rows: personalRows(answers, data), headlinePct: data.headline.yoy,
-    referenceMonth: data.referenceMonth, answers,
+    exShelterPct: data.lines.exShelter?.yoy ?? null, referenceMonth: data.referenceMonth, answers,
   });
 }
 
@@ -54,9 +54,9 @@ test("personal panel with a mortgage: 0% line, prompt for home insurance, basis,
   assert.equal(mortgage.dollarText, "$0");
   assert.deepEqual(m.prompts, [{ id: "homeIns", text: "Home insurance: add your renewal increase" }]);
   assert.equal(m.basis, "Based on 1 answer and 3 guesses. Monthly amounts are starting estimates.");
-  assert.match(m.verdict, /national rate/);
-  assert.match(m.ratesLine, /^Your costs (rose|fell) \d+\.\d%\. Prices overall rose 3\.4%\.$/);
-  assert.ok(m.compare && m.compare.us.text === "+3.4%");
+  assert.match(m.verdict, /prices other than housing/);
+  assert.match(m.ratesLine, /^Your costs (rose|fell) \d+\.\d%\. Prices other than housing rose 3\.6%\.$/);
+  assert.ok(m.compare && m.compare.us.text === "+3.6%");
   assert.equal(m.bars, true);
   assert.equal(shownSum(m), m.total);
 });
@@ -213,4 +213,27 @@ test("panel copy obeys the voice guide's banned characters", () => {
   for (const banned of ["—", "·", "→", "!", "CPI", "YoY"]) {
     assert.ok(!text.includes(banned), `found ${banned}`);
   }
+});
+
+test("owners are compared with prices other than housing; renters with the national rate", () => {
+  for (const home of ["owned", "mortgage"]) {
+    const m = personalModel(answersWith({ answered: { home } }));
+    assert.match(m.ratesLine, /^Your costs (rose|fell) \d+\.\d%\. Prices other than housing rose 3\.6%\.$/, home);
+    assert.match(m.verdict, /prices other than housing/, home);
+    assert.equal(m.compare.us.text, "+3.6%", home);
+    assert.equal(m.compare.usLabel, "Outside housing", home);
+  }
+  const renter = personalModel(answersWith({ answered: { home: "rent" } }));
+  assert.match(renter.ratesLine, /Prices overall rose 3\.4%\.$/);
+  assert.match(renter.verdict, /national rate/);
+  assert.equal(renter.compare.us.text, "+3.4%");
+  assert.equal(renter.compare.usLabel, "National");
+});
+
+test("owners fall back to the national rate when the outside-housing figure is missing", () => {
+  const data = fakeData({ lines: { exShelter: { id: "exShelter", yoy: null, stale: true } } });
+  const m = personalModel(answersWith({ answered: { home: "owned" } }), data);
+  assert.match(m.ratesLine, /Prices overall rose 3\.4%\.$/);
+  assert.match(m.verdict, /national rate/);
+  assert.equal(m.compare.usLabel, "National");
 });
