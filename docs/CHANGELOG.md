@@ -6,6 +6,12 @@ also include **Tradeoffs / Alternatives considered**.
 
 Curated, not exhaustive — `git log` has every commit.
 
+## 2026-10-01
+
+### Homeowners are compared with prices other than housing
+
+**Why:** The national rate counts rent that homeowners don't pay. Comparing owners with it was unfair. Now owners see how their costs compare with prices other than housing, and renters still see the national rate.
+
 ## 2026-09-28
 
 ### Line amounts in Your costs never show the wrong sign
