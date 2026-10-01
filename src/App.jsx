@@ -8,6 +8,7 @@ import SectionNav from "./components/SectionNav.jsx";
 import YourCosts from "./views/YourCosts.jsx";
 import NationalNumbers from "./views/NationalNumbers.jsx";
 import PriceCheck from "./views/PriceCheck.jsx";
+import Sources from "./views/Sources.jsx";
 import LegacyDashboard from "./views/LegacyDashboard.jsx";
 
 const BASE = import.meta.env.BASE_URL;
@@ -79,6 +80,7 @@ export default function App() {
         {route === "your-costs" ? <YourCosts data={data} base={BASE} onNavigate={navigate} />
           : route === "national-numbers" ? <NationalNumbers data={data} />
           : route === "price-check" ? <PriceCheck data={data} />
+          : route === "sources" ? <Sources data={data} />
           : <LegacyDashboard dynamic={dynamic} view={LEGACY_VIEW[route]} />}
       </main>
     </div>
