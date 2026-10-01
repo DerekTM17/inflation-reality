@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-18T00:52:48.806Z",
+  "generatedAt": "2026-10-01T23:14:19.561Z",
   "referenceMonth": "2026-08",
   "referenceMonthLabel": "August 2026",
   "headline": {
@@ -132,7 +132,7 @@
   },
   "altMeasures": {
     "corePce": {
-      "yoy": 3.3
+      "yoy": 3
     },
     "medianCpi": {
       "yoy": 2.6
@@ -144,21 +144,21 @@
       "yoy": 2.7
     },
     "trimmedPce": {
-      "yoy": 2.3
+      "yoy": 2.2
     }
   },
   "weeklyPrices": {
     "gasoline": {
-      "current": 4.319,
-      "yearAgo": 3.168,
-      "asOf": "2026-09-14",
-      "asOfLabel": "Sep 14, 2026"
+      "current": 4.465,
+      "yearAgo": 3.118,
+      "asOf": "2026-09-28",
+      "asOfLabel": "Sep 28, 2026"
     },
     "diesel": {
-      "current": 6.285,
-      "yearAgo": 3.739,
-      "asOf": "2026-09-14",
-      "asOfLabel": "Sep 14, 2026"
+      "current": 6.382,
+      "yearAgo": 3.754,
+      "asOf": "2026-09-28",
+      "asOfLabel": "Sep 28, 2026"
     }
   },
   "trend": [
@@ -257,6 +257,9 @@
     },
     "fun": {
       "yoy": 2.681868
+    },
+    "exShelter": {
+      "yoy": 3.590982
     },
     "doctor": {
       "yoy": 0.194294
