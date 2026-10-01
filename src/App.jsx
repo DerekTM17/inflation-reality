@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as catalog from "./data/catalog.js";
 import { buildViewData } from "./data/merge.js";
 import { isPlausiblePayload } from "./data/payload.js";
 import fallbackDynamic from "./data/fallback.json";
-import { routeFromHash, hrefFor } from "./routes.js";
+import { routeFromHash, hrefFor, titleFor } from "./routes.js";
 import SectionNav from "./components/SectionNav.jsx";
 import YourCosts from "./views/YourCosts.jsx";
 import LegacyDashboard from "./views/LegacyDashboard.jsx";
@@ -45,6 +45,20 @@ export default function App() {
       window.removeEventListener("popstate", sync);
     };
   }, []);
+
+  // Every route names its tab in document.title. A route change (not the first
+  // render of a page load) also moves focus to the new view's heading (#page-title),
+  // so screen reader and keyboard users land at the top of what just appeared.
+  // Child effects have committed by now, so the new heading exists. Comparing with
+  // the previous route (not a "first render" flag) stays correct under StrictMode,
+  // which runs effects twice in development.
+  const shownRoute = useRef(route);
+  useEffect(() => {
+    document.title = titleFor(route);
+    if (shownRoute.current === route) return;
+    shownRoute.current = route;
+    document.getElementById("page-title")?.focus({ preventScroll: true });
+  }, [route]);
 
   // Section links push a normal history entry. pushState (not a bare href) because
   // leaving a hash for the bare base path would otherwise reload the page.

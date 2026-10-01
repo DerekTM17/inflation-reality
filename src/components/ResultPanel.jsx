@@ -51,7 +51,7 @@ const ResultPanel = forwardRef(function ResultPanel(
       {model.main.length > 0 && (
         <>
           <h3 className="lines-title">Where the extra money goes</h3>
-          <ul className="lines">
+          <ul className="lines" id="result-lines">
             {rows.map((r) => <LineRow key={r.id} row={r} showBars={model.bars} />)}
             {!showAll && model.smaller && (
               <li className="line">
@@ -76,7 +76,13 @@ const ResultPanel = forwardRef(function ResultPanel(
       <div className="actions">
         <button type="button" className="btn" onClick={onAction}>{model.actionLabel}</button>
         {model.smaller && (
-          <button type="button" className="text-btn" aria-expanded={showAll ? "true" : "false"} onClick={onToggleShowAll}>
+          <button
+            type="button"
+            className="text-btn"
+            aria-expanded={showAll ? "true" : "false"}
+            aria-controls="result-lines"
+            onClick={onToggleShowAll}
+          >
             {showAll ? "Show fewer items" : `Show all ${model.allCount} items`}
           </button>
         )}

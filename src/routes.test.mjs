@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ROUTES, routeFromHash, hrefFor, isPlainClick } from "./routes.js";
+import { ROUTES, routeFromHash, hrefFor, isPlainClick, titleFor } from "./routes.js";
 
 test("routeFromHash: known hashes, empty, unknown", () => {
   assert.equal(routeFromHash(""), "your-costs");
@@ -24,4 +24,12 @@ test("isPlainClick ignores modified and non-left clicks", () => {
   assert.equal(isPlainClick(click), true);
   assert.equal(isPlainClick({ ...click, metaKey: true }), false);
   assert.equal(isPlainClick({ ...click, button: 1 }), false);
+});
+
+test("titleFor: the site name alone on Your costs, the tab name first elsewhere", () => {
+  assert.equal(titleFor("your-costs"), "Inflation Reality");
+  assert.equal(titleFor("national-numbers"), "National numbers | Inflation Reality");
+  assert.equal(titleFor("price-check"), "Price check | Inflation Reality");
+  assert.equal(titleFor("sources"), "Sources | Inflation Reality");
+  assert.equal(titleFor("nope"), "Inflation Reality");
 });

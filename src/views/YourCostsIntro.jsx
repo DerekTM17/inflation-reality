@@ -5,7 +5,7 @@ import { hrefFor, isPlainClick } from "../routes.js";
 export default function YourCostsIntro({ data, base, onNavigate, returning }) {
   return (
     <div className="intro">
-      <h1>How much more are you paying than a year ago?</h1>
+      <h1 id="page-title" tabIndex={-1}>How much more are you paying than a year ago?</h1>
       <p className="lede">
         {ledeText({ headlinePct: data.headline.yoy, referenceMonth: data.referenceMonth, returning })}
       </p>

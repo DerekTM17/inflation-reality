@@ -19,6 +19,15 @@ export function hrefFor(id, base) {
   return id === "your-costs" ? base : `${base}#${id}`;
 }
 
+/**
+ * document.title for a route. Your costs keeps the bare site name, matching the
+ * link preview; the other tabs put their own name first so browser tabs differ.
+ */
+export function titleFor(id) {
+  const r = ROUTES.find((x) => x.id === id);
+  return !r || r.id === "your-costs" ? "Inflation Reality" : `${r.label} | Inflation Reality`;
+}
+
 /** A plain left click with no modifier: safe to handle in-page instead of letting the browser navigate. */
 export function isPlainClick(e) {
   return e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
