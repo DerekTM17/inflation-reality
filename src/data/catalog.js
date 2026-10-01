@@ -65,15 +65,15 @@ export const AVG_PRICE_ITEMS = [
 // kind "yoyRate"→ the series value already IS the 12-month %; use the latest value.
 export const ALT_MEASURES = [
   { key: "corePce",    label: "Core PCE",         seriesId: "PCEPILFE",              kind: "index",   color: "#2D6A4F",
-    blurb: "The Fed's preferred gauge (from the BEA). Weighted differently than CPI and usually runs a bit lower — it's what the Fed targets at 2%." },
+    blurb: "The Federal Reserve watches this one most closely. It comes from the Commerce Department, leaves out food and energy, and usually runs a little lower than CPI." },
   { key: "medianCpi",  label: "Median CPI",       seriesId: "MEDCPIM159SFRBCLE",     kind: "yoyRate", color: "#6D597A",
-    blurb: "Takes the middle category's price change, ignoring the biggest movers on both ends — a cleaner read on the broad trend. (Cleveland Fed.)" },
-  { key: "trimmedCpi", label: "Trimmed-Mean CPI", seriesId: "TRMMEANCPIM159SFRBCLE", kind: "yoyRate", color: "#52796F",
-    blurb: "Throws out the most extreme price moves on each side, then averages the rest — like Median CPI, it strips out the noise. (Cleveland Fed.)" },
-  { key: "stickyCpi",  label: "Sticky-Price CPI", seriesId: "CORESTICKM159SFRBATL",  kind: "yoyRate", color: "#E76F51",
-    blurb: "Counts only prices that change slowly (rent, insurance), which tend to reflect longer-run expectations — a steadier signal. (Atlanta Fed.)" },
-  { key: "trimmedPce", label: "Trimmed-Mean PCE", seriesId: "PCETRIM12M159SFRBDAL",  kind: "yoyRate", color: "#B5838D",
-    blurb: "The Dallas Fed's trimmed-mean measure applied to PCE (the Fed's preferred index) instead of CPI — drops the biggest movers on each side to show the underlying trend." },
+    blurb: "Lines up every item's price change and takes the one in the middle, so the biggest moves at either end don't count. From the Cleveland Fed." },
+  { key: "trimmedCpi", label: "Trimmed-mean CPI", seriesId: "TRMMEANCPIM159SFRBCLE", kind: "yoyRate", color: "#52796F",
+    blurb: "Drops the items with the biggest price moves at both ends and averages the rest. From the Cleveland Fed." },
+  { key: "stickyCpi",  label: "Sticky-price CPI", seriesId: "CORESTICKM159SFRBATL",  kind: "yoyRate", color: "#E76F51",
+    blurb: "Counts only prices that change slowly, like rent and insurance. These tend to show where prices are heading over the long run. From the Atlanta Fed." },
+  { key: "trimmedPce", label: "Trimmed-mean PCE", seriesId: "PCETRIM12M159SFRBDAL",  kind: "yoyRate", color: "#B5838D",
+    blurb: "The Dallas Fed drops the biggest price moves at both ends of PCE, the measure the Federal Reserve watches, and averages the rest." },
 ];
 
 // Weekly retail fuel prices from the EIA, mirrored on FRED (so no second API key).
@@ -83,10 +83,10 @@ export const ALT_MEASURES = [
 // the pair is the point — it cross-checks BLS on identical goods and makes the lag
 // visible instead of implying the monthly number is today's price.
 export const WEEKLY_PRICES = [
-  { key: "gasoline", label: "Gasoline, Regular", unit: "/gal", seriesId: "GASREGW", blsSeriesId: "APU000074714",
-    blurb: "EIA's weekly survey of retail stations nationwide, averaged across all formulations of regular unleaded. Published every Monday for the prior week." },
+  { key: "gasoline", label: "Gasoline, regular", unit: "/gal", seriesId: "GASREGW", blsSeriesId: "APU000074714",
+    blurb: "The Energy Information Administration checks prices at gas stations across the country every week and posts them each Monday." },
   { key: "diesel",   label: "Diesel",            unit: "/gal", seriesId: "GASDESW", blsSeriesId: "APU000074717",
-    blurb: "EIA's weekly retail diesel price, all types. Diesel moves freight, so it feeds through into the price of most physical goods a few months later." },
+    blurb: "Trucks and trains run on diesel, so a change in its price shows up in the cost of most goods a few months later." },
 ];
 
 // ── Calculator (redesign, Phase 1) ─────────────────────────────────────────

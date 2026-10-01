@@ -93,3 +93,15 @@ test("basket: December 2025 weights leave 28.452 (at least 10) for everything el
   assert.equal(Number((100 - visible).toFixed(3)), 28.452);
   assert.equal(BASKET.ceMonthlyMean, 5750);
 });
+
+// Voice guide: these blurbs are shown on National numbers and Price check.
+test("measure and fuel blurbs and labels follow the voice guide", () => {
+  for (const x of [...ALT_MEASURES, ...WEEKLY_PRICES]) {
+    for (const text of [x.label, x.blurb]) {
+      for (const banned of ["—", "·", "→", "!", "Here's", "Let's", "simply"]) {
+        assert.ok(!text.includes(banned), `${x.key}: ${JSON.stringify(banned)} in ${text}`);
+      }
+    }
+    assert.doesNotMatch(x.label, /[\s-][A-Z][a-z]/, `${x.key} label is sentence case`);
+  }
+});
