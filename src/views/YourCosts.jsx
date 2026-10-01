@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BASKET } from "../data/catalog.js";
-import { emptyAnswers, isPersonal, personalRows, averageRows } from "../calculator/model.js";
-import { panelModel, summaryText, finePrint } from "../calculator/panel.js";
+import { emptyAnswers, isPersonal } from "../calculator/model.js";
+import { summaryText, finePrint } from "../calculator/panel.js";
+import { estimateFor } from "../tabs/estimate.js";
 import { getStorage, storageAvailable, loadAnswers, saveAnswers } from "../calculator/storage.js";
 import YourCostsIntro from "./YourCostsIntro.jsx";
 import Questions from "../components/Questions.jsx";
@@ -40,16 +41,9 @@ export default function YourCosts({ data, base, onNavigate }) {
   const [pendingFocus, setPendingFocus] = useState(null);
   const panelRef = useRef(null);
 
-  const personal = isPersonal(answers);
-  const mode = personal ? "personal" : "average";
-  const rows = useMemo(
-    () => (personal ? personalRows(answers, data) : averageRows(data, BASKET.ceMonthlyMean)),
-    [personal, answers, data],
-  );
-  const model = useMemo(
-    () => panelModel({ mode, rows, headlinePct: data.headline.yoy, exShelterPct: data.lines.exShelter?.yoy ?? null, referenceMonth: data.referenceMonth, answers }),
-    [mode, rows, data, answers],
-  );
+  // One source for the panel's numbers, shared with the spreadsheet download.
+  const { mode, rows, model } = useMemo(() => estimateFor(answers, data), [answers, data]);
+  const personal = mode === "personal";
   const fine = useMemo(() => finePrint({ mode, rows, data }), [mode, rows, data]);
 
   useEffect(() => {
