@@ -7,12 +7,13 @@ import { routeFromHash, hrefFor, titleFor } from "./routes.js";
 import SectionNav from "./components/SectionNav.jsx";
 import YourCosts from "./views/YourCosts.jsx";
 import NationalNumbers from "./views/NationalNumbers.jsx";
+import PriceCheck from "./views/PriceCheck.jsx";
 import LegacyDashboard from "./views/LegacyDashboard.jsx";
 
 const BASE = import.meta.env.BASE_URL;
 
 // Until Phase 2b rebuilds them, the other sections render the old dashboard's views.
-const LEGACY_VIEW = { "price-check": "prices", sources: "methodology" };
+const LEGACY_VIEW = { sources: "methodology" };
 
 /** Shell only: data loading (bundled fallback, then cpi.json), hash routing, section nav. */
 export default function App() {
@@ -77,6 +78,7 @@ export default function App() {
       <main>
         {route === "your-costs" ? <YourCosts data={data} base={BASE} onNavigate={navigate} />
           : route === "national-numbers" ? <NationalNumbers data={data} />
+          : route === "price-check" ? <PriceCheck data={data} />
           : <LegacyDashboard dynamic={dynamic} view={LEGACY_VIEW[route]} />}
       </main>
     </div>
