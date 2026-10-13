@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-01T23:14:19.561Z",
+  "generatedAt": "2026-10-13T20:05:33.922Z",
   "referenceMonth": "2026-08",
   "referenceMonthLabel": "August 2026",
   "headline": {
@@ -149,16 +149,16 @@
   },
   "weeklyPrices": {
     "gasoline": {
-      "current": 4.465,
-      "yearAgo": 3.118,
-      "asOf": "2026-09-28",
-      "asOfLabel": "Sep 28, 2026"
+      "current": 4.354,
+      "yearAgo": 3.124,
+      "asOf": "2026-10-05",
+      "asOfLabel": "Oct 5, 2026"
     },
     "diesel": {
-      "current": 6.382,
-      "yearAgo": 3.754,
-      "asOf": "2026-09-28",
-      "asOfLabel": "Sep 28, 2026"
+      "current": 6.199,
+      "yearAgo": 3.711,
+      "asOf": "2026-10-05",
+      "asOfLabel": "Oct 5, 2026"
     }
   },
   "trend": [
