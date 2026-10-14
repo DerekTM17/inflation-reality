@@ -208,3 +208,79 @@ git status -sb                      # expect main ahead of origin by 2 (docs onl
 npm test                            # expect 133/133
 npx vite build && npx vite preview --port 4719 --strictPort   # then open /inflation-reality/
 ```
+
+## 2026-10-14
+
+#### Handoff — Phase 2b built and reviewed; owner wants the Bolder color treatment before merge (supersedes all earlier handoffs)
+
+**Goal:** Fix the rounding sign flip, settle the two owner questions, write and run the Phase 2b plan, then merge after the owner's 5-second test. The 5-second test turned into a visual redesign request, which is where things stand.
+
+**Done (all verified):**
+- `8ecfa42` rounding fix (`allocateRounded` re-checks sign safety before every step; a seeded 5,000-household property test also caught an adding-side flip). `ef81ff2` owners (mortgage and owned) are compared with "Prices other than housing" (CPI-U all items less shelter, `CUUR0000SA0L2`, catalog `CALC_LINES` entry `exShelter`, `yardstick: true`); renters keep the national rate. Home insurance stays as-is. Both are **LIVE**: pushed `main` at `5adc80d`, deploy run `36939661044` green, `55/55 series live`, live cpi.json has `exShelter` 3.590982, Python Playwright check on the live site showed rent 3.5% vs National 3.4%, owned 3.9% vs "Outside housing" 3.6%, mortgage 2.1% vs 3.6%, zero console errors.
+- Phase 2b plan `docs/superpowers/plans/2026-10-01-calculator-phase2b-other-tabs.md`, executed subagent-driven on branch **`redesign/phase2b`** in worktree **`~/projects/inflation-reality-phase2b`** (a worktree because other sessions run ledger commits in the main checkout). 12 tasks + a final-review fix wave, each with a task review; final whole-branch review verdict "ready after fixes", fixes re-reviewed clean. Commits `b2c493a`..`1319b8e`, plus `53c8fd1` (mockups). Branch head on GitHub is `1319b8e` (pushed during the gap by someone else, not by this session; a branch push does not deploy). `53c8fd1` is local only.
+- Branch state verified: `npm test` 184/184; `npx vite build` ok; `scripts/audit/ui-audit.py` 0 FAIL (127 checks) against `vite preview`, and it fails on injected faults.
+- SDD ledger with every ruling and every deferred minor: `~/projects/inflation-reality-phase2b/.superpowers/sdd/2026-10-01-calculator-phase2b-other-tabs/progress.md` (gitignored; read it before touching the branch).
+
+**Owner's 5-second test result:** the owner felt down about the new tabs. They miss the original's per-good colors, hover details and animation. Three clickable mockups were made (copies committed on the branch in `docs/superpowers/mockups/2026-10-02-color-study-*.html`):
+- Your costs panel: https://claude.ai/artifact/JVd3KnL8NVPBN4PFBMwfyP
+- National numbers: https://claude.ai/artifact/9EDzFvkHYt6EyXfBuXL1n5
+- Spending mix (answers + amounts): https://claude.ai/artifact/K1bqKshUY117QCUU6Em7Ng
+
+**Decisions the owner made (2026-10-02):**
+- **Bolder treatment**: color by *kind of spending* (Your costs, Price check) and by *publisher* (National numbers measures); tinted cards and rows, thicker bars, shaded area under the trend line; hover cards on rows, chart crosshair with arrow keys, bars grow in, line draws in, numbers count up; all motion off under prefers-reduced-motion. Color never means good/bad; rises/falls shown by sign and bar side.
+- **Quick-start households come back** (Young renter, Family with kids, Commuter, Retiree). This reverses spec revision 2's "no profiles"; record it in the spec.
+- **Less scrolling**: compact two-column layout (result beside the spending-mix bar; kinds of spending as two columns of tinted cards; one tight row per amount; questions fold to a one-line summary with "Change answers" after a quick start). Measured to end of amounts, Commuter household: desktop 2,812px -> 1,347px; phone 3,252px -> 2,379px.
+- Dollars, not percentage shares, for amounts (no auto-normalizing); the mix bar shows the percentages.
+
+**Validated palette** (dataviz validator: lightness, chroma, color-blind separation, normal-vision floor; amber gets a contrast WARN in light mode, relieved by text labels). Families in this fixed order: Home, Getting around, Food, Utilities, Clothing and fun, Health, Kids and school; Everything else is gray.
+- Light (on `#F3F5F4`): `#2F6DB5, #D2602E, #1A9473, #C48A12, #C9638C, #3E7D2E, #5A4AA8`, rest `#87919A`
+- Dark (on `#161A1E`): `#4C8BD6, #DE6A35, #2AAA85, #B98312, #CB668F, #5C9A45, #9085E9`, rest `#7A858F`
+- Publishers on National numbers: Labor Dept = home blue, Commerce = food green, Cleveland Fed = kids violet, Atlanta Fed = utilities amber, Dallas Fed = fun rose.
+- The original's palette FAILED the validator (too dull; plum vs steel blue ΔE 10.4). Don't go back to it.
+
+**Next (in this order):**
+1. Re-show the owner the exact message below and get the one open answer: **collapsible family cards on phones, yes or no?**
+2. Write spec revision 4 into `docs/superpowers/specs/2026-09-10-calculator-first-redesign-design.md` (on the branch): visual system (family + publisher colors with the palette above, Bolder treatment, hover and motion rules, reduced motion), quick starts back, compact layout, the phone-collapse answer. Get the owner's review of the written spec.
+3. Write a plan for it (writing-plans), execute on `redesign/phase2b` (subagent-driven worked well), re-run tests + audit (the audit's design rules must be updated: it currently enforces one accent / gray bars / at most one raised surface).
+4. Owner's 5-second test again, then merge to `main` from `~/projects/inflation-reality` and push **only on the owner's word**, then run the audit with `--base-url https://derektm17.github.io/inflation-reality/`, then Task 13 of the Phase 2b plan (handoff, `ledger ship`, `ledger done` for Phase 2b / route focus / Show all aria-controls / legacy dark mode, `ledger idea` follow-ups).
+
+**Deferred items from the Phase 2b reviews worth folding into the restyle:** uneven y-axis ticks on the trend chart (0/2/5%); fuel `.help` paragraphs run together on Price check; the audit doesn't check the personal state of Your costs in dark/1280, checks banned strings only inside `main`, and has a dead cpi.json console filter. Full list in the SDD ledger.
+
+**Gotchas:**
+- Use Python Playwright, not the Playwright MCP (shared browser). Kill preview servers by PID only; a broad `pkill -f "vite preview"` has killed agents' own shells. A stray preview once held port 4720 for days.
+- `vite preview` has no `public/cpi.json`, so it falls back to `src/data/fallback.json` (expected).
+- Artifact mockups need the page wrapped in `<!doctype html>…<body>` to screenshot locally; they're published without one.
+
+**The exact message to bring back up (owner asked for it verbatim):**
+
+> I updated the spending-mix mockup (same link): **https://claude.ai/artifact/K1bqKshUY117QCUU6Em7Ng**. Open it on **Bolder** and tap a quick start such as **Commuter**.
+>
+> **How much shorter it is,** measured from the top of the page to the end of the amounts, for the Commuter household:
+>
+> | Screen | In between | Bolder, compact | Saved |
+> |---|---|---|---|
+> | Desktop (1280px) | 2,812px | **1,347px** | about half |
+> | Phone (390px) | 3,252px | **2,379px** | about a quarter |
+>
+> **What made the difference:**
+> - **Desktop:** the result sits next to the spending mix bar. The kinds of spending fill two columns of tinted cards, like the old grid.
+> - **Each amount is one tight row:** name, price change, what it adds a year (for example "+$980/yr"), the dollar box, and a slider just under it.
+> - **The questions fold away:** a quick start collapses them to one line ("Rent · Gas car · Heat: electric · …") with a **Change answers** button.
+>
+> **Phone is still the long one,** since everything has to stack into one column. To shorten it further, I'd make each tinted card collapsible on phones. Each card would show only its name and total, like "Getting around +$930/yr", and you'd tap to open its sliders. That would cut the phone version roughly in half again. The catch is one extra tap to reach a slider. Do you want that?
+>
+> So far you've decided:
+> - The **Bolder** treatment, with the family colors.
+> - **Quick-start households come back.**
+> - **Less scrolling**, using the compact two-column layout.
+>
+> Once you've answered the phone question, I'll write these into the spec as a revision covering all three tabs, then plan the work onto this branch before merging. This session has also gotten long. When the spec is approved, I'd write a handoff so a fresh session can build it cheaply.
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality-phase2b          # the branch worktree (redesign/phase2b)
+git status -sb && git log --oneline -3           # expect clean, head 53c8fd1 (1 ahead of origin: mockups)
+npm test                                         # expect 184/184
+npx vite build && npx vite preview --port 4730 --strictPort --host   # owner can open http://localhost:4730/inflation-reality/
+# main checkout: ~/projects/inflation-reality is clean on main at 5adc80d plus this handoff commit
+```
