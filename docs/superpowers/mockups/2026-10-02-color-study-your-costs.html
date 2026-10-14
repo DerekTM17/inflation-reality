@@ -1,0 +1,444 @@
+<title>Inflation Reality Color Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;800&display=swap">
+<style>
+/* Layout: one reading column like the live site; a sticky switcher on top picks the treatment. */
+:root {
+  --ground: #F3F5F4; --surface: #FFFFFF; --ink: #1F2933; --ink-2: #56626E; --ink-3: #66717D;
+  --rule: #D5DCDA; --accent: #2E5E45; --accent-soft: #E3EDE7; --bar-line: #87919A; --bar-us: #7D8894;
+  /* Family colors: validated (lightness, chroma, color-blind separation) against --ground. */
+  --f-home: #2F6DB5; --f-around: #D2602E; --f-food: #1A9473; --f-util: #C48A12;
+  --f-fun: #C9638C; --f-health: #3E7D2E; --f-kids: #5A4AA8; --f-rest: #87919A;
+  --tip-shadow: rgba(31, 41, 51, .14);
+  --sans: "Libre Franklin", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --ground: #161A1E; --surface: #1F252B; --ink: #E7ECEA; --ink-2: #AEB8C0; --ink-3: #9AA5AE;
+  --rule: #353D44; --accent: #8CC9A2; --accent-soft: #22382C; --bar-line: #7A858F; --bar-us: #8C97A2;
+  --f-home: #4C8BD6; --f-around: #DE6A35; --f-food: #2AAA85; --f-util: #B98312;
+  --f-fun: #CB668F; --f-health: #5C9A45; --f-kids: #9085E9; --f-rest: #7A858F;
+  --tip-shadow: rgba(0, 0, 0, .5); color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --ground: #161A1E; --surface: #1F252B; --ink: #E7ECEA; --ink-2: #AEB8C0; --ink-3: #9AA5AE;
+  --rule: #353D44; --accent: #8CC9A2; --accent-soft: #22382C; --bar-line: #7A858F; --bar-us: #8C97A2;
+  --f-home: #4C8BD6; --f-around: #DE6A35; --f-food: #2AAA85; --f-util: #B98312;
+  --f-fun: #CB668F; --f-health: #5C9A45; --f-kids: #9085E9; --f-rest: #7A858F;
+  --tip-shadow: rgba(0, 0, 0, .5); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.5; }
+.wrap { max-width: 760px; margin: 0 auto; padding-inline: 16px; padding-block: 0 64px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+h1 { font-size: 30px; font-weight: 800; letter-spacing: -.01em; }
+h2 { font-size: 20px; font-weight: 600; }
+p { margin: 0; }
+.muted { color: var(--ink-2); }
+.small { font-size: 14px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Switcher */
+.switcher { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--ground);
+  border-bottom: 1px solid var(--rule); padding-block: 12px; margin-bottom: 24px; }
+.switcher .inner { max-width: 760px; margin: 0 auto; padding-inline: 16px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.seg button { font: inherit; font-size: 14px; border: 0; background: transparent; color: var(--ink-2); padding: 7px 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.seg button:focus-visible, .replay:focus-visible, .row:focus-visible, .chip:focus-visible, .trend:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.replay { font: inherit; font-size: 14px; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); color: var(--ink); padding: 7px 12px; cursor: pointer; }
+.note { font-size: 14px; color: var(--ink-2); flex-basis: 100%; }
+
+section { border-top: 1px solid var(--rule); padding-top: 24px; margin-top: 32px; display: grid; gap: 14px; }
+.intro { display: grid; gap: 10px; }
+
+/* Your costs panel */
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 20px; display: grid; gap: 16px; }
+.answer { font-size: 28px; font-weight: 800; line-height: 1.2; }
+.compare { display: grid; grid-template-columns: auto 1fr auto; gap: 8px 12px; align-items: center; font-size: 14px; }
+.ctrack { height: 10px; position: relative; }
+.cbar { position: absolute; left: 0; top: 0; height: 10px; border-radius: 0 3px 3px 0; transform-origin: left center; }
+.cbar.you { background: var(--accent); }
+.cbar.us { background: var(--bar-us); }
+.verdict { font-weight: 600; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px;
+  border: 1px solid var(--rule); border-radius: 999px; background: transparent; color: var(--ink-2); cursor: pointer; }
+.chip .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.chip[aria-pressed="true"] { color: var(--ink); border-color: var(--c); }
+
+.rows { display: grid; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) 62px 74px; grid-template-areas: "label rate dollars" "bar bar bar";
+  gap: 4px 10px; padding: 10px 6px; border-top: 1px solid var(--rule); position: relative; cursor: default;
+  transition: opacity .18s ease, background-color .18s ease; border-radius: 4px; }
+.row:first-child { border-top: 0; }
+.row .label { grid-area: label; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.row .label .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--c); }
+.row .rate { grid-area: rate; text-align: right; color: var(--ink-2); }
+.row .dollars { grid-area: dollars; text-align: right; font-weight: 600; }
+.row .track { grid-area: bar; height: 8px; position: relative; }
+.row .bar { position: absolute; top: 0; height: 8px; border-radius: 2px; background: var(--c); transform-origin: var(--origin, left) center; }
+.row .zero { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--rule); }
+.famhead { font-size: 13px; font-weight: 600; color: var(--ink-2); padding: 14px 6px 4px; display: flex; align-items: center; gap: 8px; }
+.famhead .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+
+/* Treatment A: today's redesign. Gray bars, no dots, no hover detail. */
+[data-v="a"] .row { --c: var(--bar-line) !important; }
+[data-v="a"] .row .label .dot, [data-v="a"] .chips, [data-v="a"] .famhead { display: none; }
+[data-v="a"] .mv { --c: var(--bar-line) !important; }
+[data-v="a"] .mv .dot { display: none; }
+/* Treatment B/C: hover focus dims the others. */
+.rows.focusing .row:not(.on), .movers.focusing .mv:not(.on) { opacity: .35; }
+.row.on, .mv.on { background: color-mix(in srgb, var(--c) 10%, transparent); }
+/* Treatment C: bolder. Thicker bars, tinted family groups. */
+[data-v="c"] .row .track, [data-v="c"] .row .bar { height: 12px; }
+[data-v="c"] .row { background: color-mix(in srgb, var(--c) 6%, transparent); border-top-color: transparent; margin-top: 3px; }
+[data-v="c"] .mv .track, [data-v="c"] .mv .bar { height: 12px; }
+
+/* Tooltip */
+.tip { position: absolute; z-index: 30; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--rule);
+  border-left: 4px solid var(--c, var(--accent)); border-radius: 6px; padding: 10px 12px; font-size: 14px; line-height: 1.45;
+  box-shadow: 0 6px 18px var(--tip-shadow); max-width: 280px; opacity: 0; transform: translateY(4px); transition: opacity .12s ease, transform .12s ease; }
+.tip.show { opacity: 1; transform: none; }
+.tip b { font-weight: 600; }
+[data-v="a"] .tip { display: none; }
+
+/* Trend */
+.trendbox { position: relative; }
+.trend { width: 100%; height: auto; display: block; overflow: visible; }
+.trend text { fill: var(--ink-2); font-size: 12px; font-family: var(--sans); }
+.trend .grid { stroke: var(--rule); stroke-width: 1; }
+.trend .line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.trend .area { fill: var(--accent); opacity: 0; }
+[data-v="c"] .trend .area { opacity: .12; }
+.trend .pt { fill: var(--accent); stroke: var(--ground); stroke-width: 2; }
+.trend .cross { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0; }
+.trend .hot { fill: var(--surface); stroke: var(--accent); stroke-width: 2.5; opacity: 0; }
+.trend .gapmark { fill: var(--ink-3); font-size: 11px; }
+
+/* Movers */
+.movers { display: grid; }
+.mv { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label val" "bar bar"; gap: 4px 10px; padding: 9px 6px;
+  border-top: 1px solid var(--rule); transition: opacity .18s ease, background-color .18s ease; border-radius: 4px; position: relative; }
+.mv:first-child { border-top: 0; }
+.mv .label { grid-area: label; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.mv .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; }
+.mv .val { grid-area: val; font-weight: 600; }
+.mv .track { grid-area: bar; height: 8px; position: relative; }
+.mv .bar { position: absolute; top: 0; height: 8px; border-radius: 2px; background: var(--c); transform-origin: var(--origin, left) center; }
+.mv .zero { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--ink-3); }
+
+/* Motion: bars grow from the zero line, the line draws itself. Off for reduced motion and for A. */
+.grow { animation: grow .7s cubic-bezier(.2, .7, .2, 1) both; animation-delay: var(--d, 0ms); }
+@keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+[data-v="a"] .grow { animation: none; }
+@media (prefers-reduced-motion: reduce) { .grow { animation: none; } .row, .mv, .tip { transition: none; } }
+
+.legend-note { font-size: 13px; color: var(--ink-3); }
+.verdictbox { display: grid; gap: 10px; }
+.callout { background: var(--accent-soft); border-radius: 6px; padding: 12px 14px; font-size: 15px; }
+@media (max-width: 480px) {
+  h1 { font-size: 26px; } .answer { font-size: 24px; }
+  .row { grid-template-columns: minmax(0, 1fr) 54px 64px; }
+}
+</style>
+
+<div class="switcher" role="region" aria-label="Pick a treatment">
+  <div class="inner">
+    <div class="seg" role="group" aria-label="Treatment">
+      <button type="button" data-pick="a" aria-pressed="false">Today's redesign</button>
+      <button type="button" data-pick="b" aria-pressed="true">In between</button>
+      <button type="button" data-pick="c" aria-pressed="false">Bolder</button>
+    </div>
+    <button type="button" class="replay" id="replay">Replay animation</button>
+    <p class="note" id="vnote"></p>
+  </div>
+</div>
+
+<main class="wrap" id="app" data-v="b">
+  <div class="intro">
+    <h1>Color and motion study</h1>
+    <p class="muted">Three ways to dress the same numbers. Hover or tap any row, chart point or color chip. Numbers come from the August 2026 data. The household is an example: a renter with a gas car, health insurance through work and no kids.</p>
+  </div>
+
+  <section aria-labelledby="s1">
+    <h2 id="s1">Your costs</h2>
+    <div class="panel">
+      <p class="answer num" id="answer">About $1,490 more a year</p>
+      <div class="verdictbox">
+        <p class="muted num" id="rates"></p>
+        <div class="compare num">
+          <span>Your costs</span><div class="ctrack"><div class="cbar you grow" id="cyou"></div></div><span id="cyouv"></span>
+          <span>National</span><div class="ctrack"><div class="cbar us grow" id="cus" style="--d:120ms"></div></div><span id="cusv"></span>
+        </div>
+        <p class="verdict" id="verdict"></p>
+      </div>
+      <div>
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:8px">Where the extra money goes</h3>
+        <div class="chips" id="chips" role="group" aria-label="Highlight a kind of spending"></div>
+      </div>
+      <div class="rows num" id="rows"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="s2">
+    <h2 id="s2">Prices overall, month by month</h2>
+    <p class="muted small">Change from the same month a year earlier. October 2025 was never published because of the government shutdown.</p>
+    <div class="trendbox" id="trendbox"></div>
+  </section>
+
+  <section aria-labelledby="s3">
+    <h2 id="s3">Biggest price changes</h2>
+    <p class="muted small">Average store prices in August 2026 compared with a year earlier, up or down.</p>
+    <div class="movers num" id="movers"></div>
+  </section>
+
+  <section aria-labelledby="s4">
+    <h2 id="s4">What changes between them</h2>
+    <div class="callout" id="explain"></div>
+    <p class="legend-note">Colors stand for a kind of spending, never for good or bad. Rises and falls are shown by the sign and by which side of the zero line a bar sits on, so the page still reads for people who can't tell colors apart. All seven colors were checked for color-blind separation and contrast in light and dark mode. Animations switch off when your device asks for reduced motion.</p>
+  </section>
+</main>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+const FAM = {
+  home: { name: "Home", c: "--f-home" }, around: { name: "Getting around", c: "--f-around" },
+  food: { name: "Food", c: "--f-food" }, util: { name: "Utilities", c: "--f-util" },
+  fun: { name: "Clothing and fun", c: "--f-fun" }, health: { name: "Health", c: "--f-health" },
+  kids: { name: "Kids and school", c: "--f-kids" }, rest: { name: "Everything else", c: "--f-rest" },
+};
+// Example renter household: default monthly amounts, August 2026 rates.
+const LINES = [
+  ["Rent", "home", 1650, 2.75], ["Groceries", "food", 620, 2.19], ["Eating out", "food", 220, 3.37],
+  ["Gas for the car", "around", 190, 27.40], ["Car insurance", "around", 160, -5.13], ["Car repairs", "around", 60, 5.24],
+  ["Electricity", "util", 110, 3.79], ["Natural gas bill", "util", 70, 4.39],
+  ["Health insurance", "health", 180, 6.0], ["Doctor and pharmacy", "health", 90, 0.19],
+  ["Clothing", "fun", 80, 3.61], ["Entertainment", "fun", 150, 2.68], ["Everything else", "rest", 250, 3.4],
+].map(([label, fam, monthly, rate]) => {
+  const annual = monthly * 12, yearAgo = annual / (1 + rate / 100);
+  return { label, fam, monthly, rate, annual, yearAgo, extra: annual - yearAgo };
+});
+const TOTAL_ANNUAL = LINES.reduce((s, l) => s + l.annual, 0);
+const TOTAL_AGO = LINES.reduce((s, l) => s + l.yearAgo, 0);
+const YOU = (TOTAL_ANNUAL / TOTAL_AGO - 1) * 100, US = 3.4;
+const TREND = [["Sep 2025", 3.0], ["Oct 2025", null], ["Nov 2025", 2.7], ["Dec 2025", 2.7], ["Jan 2026", 2.4], ["Feb 2026", 2.4],
+  ["Mar 2026", 3.3], ["Apr 2026", 3.8], ["May 2026", 4.2], ["Jun 2026", 3.5], ["Jul 2026", 3.4], ["Aug 2026", 3.4]];
+const MOVERS = [
+  ["Diesel, automotive", "around", 48.9, 3.73, 5.55, "a gallon"], ["Eggs, Grade A Large", "food", -36.7, 3.59, 2.27, "a dozen"],
+  ["Gasoline, regular", "around", 27.5, 3.29, 4.20, "a gallon"], ["Butter, stick", "food", -16.7, 4.83, 4.02, "a pound"],
+  ["Ground beef, 100%", "food", 9.6, 6.32, 6.92, "a pound"], ["Bacon, sliced", "food", -8.4, 7.21, 6.61, "a pound"],
+  ["Orange juice", "food", 6.0, 1.50, 1.58, "for 16 ounces"], ["Flour, all purpose", "food", 4.9, 1.06, 1.11, "a pound"],
+  ["Natural gas", "util", 4.9, 1.63, 1.71, "a therm"], ["Coffee, ground roast", "food", 4.8, 8.87, 9.30, "a pound"],
+];
+const NOTES = {
+  a: "This is what the branch looks like now: one green accent, gray bars, no hover detail and no animation.",
+  b: "My recommendation. Each kind of spending gets its own color, shown as a dot and a bar. Labels and numbers stay in ink. Hover or tap a row for the details, tap a color chip to pick out one kind, and bars grow in from zero when the page loads.",
+  c: "Closer to the original's energy. Thicker bars, rows tinted by their color, a shaded area under the trend line, and the same hover and motion as In between.",
+};
+
+const $ = (s, r = document) => r.querySelector(s);
+const MINUS = "−";
+const pct = (n) => (n > 0 ? "+" : n < 0 ? MINUS : "") + Math.abs(n).toFixed(1) + "%";
+const money = (n, d = 0) => (n < 0 ? MINUS : "") + "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const round10 = (n) => Math.round(n / 10) * 10;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const app = $("#app"), tip = $("#tip");
+
+function showTip(html, color, anchorEl, x, y) {
+  if (app.dataset.v === "a") return;
+  tip.innerHTML = html;
+  tip.style.setProperty("--c", color);
+  tip.classList.add("show");
+  const box = anchorEl.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
+  let left = (x ?? box.left + box.width / 2) - tw / 2 + scrollX;
+  left = Math.max(8 + scrollX, Math.min(left, scrollX + document.documentElement.clientWidth - tw - 8));
+  let top = (y ?? box.top) - th - 10 + scrollY;
+  if (top < scrollY + 64) top = (y ?? box.bottom) + 14 + scrollY;
+  tip.style.left = left + "px"; tip.style.top = top + "px";
+}
+const hideTip = () => tip.classList.remove("show");
+
+/* Your costs panel */
+function buildPanel() {
+  const shown = LINES.slice().sort((a, b) => Math.abs(b.extra) - Math.abs(a.extra));
+  const max = Math.max(...shown.map((l) => Math.abs(l.extra)));
+  const neg = Math.max(0, ...shown.map((l) => -l.extra)) / (max + Math.max(0, ...shown.map((l) => -l.extra)));
+  const zero = neg * 100, span = 100 - zero;
+  const total = round10(shown.reduce((s, l) => s + l.extra, 0));
+  $("#answer").textContent = `About ${money(total)} more a year`;
+  $("#rates").textContent = `Your costs rose ${YOU.toFixed(1)}%. Prices overall rose ${US}%.`;
+  $("#cyouv").textContent = pct(YOU); $("#cusv").textContent = pct(US);
+  const cmax = Math.max(YOU, US);
+  $("#cyou").style.width = (YOU / cmax * 100) + "%"; $("#cus").style.width = (US / cmax * 100) + "%";
+  $("#verdict").textContent = Math.abs(YOU - US) <= 0.2 ? "About the same as the national rate." :
+    (YOU > US ? "More than the national rate, mainly because of gas prices." : "Less than the national rate.");
+
+  const v = app.dataset.v, rows = $("#rows");
+  rows.innerHTML = "";
+  let list = shown;
+  if (v === "c") {
+    const order = Object.keys(FAM);
+    list = shown.slice().sort((a, b) => {
+      const fa = Math.max(...shown.filter((l) => l.fam === a.fam).map((l) => Math.abs(l.extra)));
+      const fb = Math.max(...shown.filter((l) => l.fam === b.fam).map((l) => Math.abs(l.extra)));
+      return a.fam === b.fam ? Math.abs(b.extra) - Math.abs(a.extra) : fb - fa || order.indexOf(a.fam) - order.indexOf(b.fam);
+    });
+  }
+  let lastFam = null, i = 0;
+  for (const l of list) {
+    const color = `var(${FAM[l.fam].c})`;
+    if (v === "c" && l.fam !== lastFam) {
+      const h = document.createElement("div");
+      h.className = "famhead"; h.style.setProperty("--c", color);
+      h.innerHTML = `<span class="dot" aria-hidden="true"></span>${FAM[l.fam].name}`;
+      rows.append(h); lastFam = l.fam;
+    }
+    const w = Math.abs(l.extra) / max * span, d = round10(l.extra);
+    const row = document.createElement("div");
+    row.className = "row"; row.tabIndex = 0; row.dataset.fam = l.fam;
+    row.style.setProperty("--c", color);
+    row.setAttribute("aria-label", `${l.label}: ${pct(l.rate)}, ${money(d)} a year`);
+    const left = l.extra >= 0 ? zero : zero - w;
+    row.innerHTML = `<span class="label"><span class="dot" aria-hidden="true"></span><span>${l.label}</span></span>
+      <span class="rate">${pct(l.rate)}</span><span class="dollars">${d === 0 ? "$0" : (d > 0 ? "+" : "") + money(d)}</span>
+      <span class="track" aria-hidden="true">${zero > 0 ? `<span class="zero" style="left:${zero}%"></span>` : ""}
+      <span class="bar grow" style="left:${left}%;width:${Math.max(w, .6)}%;--origin:${l.extra >= 0 ? "left" : "right"};--d:${i * 45}ms"></span></span>`;
+    const html = () => `<b>${l.label}</b><br>You spend ${money(l.monthly)} a month, ${money(l.annual)} a year.<br>
+      A year ago the same ${l.label.toLowerCase()} cost about ${money(round10(l.yearAgo))}.<br>
+      Price change: <b>${pct(l.rate)}</b>. That is <b>${money(round10(Math.abs(l.extra)))} ${l.extra >= 0 ? "more" : "less"}</b> a year.`;
+    const on = () => { setFocus(rows, row); showTip(html(), color, row); };
+    const off = () => { clearFocus(rows); hideTip(); };
+    row.addEventListener("mouseenter", on); row.addEventListener("mouseleave", off);
+    row.addEventListener("focus", on); row.addEventListener("blur", off);
+    rows.append(row); i++;
+  }
+  buildChips(shown);
+}
+function setFocus(container, el) { if (app.dataset.v === "a") return; container.classList.add("focusing"); container.querySelectorAll(".on").forEach((n) => n.classList.remove("on")); el.classList.add("on"); }
+function clearFocus(container) { container.classList.remove("focusing"); container.querySelectorAll(".on").forEach((n) => n.classList.remove("on")); }
+
+function buildChips(shown) {
+  const chips = $("#chips"); chips.innerHTML = "";
+  const fams = [...new Set(shown.map((l) => l.fam))];
+  for (const f of fams) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", "false");
+    b.style.setProperty("--c", `var(${FAM[f].c})`);
+    const sum = round10(shown.filter((l) => l.fam === f).reduce((s, l) => s + l.extra, 0));
+    b.innerHTML = `<span class="dot" aria-hidden="true"></span>${FAM[f].name} <span class="muted num">${sum >= 0 ? "+" : ""}${money(sum)}</span>`;
+    b.addEventListener("click", () => {
+      const was = b.getAttribute("aria-pressed") === "true";
+      chips.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", "false"));
+      const rows = $("#rows");
+      clearFocus(rows);
+      if (!was) {
+        b.setAttribute("aria-pressed", "true");
+        rows.classList.add("focusing");
+        rows.querySelectorAll(`.row[data-fam="${f}"]`).forEach((r) => r.classList.add("on"));
+      }
+    });
+    chips.append(b);
+  }
+}
+
+/* Trend */
+function buildTrend() {
+  const box = $("#trendbox");
+  const W = 720, H = 260, m = { l: 40, r: 28, t: 16, b: 34 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b, yMax = 5;
+  const x = (i) => m.l + (i / (TREND.length - 1)) * iw, y = (v) => m.t + ih - (v / yMax) * ih;
+  const ticks = [0, 1, 2, 3, 4, 5];
+  const segs = []; let cur = [];
+  TREND.forEach(([, v], i) => { if (v == null) { if (cur.length) segs.push(cur); cur = []; } else cur.push([x(i), y(v)]); });
+  if (cur.length) segs.push(cur);
+  const path = (s) => s.map(([a, b], k) => (k ? "L" : "M") + a.toFixed(1) + " " + b.toFixed(1)).join(" ");
+  const area = (s) => s.length > 1 ? path(s) + ` L${s[s.length - 1][0]} ${y(0)} L${s[0][0]} ${y(0)} Z` : "";
+  const labels = [0, 3, 6, 9, 11];
+  box.innerHTML = `<svg class="trend" viewBox="0 0 ${W} ${H}" tabindex="0" role="img" aria-label="Prices overall rose between 2.4% and 4.2% a year over the last 12 months, and 3.4% in August 2026.">
+    ${ticks.map((t) => `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${y(t)}" y2="${y(t)}"/><text x="${m.l - 8}" y="${y(t) + 4}" text-anchor="end">${t}%</text>`).join("")}
+    ${labels.map((i) => `<text x="${x(i)}" y="${H - 10}" text-anchor="${i === 0 ? "start" : i === 11 ? "end" : "middle"}">${TREND[i][0]}</text>`).join("")}
+    <text class="gapmark" x="${x(1)}" y="${y(0) - 8}" text-anchor="middle">not published</text>
+    ${segs.map((s) => `<path class="area" d="${area(s)}"/>`).join("")}
+    ${segs.map((s) => `<path class="line" d="${path(s)}"/>`).join("")}
+    ${TREND.map(([, v], i) => v == null ? "" : `<circle class="pt" cx="${x(i)}" cy="${y(v)}" r="3.5"/>`).join("")}
+    <line class="cross" y1="${m.t}" y2="${m.t + ih}"/><circle class="hot" r="6"/>
+  </svg>`;
+  const svg = box.querySelector("svg"), cross = svg.querySelector(".cross"), hot = svg.querySelector(".hot");
+  if (app.dataset.v !== "a" && !reduce) {
+    svg.querySelectorAll(".line").forEach((p, k) => {
+      const len = p.getTotalLength();
+      p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+      p.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 900, delay: k * 250, easing: "cubic-bezier(.3,.7,.2,1)", fill: "forwards" });
+    });
+  }
+  let idx = TREND.length - 1;
+  const point = (i) => {
+    if (app.dataset.v === "a") return;
+    const [label, v] = TREND[i];
+    cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.style.opacity = 1;
+    const r = svg.getBoundingClientRect(), sx = r.width / W;
+    if (v == null) { hot.style.opacity = 0; showTip(`<b>${label}</b><br>Not published. The government shutdown stopped data collection that month.`, "var(--ink-3)", svg, r.left + x(i) * sx, r.top + y(2.5) * sx); return; }
+    hot.setAttribute("cx", x(i)); hot.setAttribute("cy", y(v)); hot.style.opacity = 1;
+    const prev = TREND[i - 1]?.[1];
+    const vs = prev == null ? "" : `<br>${v > prev ? "Up" : v < prev ? "Down" : "No change"} from ${prev}% the month before.`;
+    showTip(`<b>${label}</b><br>Prices were <b>${pct(v)}</b> from a year earlier.${vs}`, "var(--accent)", svg, r.left + x(i) * sx, r.top + y(v) * sx);
+  };
+  svg.addEventListener("pointermove", (e) => {
+    const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * W;
+    idx = Math.max(0, Math.min(TREND.length - 1, Math.round((px - m.l) / iw * (TREND.length - 1))));
+    point(idx);
+  });
+  const leave = () => { cross.style.opacity = 0; hot.style.opacity = 0; hideTip(); };
+  svg.addEventListener("pointerleave", leave); svg.addEventListener("blur", leave);
+  svg.addEventListener("focus", () => point(idx));
+  svg.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") { idx = Math.max(0, idx - 1); point(idx); e.preventDefault(); }
+    if (e.key === "ArrowRight") { idx = Math.min(TREND.length - 1, idx + 1); point(idx); e.preventDefault(); }
+  });
+}
+
+/* Movers */
+function buildMovers() {
+  const box = $("#movers"); box.innerHTML = "";
+  const maxUp = Math.max(...MOVERS.map((m) => m[2])), maxDown = Math.max(...MOVERS.map((m) => -m[2]));
+  const zero = maxDown / (maxUp + maxDown) * 100;
+  MOVERS.forEach(([name, fam, chg, ago, now, unit], i) => {
+    const color = `var(${FAM[fam].c})`;
+    const w = Math.abs(chg) / (maxUp + maxDown) * 100;
+    const el = document.createElement("div");
+    el.className = "mv"; el.tabIndex = 0; el.style.setProperty("--c", color);
+    el.setAttribute("aria-label", `${name}: ${pct(chg)}`);
+    el.innerHTML = `<span class="label"><span class="dot" aria-hidden="true"></span><span>${name}</span></span><span class="val">${pct(chg)}</span>
+      <span class="track" aria-hidden="true"><span class="zero" style="left:${zero}%"></span>
+      <span class="bar grow" style="left:${chg >= 0 ? zero : zero - w}%;width:${w}%;--origin:${chg >= 0 ? "left" : "right"};--d:${i * 50}ms"></span></span>`;
+    const html = `<b>${name}</b> <span class="muted">(${FAM[fam].name})</span><br>Now ${money(now, 2)} ${unit}. A year ago ${money(ago, 2)}.<br>
+      That is <b>${pct(chg)}</b>, ${money(Math.abs(now - ago), 2)} ${chg >= 0 ? "more" : "less"}.`;
+    const on = () => { setFocus(box, el); showTip(html, color, el); };
+    const off = () => { clearFocus(box); hideTip(); };
+    el.addEventListener("mouseenter", on); el.addEventListener("mouseleave", off);
+    el.addEventListener("focus", on); el.addEventListener("blur", off);
+    box.append(el);
+  });
+}
+
+function render() {
+  hideTip();
+  buildPanel(); buildTrend(); buildMovers();
+  $("#vnote").textContent = NOTES[app.dataset.v];
+  $("#explain").textContent = NOTES[app.dataset.v];
+}
+document.querySelectorAll("[data-pick]").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-pick]").forEach((o) => o.setAttribute("aria-pressed", String(o === b)));
+  app.dataset.v = b.dataset.pick;
+  try { localStorage.setItem("ir-study-v", b.dataset.pick); } catch {}
+  render();
+}));
+$("#replay").addEventListener("click", render);
+try {
+  const saved = localStorage.getItem("ir-study-v");
+  if (saved && /^[abc]$/.test(saved)) { app.dataset.v = saved; document.querySelectorAll("[data-pick]").forEach((o) => o.setAttribute("aria-pressed", String(o.dataset.pick === saved))); }
+} catch {}
+render();
+</script>

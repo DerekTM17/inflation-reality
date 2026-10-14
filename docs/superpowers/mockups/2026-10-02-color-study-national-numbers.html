@@ -1,0 +1,346 @@
+<title>National Numbers Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;800&display=swap">
+<style>
+/* Layout: the live site's single reading column; a sticky switcher picks the treatment. */
+:root {
+  --ground: #F3F5F4; --surface: #FFFFFF; --ink: #1F2933; --ink-2: #56626E; --ink-3: #66717D;
+  --rule: #D5DCDA; --accent: #2E5E45; --accent-soft: #E3EDE7; --bar-line: #87919A;
+  /* Publisher colors: same validated palette as the Your costs study. */
+  --p-bls: #2F6DB5; --p-commerce: #1A9473; --p-cleveland: #5A4AA8; --p-atlanta: #C48A12; --p-dallas: #C9638C;
+  --tip-shadow: rgba(31, 41, 51, .14);
+  --sans: "Libre Franklin", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --ground: #161A1E; --surface: #1F252B; --ink: #E7ECEA; --ink-2: #AEB8C0; --ink-3: #9AA5AE;
+  --rule: #353D44; --accent: #8CC9A2; --accent-soft: #22382C; --bar-line: #7A858F;
+  --p-bls: #4C8BD6; --p-commerce: #2AAA85; --p-cleveland: #9085E9; --p-atlanta: #B98312; --p-dallas: #CB668F;
+  --tip-shadow: rgba(0, 0, 0, .5); color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --ground: #161A1E; --surface: #1F252B; --ink: #E7ECEA; --ink-2: #AEB8C0; --ink-3: #9AA5AE;
+  --rule: #353D44; --accent: #8CC9A2; --accent-soft: #22382C; --bar-line: #7A858F;
+  --p-bls: #4C8BD6; --p-commerce: #2AAA85; --p-cleveland: #9085E9; --p-atlanta: #B98312; --p-dallas: #CB668F;
+  --tip-shadow: rgba(0, 0, 0, .5); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.5; }
+.wrap { max-width: 760px; margin: 0 auto; padding-inline: 16px; padding-block: 0 64px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+h1 { font-size: 32px; font-weight: 800; letter-spacing: -.01em; }
+h2 { font-size: 20px; font-weight: 600; }
+p { margin: 0; }
+.muted { color: var(--ink-2); }
+.small { font-size: 14px; }
+.num { font-variant-numeric: tabular-nums; }
+
+.switcher { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--ground); border-bottom: 1px solid var(--rule); padding-block: 12px; margin-bottom: 24px; }
+.switcher .inner { max-width: 760px; margin: 0 auto; padding-inline: 16px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.seg button { font: inherit; font-size: 14px; border: 0; background: transparent; color: var(--ink-2); padding: 7px 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.replay { font: inherit; font-size: 14px; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); color: var(--ink); padding: 7px 12px; cursor: pointer; }
+:is(.seg button, .replay, .mrow, .chip, .trend, .card):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.note { font-size: 14px; color: var(--ink-2); flex-basis: 100%; }
+
+.intro { display: grid; gap: 10px; }
+section { border-top: 1px solid var(--rule); padding-top: 24px; margin-top: 32px; display: grid; gap: 14px; }
+
+/* Cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.card { display: grid; gap: 8px; align-content: start; padding-top: 14px; border-top: 3px solid var(--rule); position: relative; }
+.card .big { font-size: 44px; font-weight: 800; line-height: 1.05; letter-spacing: -.02em; }
+.card .spark { width: 100%; height: 44px; display: block; }
+.card .spark path { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.card .spark circle { fill: var(--c); }
+.card .help { font-size: 14px; color: var(--ink-2); }
+.pace { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 10px; align-items: center; font-size: 13px; color: var(--ink-2); }
+.pace .t { height: 6px; position: relative; }
+.pace .b { position: absolute; left: 0; top: 0; height: 6px; border-radius: 0 2px 2px 0; background: var(--c); transform-origin: left center; }
+.pace .b.ghost { background: transparent; border: 1.5px dashed var(--c); height: 6px; }
+
+/* Treatment A hides the new decorations */
+[data-v="a"] .card { --c: var(--bar-line) !important; border-top-color: var(--rule) !important; }
+[data-v="a"] .card .spark, [data-v="a"] .pace, [data-v="a"] .chips, [data-v="a"] .ref, [data-v="a"] .mrow .dot { display: none; }
+[data-v="a"] .mrow { --c: var(--bar-line) !important; }
+[data-v="a"] .tip { display: none; }
+[data-v="b"] .card, [data-v="c"] .card { border-top-color: var(--c); }
+[data-v="c"] .card { background: color-mix(in srgb, var(--c) 7%, transparent); padding: 14px 16px 16px; border-radius: 0 0 6px 6px; }
+[data-v="c"] .card .spark path.fill { fill: var(--c); stroke: none; opacity: .14; }
+.card .spark path.fill { display: none; }
+[data-v="c"] .card .spark path.fill { display: block; }
+
+/* Trend */
+.trend { width: 100%; height: auto; display: block; overflow: visible; }
+.trend text { fill: var(--ink-2); font-size: 12px; font-family: var(--sans); }
+.trend .grid { stroke: var(--rule); }
+.trend .line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.trend .area { fill: var(--accent); opacity: 0; }
+[data-v="c"] .trend .area { opacity: .12; }
+.trend .pt { fill: var(--accent); stroke: var(--ground); stroke-width: 2; }
+.trend .cross { stroke: var(--ink-3); stroke-dasharray: 3 3; opacity: 0; }
+.trend .hot { fill: var(--surface); stroke: var(--accent); stroke-width: 2.5; opacity: 0; }
+.trend .gapmark { fill: var(--ink-3); font-size: 11px; }
+.trend .endlabel { fill: var(--accent); font-weight: 600; font-size: 13px; }
+[data-v="a"] .trend .endlabel { display: none; }
+
+/* Measures */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; border: 1px solid var(--rule); border-radius: 999px; background: transparent; color: var(--ink-2); cursor: pointer; }
+.chip .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.chip[aria-pressed="true"] { color: var(--ink); border-color: var(--c); }
+.measures { position: relative; display: grid; }
+.mrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label val" "bar bar" "note note"; gap: 4px 10px; padding: 10px 6px; border-top: 1px solid var(--rule); border-radius: 4px; transition: opacity .18s ease, background-color .18s ease; position: relative; }
+.mrow:first-child { border-top: 0; }
+.mrow .label { grid-area: label; display: flex; align-items: center; gap: 8px; font-weight: 500; min-width: 0; }
+.mrow .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; }
+.mrow .val { grid-area: val; font-weight: 600; }
+.mrow .track { grid-area: bar; height: 8px; position: relative; }
+.mrow .bar { position: absolute; left: 0; top: 0; height: 8px; border-radius: 0 2px 2px 0; background: var(--c); transform-origin: left center; }
+.mrow .mnote { grid-area: note; font-size: 14px; color: var(--ink-2); }
+[data-v="b"] .mrow .mnote, [data-v="c"] .mrow .mnote { display: none; }
+[data-v="c"] .mrow .track, [data-v="c"] .mrow .bar { height: 12px; }
+[data-v="c"] .mrow { background: color-mix(in srgb, var(--c) 6%, transparent); margin-top: 3px; border-top-color: transparent; }
+.ref { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1.5px dashed var(--ink-3); pointer-events: none; z-index: 1; }
+.ref span { position: absolute; top: -22px; left: -4px; transform: translateX(-50%); white-space: nowrap; font-size: 12px; color: var(--ink-2); background: var(--ground); padding: 0 4px; }
+.measures.focusing .mrow:not(.on) { opacity: .35; }
+.mrow.on { background: color-mix(in srgb, var(--c) 10%, transparent); }
+.legend-note { font-size: 13px; color: var(--ink-3); }
+.callout { background: var(--accent-soft); border-radius: 6px; padding: 12px 14px; font-size: 15px; }
+
+.tip { position: absolute; z-index: 30; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-left: 4px solid var(--c, var(--accent)); border-radius: 6px; padding: 10px 12px; font-size: 14px; line-height: 1.45; box-shadow: 0 6px 18px var(--tip-shadow); max-width: 300px; opacity: 0; transform: translateY(4px); transition: opacity .12s ease, transform .12s ease; }
+.tip.show { opacity: 1; transform: none; }
+.tip b { font-weight: 600; }
+
+.grow { animation: grow .7s cubic-bezier(.2, .7, .2, 1) both; animation-delay: var(--d, 0ms); }
+@keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+[data-v="a"] .grow { animation: none; }
+@media (prefers-reduced-motion: reduce) { .grow { animation: none; } .mrow, .tip { transition: none; } }
+@media (max-width: 480px) { h1 { font-size: 27px; } .card .big { font-size: 38px; } }
+</style>
+
+<div class="switcher" role="region" aria-label="Pick a treatment">
+  <div class="inner">
+    <div class="seg" role="group" aria-label="Treatment">
+      <button type="button" data-pick="a" aria-pressed="false">Today's redesign</button>
+      <button type="button" data-pick="b" aria-pressed="true">In between</button>
+      <button type="button" data-pick="c" aria-pressed="false">Bolder</button>
+    </div>
+    <button type="button" class="replay" id="replay">Replay animation</button>
+    <p class="note" id="vnote"></p>
+  </div>
+</div>
+
+<main class="wrap" id="app" data-v="b">
+  <div class="intro">
+    <h1>National numbers</h1>
+    <p class="muted">Prices overall rose 3.4% in the year to August 2026. These are the official numbers for the whole country.</p>
+  </div>
+
+  <section aria-label="This month's numbers" style="border-top:0;margin-top:20px;padding-top:0">
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section aria-labelledby="trend-title">
+    <h2 id="trend-title">The last 12 months</h2>
+    <p class="muted small">Prices overall, compared with the same month a year earlier. No figures were published for October 2025, so the line breaks there.</p>
+    <div id="trendbox"></div>
+  </section>
+
+  <section aria-labelledby="measures-title">
+    <h2 id="measures-title">Other official measures</h2>
+    <p class="muted small">Government agencies and Federal Reserve banks each measure inflation a little differently. Here is where each one stands for the latest month.</p>
+    <div class="chips" id="chips" role="group" aria-label="Highlight who publishes it"></div>
+    <div class="measures num" id="measures" style="margin-top:22px"></div>
+  </section>
+
+  <section aria-labelledby="diff-title">
+    <h2 id="diff-title">What changes between them</h2>
+    <div class="callout" id="explain"></div>
+    <p class="legend-note">On this tab, color stands for who publishes a measure, never for good or bad. The dashed line marks prices overall, so you can see at a glance which measures run hotter or cooler. Animations switch off when your device asks for reduced motion.</p>
+  </section>
+</main>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+const PUB = {
+  bls: { name: "Labor Department", c: "--p-bls" }, commerce: { name: "Commerce Department", c: "--p-commerce" },
+  cleveland: { name: "Cleveland Fed", c: "--p-cleveland" }, atlanta: { name: "Atlanta Fed", c: "--p-atlanta" },
+  dallas: { name: "Dallas Fed", c: "--p-dallas" },
+};
+const TREND = [["Sep 2025", 3.0], ["Oct 2025", null], ["Nov 2025", 2.7], ["Dec 2025", 2.7], ["Jan 2026", 2.4], ["Feb 2026", 2.4],
+  ["Mar 2026", 3.3], ["Apr 2026", 3.8], ["May 2026", 4.2], ["Jun 2026", 3.5], ["Jul 2026", 3.4], ["Aug 2026", 3.4]];
+const CARDS = [
+  { title: "Prices overall", year: 3.4, month: 0.4, pace: 4.9, c: "--accent", spark: TREND.map((t) => t[1]),
+    help: "This is the number in the news. The one-month change is adjusted for normal seasonal swings, like holiday sales." },
+  { title: "Prices other than food and energy", year: 2.4, month: 0.3, pace: 3.5, c: "--p-bls", spark: null,
+    help: "Food and energy prices jump around the most. Leaving them out shows the slower trend underneath. Economists call this core inflation." },
+];
+const MEASURES = [
+  ["Prices other than housing", "bls", 3.59, "CPI without rent and the rent value of owned homes. Your costs compares homeowners with this one."],
+  ["CPI for all items", "bls", 3.4, "The government's main measure of prices for everything people buy."],
+  ["Core PCE", "commerce", 3.3, "The Federal Reserve watches this one most closely. It comes from the Commerce Department, leaves out food and energy, and usually runs a little lower than CPI."],
+  ["Sticky-price CPI", "atlanta", 2.7, "Counts only prices that change slowly, like rent and insurance. These tend to show where prices are heading over the long run."],
+  ["Median CPI", "cleveland", 2.6, "Lines up every item's price change and takes the one in the middle, so the biggest moves at either end don't count."],
+  ["Trimmed-mean CPI", "cleveland", 2.6, "Drops the items with the biggest price moves at both ends and averages the rest."],
+  ["Core CPI", "bls", 2.4, "CPI without food and energy, whose prices jump around the most."],
+  ["Trimmed-mean PCE", "dallas", 2.3, "Drops the biggest price moves at both ends of PCE, the measure the Federal Reserve watches, and averages the rest."],
+];
+const NOTES = {
+  a: "What the branch has now: gray bars, a plain green line, and every measure's explanation printed under it.",
+  b: "My recommendation. The two headline numbers count up and carry a small color rule and a 12-month sparkline. The pace bars show this month's change next to the yearly pace. Measures are colored by who publishes them, with a dashed line at prices overall. Explanations move into the hover card to keep the list easy to scan, and tapping a publisher chip picks out its measures.",
+  c: "Closer to the original's energy. Tinted cards with a filled sparkline, thicker tinted measure rows, and a shaded area under the trend line.",
+};
+const $ = (s) => document.querySelector(s), app = $("#app"), tip = $("#tip");
+const MINUS = "−";
+const pct = (n) => (n > 0 ? "+" : n < 0 ? MINUS : "") + Math.abs(n).toFixed(1) + "%";
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function showTip(html, color, el, x, y) {
+  if (app.dataset.v === "a") return;
+  tip.innerHTML = html; tip.style.setProperty("--c", color); tip.classList.add("show");
+  const box = el.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
+  let left = (x ?? box.left + box.width / 2) - tw / 2 + scrollX;
+  left = Math.max(8 + scrollX, Math.min(left, scrollX + document.documentElement.clientWidth - tw - 8));
+  let top = (y ?? box.top) - th - 10 + scrollY;
+  if (top < scrollY + 64) top = (y ?? box.bottom) + 14 + scrollY;
+  tip.style.left = left + "px"; tip.style.top = top + "px";
+}
+const hideTip = () => tip.classList.remove("show");
+
+function countUp(el, to) {
+  if (app.dataset.v === "a" || reduce) { el.textContent = pct(to); return; }
+  const t0 = performance.now(), dur = 900;
+  const step = (t) => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = pct(to * e); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+function buildCards() {
+  const box = $("#cards"); box.innerHTML = "";
+  CARDS.forEach((c, i) => {
+    const color = `var(${c.c})`, el = document.createElement("article");
+    el.className = "card"; el.style.setProperty("--c", color); el.tabIndex = 0;
+    let spark = "";
+    if (c.spark) {
+      const W = 300, H = 44, pts = c.spark.map((v, k) => v == null ? null : [k / (c.spark.length - 1) * (W - 8) + 4, H - 4 - (v / 5) * (H - 8)]);
+      const segs = []; let cur = [];
+      pts.forEach((p) => { if (!p) { if (cur.length) segs.push(cur); cur = []; } else cur.push(p); });
+      if (cur.length) segs.push(cur);
+      const d = (s) => s.map(([x, y], k) => (k ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1)).join(" ");
+      const last = pts[pts.length - 1];
+      spark = `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+        ${segs.map((s) => s.length > 1 ? `<path class="fill" d="${d(s)} L${s[s.length - 1][0]} ${H} L${s[0][0]} ${H} Z"/>` : "").join("")}
+        ${segs.map((s) => `<path d="${d(s)}"/>`).join("")}<circle cx="${last[0]}" cy="${last[1]}" r="3.5"/></svg>`;
+    }
+    const pmax = Math.max(c.pace, c.year) * 1.05;
+    el.innerHTML = `<h2>${c.title}</h2><p class="big num" data-to="${c.year}">${pct(c.year)}</p>
+      <p class="muted small">Change over the 12 months to August 2026.</p>${spark}
+      <div class="pace num" aria-hidden="true">
+        <span>Past year</span><span class="t"><span class="b grow" style="width:${c.year / pmax * 100}%;--d:${200 + i * 100}ms"></span></span><span>${pct(c.year)}</span>
+        <span>This month's pace</span><span class="t"><span class="b ghost grow" style="width:${c.pace / pmax * 100}%;--d:${300 + i * 100}ms"></span></span><span>${pct(c.pace)}</span>
+      </div>
+      <p class="small">From July to August, prices rose ${c.month}%. At that pace for a full year, they would rise ${c.pace}%.</p>
+      <p class="help">${c.help}</p>`;
+    box.append(el);
+    countUp(el.querySelector(".big"), c.year);
+  });
+}
+
+function buildTrend() {
+  const box = $("#trendbox");
+  const W = 720, H = 260, m = { l: 40, r: 64, t: 16, b: 34 }, iw = W - m.l - m.r, ih = H - m.t - m.b, yMax = 5;
+  const x = (i) => m.l + i / (TREND.length - 1) * iw, y = (v) => m.t + ih - v / yMax * ih;
+  const segs = []; let cur = [];
+  TREND.forEach(([, v], i) => { if (v == null) { if (cur.length) segs.push(cur); cur = []; } else cur.push([x(i), y(v)]); });
+  if (cur.length) segs.push(cur);
+  const path = (s) => s.map(([a, b], k) => (k ? "L" : "M") + a.toFixed(1) + " " + b.toFixed(1)).join(" ");
+  const area = (s) => s.length > 1 ? path(s) + ` L${s[s.length - 1][0]} ${y(0)} L${s[0][0]} ${y(0)} Z` : "";
+  const labels = [0, 3, 6, 9, 11], last = TREND[TREND.length - 1];
+  box.innerHTML = `<svg class="trend" viewBox="0 0 ${W} ${H}" tabindex="0" role="img" aria-label="Prices overall rose between 2.4% and 4.2% a year over the last 12 months, and 3.4% in August 2026. Use the arrow keys to step through the months.">
+    ${[0, 1, 2, 3, 4, 5].map((t) => `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${y(t)}" y2="${y(t)}"/><text x="${m.l - 8}" y="${y(t) + 4}" text-anchor="end">${t}%</text>`).join("")}
+    ${labels.map((i) => `<text x="${x(i)}" y="${H - 10}" text-anchor="middle">${TREND[i][0]}</text>`).join("")}
+    <text class="gapmark" x="${x(1)}" y="${y(0) - 8}" text-anchor="middle">not published</text>
+    ${segs.map((s) => `<path class="area" d="${area(s)}"/>`).join("")}
+    ${segs.map((s) => `<path class="line" d="${path(s)}"/>`).join("")}
+    ${TREND.map(([, v], i) => v == null ? "" : `<circle class="pt" cx="${x(i)}" cy="${y(v)}" r="3.5"/>`).join("")}
+    <text class="endlabel" x="${x(11) + 10}" y="${y(last[1]) + 4}">${pct(last[1])}</text>
+    <line class="cross" y1="${m.t}" y2="${m.t + ih}"/><circle class="hot" r="6"/></svg>`;
+  const svg = box.querySelector("svg"), cross = svg.querySelector(".cross"), hot = svg.querySelector(".hot");
+  if (app.dataset.v !== "a" && !reduce) svg.querySelectorAll(".line").forEach((p, k) => {
+    const len = p.getTotalLength(); p.style.strokeDasharray = len;
+    p.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 900, delay: k * 250, easing: "cubic-bezier(.3,.7,.2,1)", fill: "both" });
+  });
+  let idx = TREND.length - 1;
+  const point = (i) => {
+    if (app.dataset.v === "a") return;
+    const [label, v] = TREND[i], r = svg.getBoundingClientRect(), s = r.width / W;
+    cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.style.opacity = 1;
+    if (v == null) { hot.style.opacity = 0; showTip(`<b>${label}</b><br>Not published. The government shutdown stopped data collection that month.`, "var(--ink-3)", svg, r.left + x(i) * s, r.top + y(2.5) * s); return; }
+    hot.setAttribute("cx", x(i)); hot.setAttribute("cy", y(v)); hot.style.opacity = 1;
+    const prev = TREND[i - 1]?.[1];
+    showTip(`<b>${label}</b><br>Prices were <b>${pct(v)}</b> from a year earlier.${prev == null ? "" : `<br>${v > prev ? "Up" : v < prev ? "Down" : "No change"} from ${prev}% the month before.`}`, "var(--accent)", svg, r.left + x(i) * s, r.top + y(v) * s);
+  };
+  svg.addEventListener("pointermove", (e) => { const r = svg.getBoundingClientRect(); idx = Math.max(0, Math.min(11, Math.round(((e.clientX - r.left) / r.width * W - m.l) / iw * 11))); point(idx); });
+  const leave = () => { cross.style.opacity = 0; hot.style.opacity = 0; hideTip(); };
+  svg.addEventListener("pointerleave", leave); svg.addEventListener("blur", leave);
+  svg.addEventListener("focus", () => point(idx));
+  svg.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") { idx = Math.max(0, idx - 1); point(idx); e.preventDefault(); }
+    if (e.key === "ArrowRight") { idx = Math.min(11, idx + 1); point(idx); e.preventDefault(); }
+  });
+}
+
+function buildMeasures() {
+  const box = $("#measures"); box.innerHTML = "";
+  const max = 4.5, overall = 3.4;
+  MEASURES.forEach(([name, pub, v, note], i) => {
+    const color = `var(${PUB[pub].c})`, el = document.createElement("div");
+    el.className = "mrow"; el.tabIndex = 0; el.dataset.pub = pub; el.style.setProperty("--c", color);
+    el.setAttribute("aria-label", `${name}, from the ${PUB[pub].name}: ${pct(v)}`);
+    el.innerHTML = `<span class="label"><span class="dot" aria-hidden="true"></span><span>${name}</span></span><span class="val">${pct(v)}</span>
+      <span class="track" aria-hidden="true"><span class="bar grow" style="width:${v / max * 100}%;--d:${i * 55}ms"></span></span>
+      <span class="mnote">${note}</span>`;
+    const d = v - overall;
+    const cmp = Math.abs(d) < 0.05 ? "the same as prices overall" : `${Math.abs(d).toFixed(1)} points ${d > 0 ? "above" : "below"} prices overall`;
+    const html = `<b>${name}</b> <span class="muted">(${PUB[pub].name})</span><br>${note}<br><b>${pct(v)}</b>, ${cmp}.`;
+    const on = () => { if (app.dataset.v === "a") return; box.classList.add("focusing"); box.querySelectorAll(".on").forEach((n) => n.classList.remove("on")); el.classList.add("on"); showTip(html, color, el); };
+    const off = () => { box.classList.remove("focusing"); box.querySelectorAll(".on").forEach((n) => n.classList.remove("on")); hideTip(); };
+    el.addEventListener("mouseenter", on); el.addEventListener("mouseleave", off);
+    el.addEventListener("focus", on); el.addEventListener("blur", off);
+    box.append(el);
+  });
+  const ref = document.createElement("div");
+  ref.className = "ref"; ref.style.left = `calc(6px + (100% - 12px) * ${overall / max})`;
+  ref.innerHTML = `<span>Prices overall ${pct(overall)}</span>`;
+  box.append(ref);
+
+  const chips = $("#chips"); chips.innerHTML = "";
+  for (const [k, p] of Object.entries(PUB)) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", "false"); b.style.setProperty("--c", `var(${p.c})`);
+    b.innerHTML = `<span class="dot" aria-hidden="true"></span>${p.name}`;
+    b.addEventListener("click", () => {
+      const was = b.getAttribute("aria-pressed") === "true";
+      chips.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", "false"));
+      box.classList.remove("focusing"); box.querySelectorAll(".on").forEach((n) => n.classList.remove("on"));
+      if (!was) { b.setAttribute("aria-pressed", "true"); box.classList.add("focusing"); box.querySelectorAll(`.mrow[data-pub="${k}"]`).forEach((r) => r.classList.add("on")); }
+    });
+    chips.append(b);
+  }
+}
+
+function render() {
+  hideTip(); buildCards(); buildTrend(); buildMeasures();
+  $("#vnote").textContent = NOTES[app.dataset.v]; $("#explain").textContent = NOTES[app.dataset.v];
+}
+document.querySelectorAll("[data-pick]").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-pick]").forEach((o) => o.setAttribute("aria-pressed", String(o === b)));
+  app.dataset.v = b.dataset.pick;
+  try { localStorage.setItem("ir-nat-v", b.dataset.pick); } catch {}
+  render();
+}));
+$("#replay").addEventListener("click", render);
+try { const s = localStorage.getItem("ir-nat-v"); if (s && /^[abc]$/.test(s)) { app.dataset.v = s; document.querySelectorAll("[data-pick]").forEach((o) => o.setAttribute("aria-pressed", String(o.dataset.pick === s))); } } catch {}
+render();
+</script>

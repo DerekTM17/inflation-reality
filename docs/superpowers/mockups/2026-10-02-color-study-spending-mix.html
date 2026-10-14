@@ -1,0 +1,359 @@
+<title>Spending Mix Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;800&display=swap">
+<style>
+/* Layout: live result pinned at the top, answers then amounts below, one reading column like the site. */
+:root {
+  --ground: #F3F5F4; --surface: #FFFFFF; --ink: #1F2933; --ink-2: #56626E; --ink-3: #66717D;
+  --rule: #D5DCDA; --accent: #2E5E45; --accent-soft: #E3EDE7; --bar-line: #87919A; --bar-us: #7D8894; --track: #E4E9E7;
+  --f-home: #2F6DB5; --f-around: #D2602E; --f-food: #1A9473; --f-util: #C48A12;
+  --f-fun: #C9638C; --f-health: #3E7D2E; --f-kids: #5A4AA8; --f-rest: #87919A;
+  --sans: "Libre Franklin", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --ground: #161A1E; --surface: #1F252B; --ink: #E7ECEA; --ink-2: #AEB8C0; --ink-3: #9AA5AE;
+  --rule: #353D44; --accent: #8CC9A2; --accent-soft: #22382C; --bar-line: #7A858F; --bar-us: #8C97A2; --track: #2C343B;
+  --f-home: #4C8BD6; --f-around: #DE6A35; --f-food: #2AAA85; --f-util: #B98312;
+  --f-fun: #CB668F; --f-health: #5C9A45; --f-kids: #9085E9; --f-rest: #7A858F; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --ground: #161A1E; --surface: #1F252B; --ink: #E7ECEA; --ink-2: #AEB8C0; --ink-3: #9AA5AE;
+  --rule: #353D44; --accent: #8CC9A2; --accent-soft: #22382C; --bar-line: #7A858F; --bar-us: #8C97A2; --track: #2C343B;
+  --f-home: #4C8BD6; --f-around: #DE6A35; --f-food: #2AAA85; --f-util: #B98312;
+  --f-fun: #CB668F; --f-health: #5C9A45; --f-kids: #9085E9; --f-rest: #7A858F; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.5; }
+.wrap { max-width: 760px; margin: 0 auto; padding-inline: 16px; padding-block: 0 64px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h1 { font-size: 30px; font-weight: 800; letter-spacing: -.01em; }
+h2 { font-size: 20px; font-weight: 600; }
+p { margin: 0; }
+.muted { color: var(--ink-2); } .small { font-size: 14px; } .num { font-variant-numeric: tabular-nums; }
+
+.switcher { background: var(--ground); border-bottom: 1px solid var(--rule); padding-block: 12px; margin-bottom: 20px; }
+.switcher .inner { max-width: 760px; margin: 0 auto; padding-inline: 16px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.seg button { font: inherit; font-size: 14px; border: 0; background: transparent; color: var(--ink-2); padding: 7px 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
+.note { font-size: 14px; color: var(--ink-2); flex-basis: 100%; }
+:is(button, input):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Pinned live result */
+.live { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; display: grid; gap: 10px; margin-block: 16px 8px; }
+.answer { font-size: 24px; font-weight: 800; line-height: 1.2; }
+.compare { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 12px; align-items: center; font-size: 14px; }
+.ctrack { height: 9px; position: relative; }
+.cbar { position: absolute; left: 0; top: 0; height: 9px; border-radius: 0 3px 3px 0; transition: width .35s cubic-bezier(.2,.7,.2,1); }
+.cbar.you { background: var(--accent); } .cbar.us { background: var(--bar-us); }
+.mixbar { display: flex; height: 14px; border-radius: 3px; overflow: hidden; gap: 2px; }
+.mixbar span { background: var(--c); transition: flex-grow .35s cubic-bezier(.2,.7,.2,1); min-width: 2px; }
+.mixlegend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; color: var(--ink-2); }
+.mixlegend span { display: inline-flex; align-items: center; gap: 5px; }
+.mixlegend i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+
+section { border-top: 1px solid var(--rule); padding-top: 22px; margin-top: 28px; display: grid; gap: 14px; }
+/* Questions */
+.q { display: grid; gap: 6px; }
+.q legend { font-weight: 600; padding: 0; margin-bottom: 6px; }
+fieldset { border: 0; padding: 0; margin: 0; }
+.opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.opt { font: inherit; font-size: 15px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 7px 12px; cursor: pointer; }
+.opt[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.preset { font: inherit; font-size: 14px; border: 1px dashed var(--rule); background: transparent; color: var(--ink); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.preset:hover { border-style: solid; border-color: var(--accent); }
+
+/* Amount rows */
+.group { display: grid; gap: 2px; }
+.ghead { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--ink-2); padding: 10px 0 2px; }
+.ghead i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.amt { display: grid; grid-template-columns: minmax(0, 1fr) 96px; grid-template-areas: "label box" "slider slider" "meta meta"; gap: 4px 12px; padding: 8px 0; border-top: 1px solid var(--rule); align-items: center; }
+.amt label { grid-area: label; font-weight: 500; display: flex; gap: 8px; align-items: center; }
+.amt label i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; }
+.amt .box { grid-area: box; display: flex; align-items: center; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); padding: 0 8px; }
+.amt .box span { color: var(--ink-3); }
+.amt .box input { font: inherit; width: 100%; border: 0; background: transparent; color: var(--ink); padding: 6px 4px; text-align: right; font-variant-numeric: tabular-nums; }
+.amt .box input:focus { outline: none; } .amt .box:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+.amt .meta { grid-area: meta; font-size: 13px; color: var(--ink-2); display: flex; justify-content: space-between; gap: 12px; }
+.amt .meta b { color: var(--ink); font-weight: 600; }
+.amt input[type=range] { grid-area: slider; width: 100%; margin: 0; height: 22px; background: transparent; -webkit-appearance: none; appearance: none; --p: 50%; }
+.amt input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(to right, var(--c) var(--p), var(--track) var(--p)); }
+.amt input[type=range]::-moz-range-track { height: 6px; border-radius: 3px; background: var(--track); }
+.amt input[type=range]::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--c); }
+.amt input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); border: 3px solid var(--c); margin-top: -7px; transition: transform .12s ease; }
+.amt input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 3px solid var(--c); }
+.amt input[type=range]:active::-webkit-slider-thumb { transform: scale(1.18); }
+.amt.bump .meta b { animation: bump .35s ease; }
+@keyframes bump { 40% { color: var(--c); } }
+
+/* A: today's number boxes only */
+[data-v="a"] .amt input[type=range], [data-v="a"] .amt label i, [data-v="a"] .ghead, [data-v="a"] .mixwrap, [data-v="a"] .presetwrap { display: none; }
+[data-v="a"] .amt { grid-template-areas: "label box" "meta meta"; }
+/* C: tinted family groups, thicker tracks */
+[data-v="c"] .group { background: color-mix(in srgb, var(--c) 6%, transparent); border-radius: 8px; padding: 2px 12px 6px; margin-top: 8px; }
+[data-v="c"] .amt input[type=range]::-webkit-slider-runnable-track { height: 10px; border-radius: 5px; }
+[data-v="c"] .amt input[type=range]::-webkit-slider-thumb { margin-top: -5px; }
+[data-v="c"] .mixbar { height: 22px; }
+/* C: compact two-column layout, one tight row per amount, questions fold to a summary */
+.lrate, .lextra, .qsummary { display: none; }
+.wrap[data-v="c"] { max-width: 1040px; }
+[data-v="c"] .live { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); align-items: center; column-gap: 24px; }
+[data-v="c"] .live .answer { grid-column: 1; }
+[data-v="c"] .live .compare { grid-column: 1; }
+[data-v="c"] .live .mixwrap { grid-column: 2; grid-row: 1 / span 2; }
+[data-v="c"] #amounts { columns: 2 380px; column-gap: 16px; }
+[data-v="c"] .group { break-inside: avoid; margin: 0 0 12px; }
+[data-v="c"] .amt { grid-template-columns: minmax(0, 1fr) auto 84px; grid-template-areas: "label extra box" "slider slider slider"; gap: 0 10px; padding: 6px 0 2px; }
+[data-v="c"] .amt .meta { display: none; }
+[data-v="c"] .lrate { display: inline; font-size: 13px; font-weight: 400; color: var(--ink-2); }
+[data-v="c"] .lextra { display: block; grid-area: extra; font-size: 13px; font-weight: 600; text-align: right; white-space: nowrap; }
+[data-v="c"] .amt .box input { padding: 3px 4px; }
+[data-v="c"] .amt input[type=range] { height: 18px; }
+[data-v="c"] #questions { grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 10px 24px !important; }
+[data-v="c"] .q { grid-template-columns: 130px minmax(0, 1fr); align-items: center; display: grid; }
+[data-v="c"] .q legend { float: left; margin: 0; font-size: 15px; }
+[data-v="c"] .opt { padding: 5px 10px; font-size: 14px; }
+[data-v="c"] .qwrap.folded #questions { display: none !important; }
+[data-v="c"] .qwrap.folded .qsummary { display: flex; }
+.qsummary { flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 15px; }
+.qsummary .change { font: inherit; font-size: 14px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 5px 12px; cursor: pointer; }
+[data-v="c"] section { margin-top: 20px; padding-top: 16px; }
+@media (max-width: 560px) { [data-v="c"] .live { grid-template-columns: 1fr; } [data-v="c"] .live .mixwrap { grid-column: 1; grid-row: auto; } [data-v="c"] .q { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .cbar, .mixbar span { transition: none; } .amt.bump .meta b { animation: none; } }
+.callout { background: var(--accent-soft); border-radius: 6px; padding: 12px 14px; font-size: 15px; }
+.flag { font-size: 13px; color: var(--ink-2); }
+@media (max-width: 480px) { h1 { font-size: 26px; } .answer { font-size: 21px; } .amt { grid-template-columns: minmax(0, 1fr) 86px; } }
+</style>
+
+<div class="switcher" role="region" aria-label="Pick a treatment">
+  <div class="inner">
+    <div class="seg" role="group" aria-label="Treatment">
+      <button type="button" data-pick="a" aria-pressed="false">Today's redesign</button>
+      <button type="button" data-pick="b" aria-pressed="true">In between</button>
+      <button type="button" data-pick="c" aria-pressed="false">Bolder</button>
+    </div>
+    <p class="note" id="vnote"></p>
+  </div>
+</div>
+
+<main class="wrap" id="app" data-v="b">
+  <h1>How much more are you paying than a year ago?</h1>
+  <p class="muted" style="margin-top:8px">Answer four questions, then drag or type your monthly amounts. Everything updates as you go. Rates are August 2026.</p>
+
+  <div class="live" aria-live="polite">
+    <p class="answer num" id="answer"></p>
+    <div class="compare num">
+      <span>Your costs</span><div class="ctrack"><div class="cbar you" id="cyou"></div></div><span id="cyouv"></span>
+      <span id="uslabel">National</span><div class="ctrack"><div class="cbar us" id="cus"></div></div><span id="cusv"></span>
+    </div>
+    <div class="mixwrap" style="display:grid;gap:6px">
+      <div class="mixbar" id="mixbar" aria-hidden="true"></div>
+      <div class="mixlegend" id="mixlegend"></div>
+    </div>
+  </div>
+
+  <section class="presetwrap" aria-labelledby="pre-title">
+    <h2 id="pre-title">Start from a household like yours</h2>
+    <div class="presets" id="presets"></div>
+    <p class="flag">This brings back the original's quick starts. The spec dropped them in revision 2, so say if you want them back.</p>
+  </section>
+
+  <section aria-labelledby="q-title" class="qwrap" id="qwrap">
+    <h2 id="q-title">Four questions</h2>
+    <div class="qsummary"><span id="qsumtext"></span><button type="button" class="change" id="qchange">Change answers</button></div>
+    <div id="questions" style="display:grid;gap:16px"></div>
+  </section>
+
+  <section aria-labelledby="a-title">
+    <h2 id="a-title">Your monthly amounts</h2>
+    <p class="muted small">Starting amounts are typical for a U.S. household. Change any of them to match yours.</p>
+    <div id="amounts"></div>
+  </section>
+
+  <section aria-labelledby="d-title">
+    <h2 id="d-title">What changes between them</h2>
+    <div class="callout" id="explain"></div>
+  </section>
+</main>
+
+<script>
+const FAM = {
+  home: ["Home", "--f-home"], around: ["Getting around", "--f-around"], food: ["Food", "--f-food"], util: ["Utilities", "--f-util"],
+  health: ["Health", "--f-health"], kids: ["Kids and school", "--f-kids"], fun: ["Clothing and fun", "--f-fun"], rest: ["Everything else", "--f-rest"],
+};
+// August 2026 rates; mortgage is a fixed payment (0%). Everything else uses the basket's residual rate.
+const L = {
+  rent: ["Rent", "home", 1650, 2.75], mortgage: ["Mortgage payment", "home", 1900, 0], upkeep: ["Home repairs", "home", 130, 1.98],
+  gasoline: ["Gas for the car", "around", 190, 27.4], charging: ["Charging the car", "around", 55, 3.79], carIns: ["Car insurance", "around", 160, -5.13],
+  carUpkeep: ["Car repairs", "around", 60, 5.24], transit: ["Bus and train fares", "around", 90, -3.7],
+  groceries: ["Groceries", "food", 620, 2.19], dining: ["Eating out", "food", 220, 3.37],
+  electric: ["Electricity", "util", 110, 3.79], heatGas: ["Natural gas bill", "util", 70, 4.39], heatOil: ["Heating oil", "util", 120, 52.04],
+  health: ["Health insurance", "health", 180, 6.0], doctor: ["Doctor and pharmacy", "health", 90, 0.19],
+  daycare: ["Daycare", "kids", 1100, 3.99], tuition: ["College tuition", "kids", 900, 2.82],
+  clothing: ["Clothing", "fun", 80, 3.61], fun: ["Entertainment", "fun", 150, 2.68], rest: ["Everything else", "rest", 250, 2.01],
+};
+const Q = [
+  ["home", "Your home", [["rent", "Rent"], ["mortgage", "Mortgage, fixed rate"], ["owned", "Own it outright"]]],
+  ["car", "Getting around", [["gas", "Gas car"], ["hybrid", "Hybrid"], ["electric", "Electric car"], ["none", "No car"]]],
+  ["heat", "Home heating", [["electric", "Electric"], ["gas", "Natural gas"], ["oil", "Heating oil"], ["included", "Included in my rent"]]],
+  ["health", "Health insurance", [["work", "Through work"], ["none", "None or covered by someone else"]]],
+];
+const PRESETS = {
+  "Young renter": { a: { home: "rent", car: "none", heat: "included", health: "work" }, kids: [], amt: { rent: 1450, groceries: 380, dining: 300, fun: 180 } },
+  "Family with kids": { a: { home: "mortgage", car: "gas", heat: "gas", health: "work" }, kids: ["daycare"], amt: { groceries: 1100, gasoline: 280, dining: 260 } },
+  "Commuter": { a: { home: "rent", car: "gas", heat: "electric", health: "work" }, kids: [], amt: { gasoline: 380, carUpkeep: 90 } },
+  "Retiree": { a: { home: "owned", car: "hybrid", heat: "gas", health: "none" }, kids: [], amt: { doctor: 220, groceries: 520, gasoline: 90 } },
+};
+const NOTES = {
+  a: "What the branch has now: the four questions and a plain list of number boxes. The result updates, but nothing moves or carries color.",
+  b: "My recommendation. Each amount gets a slider in its kind-of-spending color plus a box for exact dollars. The result stays pinned at the top while you scroll, and a spending mix bar shows where your money goes by color, sliding as you drag. Each row says what that line adds this year. Quick-start households fill everything in one tap.",
+  c: "Bolder and compact. On wide screens the result and the spending mix sit side by side, and the kinds of spending fill two columns of tinted cards. Each amount is one tight row: name, price change, what it adds a year, the box, and a slider. Pick a quick start and the four questions fold into one line you can reopen.",
+};
+const state = { a: { home: "rent", car: "gas", heat: "gas", health: "work" }, kids: [], amt: {} };
+const $ = (s) => document.querySelector(s), app = $("#app");
+const MINUS = "−";
+const pct = (n) => (n > 0 ? "+" : n < 0 ? MINUS : "") + Math.abs(n).toFixed(1) + "%";
+const money = (n) => (n < 0 ? MINUS : "") + "$" + Math.round(Math.abs(n)).toLocaleString("en-US");
+const r10 = (n) => Math.round(n / 10) * 10;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function activeLines() {
+  const a = state.a, ids = [];
+  if (a.home === "rent") ids.push("rent");
+  if (a.home === "mortgage") ids.push("mortgage", "upkeep");
+  if (a.home === "owned") ids.push("upkeep");
+  if (a.car === "gas" || a.car === "hybrid") ids.push("gasoline", "carIns", "carUpkeep");
+  if (a.car === "electric") ids.push("charging", "carIns", "carUpkeep");
+  if (a.car === "none") ids.push("transit");
+  ids.push("groceries", "dining", "electric");
+  if (a.heat === "gas") ids.push("heatGas");
+  if (a.heat === "oil") ids.push("heatOil");
+  if (a.health === "work") ids.push("health");
+  ids.push("doctor", ...state.kids, "clothing", "fun", "rest");
+  return ids;
+}
+const amountOf = (id) => state.amt[id] ?? (id === "gasoline" && state.a.car === "hybrid" ? 110 : L[id][2]);
+
+let shown = null;
+function tween(el, to, fmt) {
+  if (reduce || app.dataset.v === "a" || shown == null) { el.textContent = fmt(to); return; }
+  const from = shown, t0 = performance.now();
+  const step = (t) => { const k = Math.min(1, (t - t0) / 350), v = from + (to - from) * (1 - Math.pow(1 - k, 3)); el.textContent = fmt(v); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+function compute() {
+  const ids = activeLines();
+  let annual = 0, ago = 0;
+  const per = ids.map((id) => {
+    const m = amountOf(id), yr = m * 12, ya = yr / (1 + L[id][3] / 100);
+    annual += yr; ago += ya; return { id, m, extra: yr - ya };
+  });
+  const rate = (annual / ago - 1) * 100, total = r10(per.reduce((s, p) => s + p.extra, 0));
+  const owner = state.a.home !== "rent", us = owner ? 3.59 : 3.4;
+  const ans = $("#answer");
+  const fmt = (v) => { const r = r10(v); return r === 0 ? "About the same as a year ago" : `About ${money(Math.abs(r))} ${r > 0 ? "more" : "less"} a year`; };
+  tween(ans, total, fmt); shown = total;
+  const cmax = Math.max(rate, us, 0.1);
+  $("#cyou").style.width = Math.max(0, rate) / cmax * 100 + "%"; $("#cus").style.width = us / cmax * 100 + "%";
+  $("#cyouv").textContent = pct(rate); $("#cusv").textContent = pct(us);
+  $("#uslabel").textContent = owner ? "Outside housing" : "National";
+  // Spending mix by kind of spending
+  const byFam = {};
+  per.forEach((p) => { const f = L[p.id][1]; byFam[f] = (byFam[f] || 0) + p.m; });
+  const sum = Object.values(byFam).reduce((s, v) => s + v, 0);
+  const famOrder = Object.keys(FAM).filter((f) => byFam[f]);
+  const bar = $("#mixbar");
+  if (bar.dataset.keys !== famOrder.join()) {
+    bar.dataset.keys = famOrder.join();
+    bar.innerHTML = famOrder.map((f) => `<span data-f="${f}" style="--c:var(${FAM[f][1]})"></span>`).join("");
+  }
+  famOrder.forEach((f) => { bar.querySelector(`[data-f="${f}"]`).style.flexGrow = byFam[f]; });
+  $("#mixlegend").innerHTML = famOrder.map((f) => `<span style="--c:var(${FAM[f][1]})"><i></i>${FAM[f][0]} ${Math.round(byFam[f] / sum * 100)}%</span>`).join("");
+  per.forEach((p) => { const meta = document.querySelector(`#meta-${p.id}`); if (meta) meta.innerHTML = metaText(p);
+    const x = document.querySelector(`#x-${p.id}`); if (x) { const e = r10(p.extra); x.textContent = e === 0 ? "$0" : `${e > 0 ? "+" : MINUS}${money(Math.abs(e))}/yr`; } });
+  updateSummary();
+}
+const metaText = (p) => {
+  const r = L[p.id][3], e = r10(p.extra);
+  return `<span>Prices ${r === 0 ? "stayed the same" : `${r > 0 ? "rose" : "fell"} ${Math.abs(r).toFixed(1)}%`}</span><span>${e === 0 ? "No change this year" : `<b>${e > 0 ? "+" : MINUS}${money(Math.abs(e))}</b> a year`}</span>`;
+};
+
+function buildQuestions() {
+  const box = $("#questions"); box.innerHTML = "";
+  for (const [id, legend, opts] of Q) {
+    const fs = document.createElement("fieldset"); fs.className = "q";
+    fs.innerHTML = `<legend>${legend}</legend><div class="opts">${opts.map(([v, l]) => `<button type="button" class="opt" data-q="${id}" data-val="${v}" aria-pressed="${state.a[id] === v}">${l}</button>`).join("")}</div>`;
+    box.append(fs);
+  }
+  const kids = document.createElement("fieldset"); kids.className = "q";
+  kids.innerHTML = `<legend>Also paying for</legend><div class="opts">${[["daycare", "Daycare"], ["tuition", "College tuition"]].map(([v, l]) => `<button type="button" class="opt" data-kid="${v}" aria-pressed="${state.kids.includes(v)}">${l}</button>`).join("")}</div>`;
+  box.append(kids);
+  box.querySelectorAll("[data-q]").forEach((b) => b.addEventListener("click", () => { state.a[b.dataset.q] = b.dataset.val; renderAll(); }));
+  box.querySelectorAll("[data-kid]").forEach((b) => b.addEventListener("click", () => {
+    const k = b.dataset.kid; state.kids = state.kids.includes(k) ? state.kids.filter((x) => x !== k) : [...state.kids, k]; renderAll();
+  }));
+}
+
+function buildAmounts() {
+  const box = $("#amounts"); box.innerHTML = "";
+  const ids = activeLines(), groups = {};
+  ids.forEach((id) => (groups[L[id][1]] ||= []).push(id));
+  for (const f of Object.keys(FAM)) {
+    if (!groups[f]) continue;
+    const g = document.createElement("div"); g.className = "group"; g.style.setProperty("--c", `var(${FAM[f][1]})`);
+    g.innerHTML = `<div class="ghead"><i aria-hidden="true"></i>${FAM[f][0]}</div>`;
+    for (const id of groups[f]) {
+      const m = amountOf(id), max = Math.max(500, Math.ceil(L[id][2] * 3 / 100) * 100);
+      const row = document.createElement("div"); row.className = "amt"; row.style.setProperty("--c", `var(${FAM[f][1]})`);
+      row.innerHTML = `<label for="n-${id}"><i aria-hidden="true"></i>${L[id][0]} <span class="lrate">${pct(L[id][3])}</span></label><span class="lextra num" id="x-${id}"></span>
+        <span class="box"><span>$</span><input id="n-${id}" inputmode="numeric" value="${m}" aria-describedby="meta-${id}"></span>
+        <input type="range" id="r-${id}" min="0" max="${max}" step="10" value="${Math.min(m, max)}" aria-label="${L[id][0]}, dollars a month" style="--p:${Math.min(m, max) / max * 100}%">
+        <div class="meta num" id="meta-${id}"></div>`;
+      const num = row.querySelector(`#n-${id}`), rng = row.querySelector(`#r-${id}`);
+      const set = (v, from) => {
+        v = Math.max(0, Math.min(99999, Math.round(+v || 0)));
+        state.amt[id] = v;
+        if (from !== "num") num.value = v;
+        if (from !== "rng") rng.value = Math.min(v, max);
+        rng.style.setProperty("--p", Math.min(v, max) / max * 100 + "%");
+        row.classList.remove("bump"); void row.offsetWidth; row.classList.add("bump");
+        compute();
+      };
+      rng.addEventListener("input", () => set(rng.value, "rng"));
+      num.addEventListener("input", () => set(num.value.replace(/[^0-9]/g, ""), "num"));
+      g.append(row);
+    }
+    box.append(g);
+  }
+}
+
+function buildPresets() {
+  const box = $("#presets"); box.innerHTML = "";
+  for (const [name, p] of Object.entries(PRESETS)) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "preset"; b.textContent = name;
+    b.addEventListener("click", () => { state.a = { ...p.a }; state.kids = [...p.kids]; state.amt = { ...p.amt }; renderAll(); $("#qwrap").classList.add("folded"); });
+    box.append(b);
+  }
+}
+
+function updateSummary() {
+  const label = (qid) => Q.find((q) => q[0] === qid)[2].find((o) => o[0] === state.a[qid])[1];
+  const parts = [label("home"), label("car"), "Heat: " + label("heat").toLowerCase(), "Health insurance: " + label("health").toLowerCase()];
+  if (state.kids.length) parts.push(state.kids.map((k) => L[k][0]).join(" and "));
+  $("#qsumtext").textContent = parts.join(" \u00b7 ");
+}
+$("#qchange").addEventListener("click", () => { $("#qwrap").classList.remove("folded"); $("#questions button")?.focus(); });
+function renderAll() { buildQuestions(); buildAmounts(); compute(); }
+function setV(v) {
+  app.dataset.v = v;
+  document.querySelectorAll("[data-pick]").forEach((o) => o.setAttribute("aria-pressed", String(o.dataset.pick === v)));
+  $("#vnote").textContent = NOTES[v]; $("#explain").textContent = NOTES[v];
+  try { localStorage.setItem("ir-mix-v", v); } catch {}
+}
+document.querySelectorAll("[data-pick]").forEach((b) => b.addEventListener("click", () => { setV(b.dataset.pick); shown = null; compute(); }));
+let start = "b"; try { const s = localStorage.getItem("ir-mix-v"); if (s && /^[abc]$/.test(s)) start = s; } catch {}
+setV(start); buildPresets(); renderAll();
+</script>
