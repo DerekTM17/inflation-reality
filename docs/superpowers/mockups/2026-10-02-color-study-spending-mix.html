@@ -8,19 +8,22 @@
   --rule: #D5DCDA; --accent: #2E5E45; --accent-soft: #E3EDE7; --bar-line: #87919A; --bar-us: #7D8894; --track: #E4E9E7;
   --f-home: #2F6DB5; --f-around: #D2602E; --f-food: #1A9473; --f-util: #C48A12;
   --f-fun: #C9638C; --f-health: #3E7D2E; --f-kids: #5A4AA8; --f-rest: #87919A;
+  --shadow: 0 8px 28px rgba(24, 38, 48, .16);
   --sans: "Libre Franklin", "Segoe UI", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --ground: #161A1E; --surface: #1F252B; --ink: #E7ECEA; --ink-2: #AEB8C0; --ink-3: #9AA5AE;
   --rule: #353D44; --accent: #8CC9A2; --accent-soft: #22382C; --bar-line: #7A858F; --bar-us: #8C97A2; --track: #2C343B;
   --f-home: #4C8BD6; --f-around: #DE6A35; --f-food: #2AAA85; --f-util: #B98312;
-  --f-fun: #CB668F; --f-health: #5C9A45; --f-kids: #9085E9; --f-rest: #7A858F; color-scheme: dark;
+  --f-fun: #CB668F; --f-health: #5C9A45; --f-kids: #9085E9; --f-rest: #7A858F;
+  --shadow: 0 8px 28px rgba(0, 0, 0, .55); color-scheme: dark;
 } }
 :root[data-theme="dark"] {
   --ground: #161A1E; --surface: #1F252B; --ink: #E7ECEA; --ink-2: #AEB8C0; --ink-3: #9AA5AE;
   --rule: #353D44; --accent: #8CC9A2; --accent-soft: #22382C; --bar-line: #7A858F; --bar-us: #8C97A2; --track: #2C343B;
   --f-home: #4C8BD6; --f-around: #DE6A35; --f-food: #2AAA85; --f-util: #B98312;
-  --f-fun: #CB668F; --f-health: #5C9A45; --f-kids: #9085E9; --f-rest: #7A858F; color-scheme: dark;
+  --f-fun: #CB668F; --f-health: #5C9A45; --f-kids: #9085E9; --f-rest: #7A858F;
+  --shadow: 0 8px 28px rgba(0, 0, 0, .55); color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.5; }
@@ -36,6 +39,7 @@ p { margin: 0; }
 .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; background: var(--surface); }
 .seg button { font: inherit; font-size: 14px; border: 0; background: transparent; color: var(--ink-2); padding: 7px 12px; cursor: pointer; }
 .seg button + button { border-left: 1px solid var(--rule); }
+.seg button:hover:not([aria-pressed="true"]) { background: var(--accent-soft); color: var(--ink); }
 .seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); font-weight: 600; }
 .note { font-size: 14px; color: var(--ink-2); flex-basis: 100%; }
 :is(button, input):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -45,12 +49,13 @@ p { margin: 0; }
 .answer { font-size: 24px; font-weight: 800; line-height: 1.2; }
 .compare { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 12px; align-items: center; font-size: 14px; }
 .ctrack { height: 9px; position: relative; }
-.cbar { position: absolute; left: 0; top: 0; height: 9px; border-radius: 0 3px 3px 0; transition: width .35s cubic-bezier(.2,.7,.2,1); }
+.cbar { position: absolute; left: 0; top: 0; height: 9px; border-radius: 0 3px 3px 0; transition: width .35s cubic-bezier(.2,.7,.2,1), height .12s ease, top .12s ease; }
 .cbar.you { background: var(--accent); } .cbar.us { background: var(--bar-us); }
-.mixbar { display: flex; height: 14px; border-radius: 3px; overflow: hidden; gap: 2px; }
-.mixbar span { background: var(--c); transition: flex-grow .35s cubic-bezier(.2,.7,.2,1); min-width: 2px; }
+.mixbar { display: flex; height: 14px; gap: 2px; }
+.mixbar span { background: var(--c); transition: flex-grow .35s cubic-bezier(.2,.7,.2,1), opacity .15s ease, transform .15s ease; min-width: 2px; }
+.mixbar span:first-child { border-radius: 3px 0 0 3px; } .mixbar span:last-child { border-radius: 0 3px 3px 0; }
 .mixlegend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; color: var(--ink-2); }
-.mixlegend span { display: inline-flex; align-items: center; gap: 5px; }
+.mixlegend .lg { font: inherit; color: inherit; background: none; border: 0; padding: 0; display: inline-flex; align-items: center; gap: 5px; cursor: default; transition: opacity .15s ease; }
 .mixlegend i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
 
 section { border-top: 1px solid var(--rule); padding-top: 22px; margin-top: 28px; display: grid; gap: 14px; }
@@ -59,16 +64,18 @@ section { border-top: 1px solid var(--rule); padding-top: 22px; margin-top: 28px
 .q legend { font-weight: 600; padding: 0; margin-bottom: 6px; }
 fieldset { border: 0; padding: 0; margin: 0; }
 .opts { display: flex; flex-wrap: wrap; gap: 6px; }
-.opt { font: inherit; font-size: 15px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 7px 12px; cursor: pointer; }
+.opt { font: inherit; font-size: 15px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 7px 12px; cursor: pointer; transition: border-color .12s ease, background .12s ease; }
+.opt:hover:not([aria-pressed="true"]) { border-color: var(--ink-3); background: var(--accent-soft); }
 .opt[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
 .presets { display: flex; flex-wrap: wrap; gap: 6px; }
 .preset { font: inherit; font-size: 14px; border: 1px dashed var(--rule); background: transparent; color: var(--ink); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
-.preset:hover { border-style: solid; border-color: var(--accent); }
+.preset:hover { border-style: solid; border-color: var(--accent); background: var(--accent-soft); }
 
 /* Amount rows */
 .group { display: grid; gap: 2px; }
-.ghead { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--ink-2); padding: 10px 0 2px; }
+.ghead { display: flex; align-items: center; gap: 8px; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink-2); padding: 10px 0 2px; background: none; border: 0; width: 100%; text-align: left; cursor: default; }
 .ghead i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.gtotal, .chev { display: none; }
 .amt { display: grid; grid-template-columns: minmax(0, 1fr) 96px; grid-template-areas: "label box" "slider slider" "meta meta"; gap: 4px 12px; padding: 8px 0; border-top: 1px solid var(--rule); align-items: center; }
 .amt label { grid-area: label; font-weight: 500; display: flex; gap: 8px; align-items: center; }
 .amt label i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; }
@@ -78,21 +85,23 @@ fieldset { border: 0; padding: 0; margin: 0; }
 .amt .box input:focus { outline: none; } .amt .box:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
 .amt .meta { grid-area: meta; font-size: 13px; color: var(--ink-2); display: flex; justify-content: space-between; gap: 12px; }
 .amt .meta b { color: var(--ink); font-weight: 600; }
-.amt input[type=range] { grid-area: slider; width: 100%; margin: 0; height: 22px; background: transparent; -webkit-appearance: none; appearance: none; --p: 50%; }
+.amt input[type=range] { grid-area: slider; width: 100%; margin: 0; height: 22px; background: transparent; -webkit-appearance: none; appearance: none; --p: 50%; cursor: pointer; }
 .amt input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(to right, var(--c) var(--p), var(--track) var(--p)); }
 .amt input[type=range]::-moz-range-track { height: 6px; border-radius: 3px; background: var(--track); }
 .amt input[type=range]::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--c); }
 .amt input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); border: 3px solid var(--c); margin-top: -7px; transition: transform .12s ease; }
-.amt input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 3px solid var(--c); }
-.amt input[type=range]:active::-webkit-slider-thumb { transform: scale(1.18); }
-.amt.bump .meta b { animation: bump .35s ease; }
+.amt input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 3px solid var(--c); transition: transform .12s ease; }
+.amt input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.12); }
+.amt input[type=range]:hover::-moz-range-thumb { transform: scale(1.12); }
+.amt input[type=range]:active::-webkit-slider-thumb { transform: scale(1.22); }
+.amt.bump .meta b, .amt.bump .lextra { animation: bump .35s ease; }
 @keyframes bump { 40% { color: var(--c); } }
 
 /* A: today's number boxes only */
 [data-v="a"] .amt input[type=range], [data-v="a"] .amt label i, [data-v="a"] .ghead, [data-v="a"] .mixwrap, [data-v="a"] .presetwrap { display: none; }
 [data-v="a"] .amt { grid-template-areas: "label box" "meta meta"; }
 /* C: tinted family groups, thicker tracks */
-[data-v="c"] .group { background: color-mix(in srgb, var(--c) 6%, transparent); border-radius: 8px; padding: 2px 12px 6px; margin-top: 8px; }
+[data-v="c"] .group { background: color-mix(in srgb, var(--c) 6%, transparent); border-radius: 8px; padding: 2px 12px 6px; margin-top: 8px; transition: background .15s ease, box-shadow .15s ease; }
 [data-v="c"] .amt input[type=range]::-webkit-slider-runnable-track { height: 10px; border-radius: 5px; }
 [data-v="c"] .amt input[type=range]::-webkit-slider-thumb { margin-top: -5px; }
 [data-v="c"] .mixbar { height: 22px; }
@@ -105,12 +114,13 @@ fieldset { border: 0; padding: 0; margin: 0; }
 [data-v="c"] .live .mixwrap { grid-column: 2; grid-row: 1 / span 2; }
 [data-v="c"] #amounts { columns: 2 380px; column-gap: 16px; }
 [data-v="c"] .group { break-inside: avoid; margin: 0 0 12px; }
-[data-v="c"] .amt { grid-template-columns: minmax(0, 1fr) auto 84px; grid-template-areas: "label extra box" "slider slider slider"; gap: 0 10px; padding: 6px 0 2px; }
+[data-v="c"] .amt { grid-template-columns: minmax(0, 1fr) auto 84px; grid-template-areas: "label extra box" "slider slider slider"; gap: 0 10px; padding: 6px 6px 2px; margin-inline: -6px; border-radius: 6px; transition: background .12s ease; }
 [data-v="c"] .amt .meta { display: none; }
 [data-v="c"] .lrate { display: inline; font-size: 13px; font-weight: 400; color: var(--ink-2); }
 [data-v="c"] .lextra { display: block; grid-area: extra; font-size: 13px; font-weight: 600; text-align: right; white-space: nowrap; }
 [data-v="c"] .amt .box input { padding: 3px 4px; }
 [data-v="c"] .amt input[type=range] { height: 18px; }
+[data-v="c"] .gtotal { display: inline; margin-left: auto; color: var(--ink); font-variant-numeric: tabular-nums; }
 [data-v="c"] #questions { grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 10px 24px !important; }
 [data-v="c"] .q { grid-template-columns: 130px minmax(0, 1fr); align-items: center; display: grid; }
 [data-v="c"] .q legend { float: left; margin: 0; font-size: 15px; }
@@ -119,9 +129,44 @@ fieldset { border: 0; padding: 0; margin: 0; }
 [data-v="c"] .qwrap.folded .qsummary { display: flex; }
 .qsummary { flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 15px; }
 .qsummary .change { font: inherit; font-size: 14px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 5px 12px; cursor: pointer; }
+.qsummary .change:hover { border-color: var(--accent); background: var(--accent-soft); }
 [data-v="c"] section { margin-top: 20px; padding-top: 16px; }
+
+/* C: hover. A row lights up in its color; its card and its slice of the mix bar light up together. */
+[data-v="c"] .amt:hover, [data-v="c"] .amt:focus-within { background: color-mix(in srgb, var(--c) 13%, transparent); }
+[data-v="c"] .group.hl { background: color-mix(in srgb, var(--c) 11%, transparent); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 55%, transparent); }
+[data-v="c"] .mixbar span, [data-v="c"] .mixlegend .lg { cursor: pointer; }
+[data-v="c"] .mixbar.dim span:not(.hl) { opacity: .3; }
+[data-v="c"] .mixbar span.hl { transform: scaleY(1.3); }
+[data-v="c"] .mixlegend.dim .lg:not(.hl) { opacity: .45; }
+[data-v="c"] .mixlegend .lg.hl { color: var(--ink); font-weight: 600; }
+[data-v="c"] [data-cmp] { cursor: default; }
+[data-v="c"] .ctrack.hl .cbar { height: 13px; top: -2px; }
+
+/* The hover card: one shared element, placed above (or below) whatever is pointed at. */
+.hc { position: fixed; left: 0; top: 0; z-index: 50; width: max-content; max-width: min(300px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: 8px; box-shadow: var(--shadow); padding: 10px 12px; font-size: 14px; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity .12s ease, transform .12s ease; }
+.hc.on { opacity: 1; transform: none; }
+.hc h4 { margin: 0 0 6px; font-size: 15px; font-weight: 600; display: flex; gap: 7px; align-items: center; }
+.hc h4 i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; }
+.hc dl { display: grid; grid-template-columns: auto auto; gap: 2px 16px; margin: 0; }
+.hc dt { color: var(--ink-2); }
+.hc dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.hc p { margin-top: 8px; color: var(--ink-2); font-size: 13px; }
+
+/* Phones, Bolder: each card folds to its name and yearly total; tap to open its sliders. */
+@media (max-width: 560px) {
+  [data-v="c"] .group:not(.open) .amt { display: none; }
+  [data-v="c"] button.ghead { cursor: pointer; font-size: 15px; color: var(--ink); padding: 12px 0; }
+  [data-v="c"] .chev { display: inline-block; color: var(--ink-2); transition: transform .15s ease; }
+  [data-v="c"] .group.open .chev { transform: rotate(180deg); }
+}
 @media (max-width: 560px) { [data-v="c"] .live { grid-template-columns: 1fr; } [data-v="c"] .live .mixwrap { grid-column: 1; grid-row: auto; } [data-v="c"] .q { grid-template-columns: 1fr; } }
-@media (prefers-reduced-motion: reduce) { .cbar, .mixbar span { transition: none; } .amt.bump .meta b { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .cbar, .mixbar span, .hc, .group, .amt, .chev, .lg, .amt input[type=range]::-webkit-slider-thumb { transition: none !important; }
+  .amt.bump .meta b, .amt.bump .lextra { animation: none; }
+  [data-v="c"] .mixbar span.hl { transform: none; }
+  .hc { transform: none; }
+}
 .callout { background: var(--accent-soft); border-radius: 6px; padding: 12px 14px; font-size: 15px; }
 .flag { font-size: 13px; color: var(--ink-2); }
 @media (max-width: 480px) { h1 { font-size: 26px; } .answer { font-size: 21px; } .amt { grid-template-columns: minmax(0, 1fr) 86px; } }
@@ -131,22 +176,22 @@ fieldset { border: 0; padding: 0; margin: 0; }
   <div class="inner">
     <div class="seg" role="group" aria-label="Treatment">
       <button type="button" data-pick="a" aria-pressed="false">Today's redesign</button>
-      <button type="button" data-pick="b" aria-pressed="true">In between</button>
-      <button type="button" data-pick="c" aria-pressed="false">Bolder</button>
+      <button type="button" data-pick="b" aria-pressed="false">In between</button>
+      <button type="button" data-pick="c" aria-pressed="true">Bolder</button>
     </div>
     <p class="note" id="vnote"></p>
   </div>
 </div>
 
-<main class="wrap" id="app" data-v="b">
+<main class="wrap" id="app" data-v="c">
   <h1>How much more are you paying than a year ago?</h1>
   <p class="muted" style="margin-top:8px">Answer four questions, then drag or type your monthly amounts. Everything updates as you go. Rates are August 2026.</p>
 
   <div class="live" aria-live="polite">
     <p class="answer num" id="answer"></p>
-    <div class="compare num">
-      <span>Your costs</span><div class="ctrack"><div class="cbar you" id="cyou"></div></div><span id="cyouv"></span>
-      <span id="uslabel">National</span><div class="ctrack"><div class="cbar us" id="cus"></div></div><span id="cusv"></span>
+    <div class="compare num" id="compare">
+      <span data-cmp="you">Your costs</span><div class="ctrack" data-cmp="you"><div class="cbar you" id="cyou"></div></div><span id="cyouv" data-cmp="you"></span>
+      <span id="uslabel" data-cmp="us">National</span><div class="ctrack" data-cmp="us"><div class="cbar us" id="cus"></div></div><span id="cusv" data-cmp="us"></span>
     </div>
     <div class="mixwrap" style="display:grid;gap:6px">
       <div class="mixbar" id="mixbar" aria-hidden="true"></div>
@@ -177,6 +222,7 @@ fieldset { border: 0; padding: 0; margin: 0; }
     <div class="callout" id="explain"></div>
   </section>
 </main>
+<div class="hc" id="hc" role="tooltip" hidden></div>
 
 <script>
 const FAM = {
@@ -194,6 +240,29 @@ const L = {
   daycare: ["Daycare", "kids", 1100, 3.99], tuition: ["College tuition", "kids", 900, 2.82],
   clothing: ["Clothing", "fun", 80, 3.61], fun: ["Entertainment", "fun", 150, 2.68], rest: ["Everything else", "rest", 250, 2.01],
 };
+// One plain line per amount for its hover card: what the price change covers.
+const ABOUT = {
+  rent: "Rent for the place you live, from the government's rent index.",
+  mortgage: "A fixed-rate payment stays the same, so it adds nothing this year.",
+  upkeep: "Repairs, tools and supplies for keeping up a home.",
+  gasoline: "Gas at the pump, all grades.",
+  charging: "Uses the electricity rate, since that is what charging costs.",
+  carIns: "What people pay for car insurance.",
+  carUpkeep: "Repairs and upkeep at the shop.",
+  transit: "Bus, subway and train fares within a city.",
+  groceries: "Food bought at the store to eat at home.",
+  dining: "Restaurants, takeout and fast food.",
+  electric: "Home electric bills.",
+  heatGas: "Natural gas piped to the home.",
+  heatOil: "Fuel oil and other home heating fuels.",
+  health: "Uses the increase on your renewal notice. This mockup assumes 6%.",
+  doctor: "Doctor visits, hospital care and prescriptions.",
+  daycare: "Daycare and preschool.",
+  tuition: "College tuition and fees.",
+  clothing: "Clothes and shoes.",
+  fun: "Streaming, sports, hobbies, pets and other fun.",
+  rest: "Everything not listed above, at the rate for the rest of the basket.",
+};
 const Q = [
   ["home", "Your home", [["rent", "Rent"], ["mortgage", "Mortgage, fixed rate"], ["owned", "Own it outright"]]],
   ["car", "Getting around", [["gas", "Gas car"], ["hybrid", "Hybrid"], ["electric", "Electric car"], ["none", "No car"]]],
@@ -209,15 +278,18 @@ const PRESETS = {
 const NOTES = {
   a: "What the branch has now: the four questions and a plain list of number boxes. The result updates, but nothing moves or carries color.",
   b: "My recommendation. Each amount gets a slider in its kind-of-spending color plus a box for exact dollars. The result stays pinned at the top while you scroll, and a spending mix bar shows where your money goes by color, sliding as you drag. Each row says what that line adds this year. Quick-start households fill everything in one tap.",
-  c: "Bolder and compact. On wide screens the result and the spending mix sit side by side, and the kinds of spending fill two columns of tinted cards. Each amount is one tight row: name, price change, what it adds a year, the box, and a slider. Pick a quick start and the four questions fold into one line you can reopen.",
+  c: "Bolder and compact. On wide screens the result and the spending mix sit side by side, and the kinds of spending fill two columns of tinted cards. Point at any amount, card heading, slice of the spending mix, or the Your costs and National bars to see a detail card. Its card and its slice light up together, and the detail card updates while you drag. On phones each card folds to its name and yearly total; tap to open it.",
 };
-const state = { a: { home: "rent", car: "gas", heat: "gas", health: "work" }, kids: [], amt: {} };
-const $ = (s) => document.querySelector(s), app = $("#app");
+const state = { a: { home: "rent", car: "gas", heat: "gas", health: "work" }, kids: [], amt: {}, open: new Set() };
+const $ = (s) => document.querySelector(s), app = $("#app"), hc = $("#hc");
 const MINUS = "−";
 const pct = (n) => (n > 0 ? "+" : n < 0 ? MINUS : "") + Math.abs(n).toFixed(1) + "%";
 const money = (n) => (n < 0 ? MINUS : "") + "$" + Math.round(Math.abs(n)).toLocaleString("en-US");
+const signed = (n) => { const r = Math.round(n / 10) * 10; return r === 0 ? "$0" : (r > 0 ? "+" : MINUS) + money(Math.abs(r)); };
 const r10 = (n) => Math.round(n / 10) * 10;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const narrow = matchMedia("(max-width: 560px)");
+const bolder = () => app.dataset.v === "c";
 
 function activeLines() {
   const a = state.a, ids = [];
@@ -244,12 +316,15 @@ function tween(el, to, fmt) {
   requestAnimationFrame(step);
 }
 
+// The latest computed numbers, kept so hover cards can read them and refresh while a slider moves.
+let last = { per: {}, fam: {}, sum: 1, rate: 0, us: 3.4, owner: false };
+
 function compute() {
   const ids = activeLines();
   let annual = 0, ago = 0;
   const per = ids.map((id) => {
     const m = amountOf(id), yr = m * 12, ya = yr / (1 + L[id][3] / 100);
-    annual += yr; ago += ya; return { id, m, extra: yr - ya };
+    annual += yr; ago += ya; return { id, m, yr, ya, extra: yr - ya };
   });
   const rate = (annual / ago - 1) * 100, total = r10(per.reduce((s, p) => s + p.extra, 0));
   const owner = state.a.home !== "rent", us = owner ? 3.59 : 3.4;
@@ -261,25 +336,109 @@ function compute() {
   $("#cyouv").textContent = pct(rate); $("#cusv").textContent = pct(us);
   $("#uslabel").textContent = owner ? "Outside housing" : "National";
   // Spending mix by kind of spending
-  const byFam = {};
-  per.forEach((p) => { const f = L[p.id][1]; byFam[f] = (byFam[f] || 0) + p.m; });
-  const sum = Object.values(byFam).reduce((s, v) => s + v, 0);
-  const famOrder = Object.keys(FAM).filter((f) => byFam[f]);
-  const bar = $("#mixbar");
+  const fam = {};
+  per.forEach((p) => {
+    const o = (fam[L[p.id][1]] ||= { m: 0, yr: 0, ya: 0, extra: 0, top: null });
+    o.m += p.m; o.yr += p.yr; o.ya += p.ya; o.extra += p.extra;
+    if (!o.top || Math.abs(p.extra) > Math.abs(o.top.extra)) o.top = p;
+  });
+  const sum = Object.values(fam).reduce((s, o) => s + o.m, 0) || 1;
+  const famOrder = Object.keys(FAM).filter((f) => fam[f]);
+  const bar = $("#mixbar"), legend = $("#mixlegend");
+  // Rebuild the bar and legend only when the set of kinds changes, so a focused legend button keeps focus while sliders move.
   if (bar.dataset.keys !== famOrder.join()) {
     bar.dataset.keys = famOrder.join();
     bar.innerHTML = famOrder.map((f) => `<span data-f="${f}" style="--c:var(${FAM[f][1]})"></span>`).join("");
+    legend.innerHTML = famOrder.map((f) => `<button type="button" class="lg" data-f="${f}" style="--c:var(${FAM[f][1]})"><i></i>${FAM[f][0]} <span id="lp-${f}"></span></button>`).join("");
   }
-  famOrder.forEach((f) => { bar.querySelector(`[data-f="${f}"]`).style.flexGrow = byFam[f]; });
-  $("#mixlegend").innerHTML = famOrder.map((f) => `<span style="--c:var(${FAM[f][1]})"><i></i>${FAM[f][0]} ${Math.round(byFam[f] / sum * 100)}%</span>`).join("");
+  famOrder.forEach((f) => {
+    bar.querySelector(`[data-f="${f}"]`).style.flexGrow = fam[f].m;
+    $(`#lp-${f}`).textContent = Math.round(fam[f].m / sum * 100) + "%";
+    const gt = document.querySelector(`#gt-${f}`); if (gt) gt.textContent = signed(fam[f].extra) + "/yr";
+  });
+  last = { per: Object.fromEntries(per.map((p) => [p.id, p])), fam, sum, rate, us, owner };
   per.forEach((p) => { const meta = document.querySelector(`#meta-${p.id}`); if (meta) meta.innerHTML = metaText(p);
-    const x = document.querySelector(`#x-${p.id}`); if (x) { const e = r10(p.extra); x.textContent = e === 0 ? "$0" : `${e > 0 ? "+" : MINUS}${money(Math.abs(e))}/yr`; } });
+    const x = document.querySelector(`#x-${p.id}`); if (x) x.textContent = signed(p.extra) + (r10(p.extra) === 0 ? "" : "/yr"); });
   updateSummary();
+  if (hcRender) hcRender();
 }
 const metaText = (p) => {
   const r = L[p.id][3], e = r10(p.extra);
   return `<span>Prices ${r === 0 ? "stayed the same" : `${r > 0 ? "rose" : "fell"} ${Math.abs(r).toFixed(1)}%`}</span><span>${e === 0 ? "No change this year" : `<b>${e > 0 ? "+" : MINUS}${money(Math.abs(e))}</b> a year`}</span>`;
 };
+
+/* ---------- Hover cards (Bolder only) ---------- */
+let hcRender = null, hcPinned = false;
+function showCard(target, render, color) {
+  if (!bolder()) return;
+  hcRender = () => {
+    hc.innerHTML = render(); hc.style.setProperty("--c", color); hc.hidden = false;
+    const r = target.getBoundingClientRect(), w = hc.offsetWidth, h = hc.offsetHeight;
+    const x = Math.min(Math.max(16, r.left + r.width / 2 - w / 2), innerWidth - w - 16);
+    let y = r.top - h - 8; if (y < 12) y = r.bottom + 8;
+    hc.style.left = x + "px"; hc.style.top = y + "px";
+    requestAnimationFrame(() => hc.classList.add("on"));
+  };
+  hcRender();
+}
+function hideCard() { hcRender = null; hcPinned = false; hc.classList.remove("on"); hc.hidden = true; }
+function hlFam(f) {
+  document.querySelectorAll(".hl").forEach((e) => e.classList.remove("hl"));
+  $("#mixbar").classList.toggle("dim", !!f); $("#mixlegend").classList.toggle("dim", !!f);
+  if (f) document.querySelectorAll(`.group[data-f="${f}"], #mixbar [data-f="${f}"], #mixlegend [data-f="${f}"]`).forEach((e) => e.classList.add("hl"));
+}
+const head = (name) => `<h4><i></i>${name}</h4>`;
+const rowCard = (id) => () => {
+  const p = last.per[id]; if (!p) return "";
+  return head(L[id][0]) + `<dl>
+    <dt>Price change since Aug 2025</dt><dd>${pct(L[id][3])}</dd>
+    <dt>You pay now</dt><dd>${money(p.m)}/mo · ${money(p.yr)}/yr</dd>
+    <dt>Same things a year ago</dt><dd>${money(r10(p.ya))}/yr</dd>
+    <dt>Adds this year</dt><dd>${signed(p.extra)}</dd></dl><p>${ABOUT[id]}</p>`;
+};
+const famCard = (f) => () => {
+  const o = last.fam[f]; if (!o) return "";
+  const top = o.top && Object.values(last.per).filter((p) => L[p.id][1] === f).length > 1
+    ? `<p>Biggest mover: ${L[o.top.id][0]}, ${signed(o.top.extra)}/yr.</p>` : "";
+  return head(FAM[f][0]) + `<dl>
+    <dt>Share of your spending</dt><dd>${Math.round(o.m / last.sum * 100)}%</dd>
+    <dt>You pay now</dt><dd>${money(o.m)}/mo</dd>
+    <dt>Prices overall</dt><dd>${pct((o.yr / o.ya - 1) * 100)}</dd>
+    <dt>Adds this year</dt><dd>${signed(o.extra)}</dd></dl>${top}`;
+};
+const cmpCard = (which) => () => which === "you"
+  ? head("Your costs") + `<dl><dt>Price change for your mix</dt><dd>${pct(last.rate)}</dd></dl><p>Each amount's price change, weighted by what you spend on it. Bigger amounts count for more.</p>`
+  : last.owner
+    ? head("Outside housing") + `<dl><dt>Prices other than housing</dt><dd>${pct(last.us)}</dd></dl><p>Homeowners are compared with prices for everything except housing, since the national rate is driven by rents you don't pay.</p>`
+    : head("National") + `<dl><dt>All prices, Aug 2025 to Aug 2026</dt><dd>${pct(last.us)}</dd></dl><p>The government's headline inflation rate for city households.</p>`;
+const famColor = (f) => `var(${FAM[f][1]})`;
+const isMouse = (e) => e.pointerType === "mouse" || e.pointerType === "pen";
+
+// Mix bar: point at a slice (mouse) or tap it (touch).
+const bar = $("#mixbar");
+bar.addEventListener("pointerover", (e) => { const s = e.target.closest("[data-f]"); if (!s || !isMouse(e) || !bolder()) return; hlFam(s.dataset.f); showCard(s, famCard(s.dataset.f), famColor(s.dataset.f)); });
+bar.addEventListener("pointerleave", (e) => { if (!isMouse(e)) return; hlFam(null); hideCard(); });
+bar.addEventListener("click", (e) => { const s = e.target.closest("[data-f]"); if (!s || !bolder()) return; e.stopPropagation(); hlFam(s.dataset.f); showCard(s, famCard(s.dataset.f), famColor(s.dataset.f)); hcPinned = true; });
+// Legend: same card, also reachable by keyboard.
+const legend = $("#mixlegend");
+const legendOn = (e) => { const b = e.target.closest(".lg"); if (!b || !bolder()) return; hlFam(b.dataset.f); showCard(b, famCard(b.dataset.f), famColor(b.dataset.f)); };
+legend.addEventListener("pointerover", (e) => { if (isMouse(e)) legendOn(e); });
+legend.addEventListener("focusin", legendOn);
+legend.addEventListener("click", (e) => { e.stopPropagation(); legendOn(e); hcPinned = true; });
+legend.addEventListener("pointerleave", (e) => { if (!isMouse(e) || legend.contains(document.activeElement)) return; hlFam(null); hideCard(); });
+legend.addEventListener("focusout", (e) => { if (!legend.contains(e.relatedTarget)) { hlFam(null); hideCard(); } });
+// Your costs / National bars.
+const cmp = $("#compare");
+cmp.addEventListener("pointerover", (e) => {
+  const t = e.target.closest("[data-cmp]"); if (!t || !isMouse(e) || !bolder()) return;
+  const which = t.dataset.cmp; document.querySelectorAll(".ctrack.hl").forEach((x) => x.classList.remove("hl"));
+  cmp.querySelector(`.ctrack[data-cmp="${which}"]`).classList.add("hl");
+  showCard(cmp.querySelector(`.ctrack[data-cmp="${which}"]`), cmpCard(which), which === "you" ? "var(--accent)" : "var(--bar-us)");
+});
+cmp.addEventListener("pointerleave", () => { document.querySelectorAll(".ctrack.hl").forEach((x) => x.classList.remove("hl")); hideCard(); });
+document.addEventListener("click", () => { if (hcPinned) { hlFam(null); hideCard(); } });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { hlFam(null); hideCard(); } });
+addEventListener("scroll", () => { if (hcRender && !hcPinned) hideCard(); else if (hcRender) hcRender(); }, { passive: true });
 
 function buildQuestions() {
   const box = $("#questions"); box.innerHTML = "";
@@ -297,14 +456,34 @@ function buildQuestions() {
   }));
 }
 
+function syncHeads() {
+  // The fold-up only exists on phones in Bolder; elsewhere the heading is just a label.
+  const folds = narrow.matches && bolder();
+  document.querySelectorAll("button.ghead").forEach((b) => {
+    if (folds) b.setAttribute("aria-expanded", String(state.open.has(b.dataset.g))); else b.removeAttribute("aria-expanded");
+  });
+}
+narrow.addEventListener("change", syncHeads);
+
 function buildAmounts() {
+  hideCard(); hlFam(null);
   const box = $("#amounts"); box.innerHTML = "";
   const ids = activeLines(), groups = {};
   ids.forEach((id) => (groups[L[id][1]] ||= []).push(id));
   for (const f of Object.keys(FAM)) {
     if (!groups[f]) continue;
-    const g = document.createElement("div"); g.className = "group"; g.style.setProperty("--c", `var(${FAM[f][1]})`);
-    g.innerHTML = `<div class="ghead"><i aria-hidden="true"></i>${FAM[f][0]}</div>`;
+    const g = document.createElement("div"); g.className = "group" + (state.open.has(f) ? " open" : ""); g.dataset.f = f; g.style.setProperty("--c", `var(${FAM[f][1]})`);
+    g.innerHTML = `<button type="button" class="ghead" data-g="${f}" aria-controls="grp-${f}"><i aria-hidden="true"></i>${FAM[f][0]}<span class="gtotal num" id="gt-${f}"></span><span class="chev" aria-hidden="true">▾</span></button><div id="grp-${f}" style="display:contents"></div>`;
+    const inner = g.querySelector(`#grp-${f}`), gh = g.querySelector(".ghead");
+    gh.addEventListener("click", () => {
+      if (!(narrow.matches && bolder())) return;
+      state.open.has(f) ? state.open.delete(f) : state.open.add(f);
+      g.classList.toggle("open", state.open.has(f)); syncHeads();
+    });
+    gh.addEventListener("pointerenter", (e) => { if (isMouse(e)) showCard(gh, famCard(f), famColor(f)); });
+    gh.addEventListener("pointerleave", (e) => { if (isMouse(e)) hideCard(); });
+    g.addEventListener("pointerenter", (e) => { if (isMouse(e) && bolder()) hlFam(f); });
+    g.addEventListener("pointerleave", (e) => { if (isMouse(e)) hlFam(null); });
     for (const id of groups[f]) {
       const m = amountOf(id), max = Math.max(500, Math.ceil(L[id][2] * 3 / 100) * 100);
       const row = document.createElement("div"); row.className = "amt"; row.style.setProperty("--c", `var(${FAM[f][1]})`);
@@ -324,10 +503,18 @@ function buildAmounts() {
       };
       rng.addEventListener("input", () => set(rng.value, "rng"));
       num.addEventListener("input", () => set(num.value.replace(/[^0-9]/g, ""), "num"));
-      g.append(row);
+      // Row hover card: mouse only (on touch a finger is busy with the slider); keyboard gets it on focus.
+      row.addEventListener("pointerenter", (e) => { if (isMouse(e)) showCard(row, rowCard(id), famColor(f)); });
+      row.addEventListener("pointerleave", (e) => { if (isMouse(e) && !row.contains(document.activeElement)) hideCard(); });
+      // Scrolling hides the card; the next small mouse move brings it back.
+      row.addEventListener("pointermove", (e) => { if (isMouse(e) && !hcRender) showCard(row, rowCard(id), famColor(f)); });
+      row.addEventListener("focusin", () => { if (!narrow.matches) showCard(row, rowCard(id), famColor(f)); });
+      row.addEventListener("focusout", (e) => { if (!row.contains(e.relatedTarget)) hideCard(); });
+      inner.append(row);
     }
     box.append(g);
   }
+  syncHeads();
 }
 
 function buildPresets() {
@@ -343,17 +530,18 @@ function updateSummary() {
   const label = (qid) => Q.find((q) => q[0] === qid)[2].find((o) => o[0] === state.a[qid])[1];
   const parts = [label("home"), label("car"), "Heat: " + label("heat").toLowerCase(), "Health insurance: " + label("health").toLowerCase()];
   if (state.kids.length) parts.push(state.kids.map((k) => L[k][0]).join(" and "));
-  $("#qsumtext").textContent = parts.join(" \u00b7 ");
+  $("#qsumtext").textContent = parts.join(" · ");
 }
 $("#qchange").addEventListener("click", () => { $("#qwrap").classList.remove("folded"); $("#questions button")?.focus(); });
 function renderAll() { buildQuestions(); buildAmounts(); compute(); }
 function setV(v) {
-  app.dataset.v = v;
+  app.dataset.v = v; hideCard(); hlFam(null);
   document.querySelectorAll("[data-pick]").forEach((o) => o.setAttribute("aria-pressed", String(o.dataset.pick === v)));
   $("#vnote").textContent = NOTES[v]; $("#explain").textContent = NOTES[v];
+  syncHeads();
   try { localStorage.setItem("ir-mix-v", v); } catch {}
 }
 document.querySelectorAll("[data-pick]").forEach((b) => b.addEventListener("click", () => { setV(b.dataset.pick); shown = null; compute(); }));
-let start = "b"; try { const s = localStorage.getItem("ir-mix-v"); if (s && /^[abc]$/.test(s)) start = s; } catch {}
+let start = "c"; try { const s = localStorage.getItem("ir-mix-v"); if (s && /^[abc]$/.test(s)) start = s; } catch {}
 setV(start); buildPresets(); renderAll();
 </script>
