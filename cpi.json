@@ -1,133 +1,133 @@
 {
-  "generatedAt": "2026-10-13T20:05:33.922Z",
-  "referenceMonth": "2026-08",
-  "referenceMonthLabel": "August 2026",
+  "generatedAt": "2026-10-16T17:44:07.314Z",
+  "referenceMonth": "2026-09",
+  "referenceMonthLabel": "September 2026",
   "headline": {
-    "yoy": 3.4,
-    "mom": 0.4,
-    "momAnnualized": 4.9
+    "yoy": 3.7,
+    "mom": 0.6,
+    "momAnnualized": 8.1
   },
   "core": {
-    "yoy": 2.4,
+    "yoy": 2.6,
     "mom": 0.3,
-    "momAnnualized": 3.5
+    "momAnnualized": 4.1
   },
   "categories": {
     "groceries": {
-      "yoy": 2.2
+      "yoy": 1.8
     },
     "dining": {
-      "yoy": 3.4
+      "yoy": 3.5
     },
     "shelter": {
-      "yoy": 3
+      "yoy": 3.2
     },
     "energy": {
-      "yoy": 5
+      "yoy": 6.2
     },
     "gas": {
-      "yoy": 27.4
+      "yoy": 34.2
     },
     "healthcare": {
-      "yoy": 1.6
+      "yoy": 1.5
     },
     "tuition": {
-      "yoy": 3.4
+      "yoy": 3.8
     },
     "apparel": {
-      "yoy": 3.6
+      "yoy": 3.4
     },
     "recreation": {
-      "yoy": 2.7
+      "yoy": 2.8
     },
     "other": {
-      "yoy": 3.1
+      "yoy": 3.2
     }
   },
   "avgPrices": {
     "APU0000708111": {
       "current": 2.272,
-      "yearAgo": 3.587
+      "yearAgo": 3.488
     },
     "APU0000703112": {
-      "current": 6.923,
-      "yearAgo": 6.318
+      "current": 6.792,
+      "yearAgo": 6.323
     },
     "APU0000706111": {
-      "current": 2.012,
-      "yearAgo": 2.076
+      "current": 2.064,
+      "yearAgo": 2.061
     },
     "APU0000704111": {
-      "current": 6.605,
-      "yearAgo": 7.208
+      "current": 6.756,
+      "yearAgo": 7.29
     },
     "APU0000709112": {
-      "current": 4.229,
-      "yearAgo": 4.171
+      "current": 4.106,
+      "yearAgo": 4.129
     },
     "APU0000FS1101": {
-      "current": 4.021,
-      "yearAgo": 4.828
+      "current": 3.959,
+      "yearAgo": 4.787
     },
     "APU0000710212": {
-      "current": 5.983,
-      "yearAgo": 6.123
+      "current": 6.133,
+      "yearAgo": 6.049
     },
     "APU0000702111": {
-      "current": 1.823,
-      "yearAgo": 1.841
+      "current": 1.83,
+      "yearAgo": 1.867
     },
     "APU0000701111": {
-      "current": 0.548,
-      "yearAgo": 0.557
+      "current": 0.545,
+      "yearAgo": 0.563
     },
     "APU0000701312": {
-      "current": 1.111,
-      "yearAgo": 1.059
+      "current": 1.118,
+      "yearAgo": 1.06
     },
     "APU0000715211": {
-      "current": 1.024,
-      "yearAgo": 1.04
+      "current": 1.019,
+      "yearAgo": 1.042
     },
     "APU0000711211": {
-      "current": 0.652,
-      "yearAgo": 0.666
+      "current": 0.656,
+      "yearAgo": 0.67
     },
     "APU0000712311": {
-      "current": 1.977,
-      "yearAgo": 1.925
+      "current": 1.992,
+      "yearAgo": 1.91
     },
     "APU0000712112": {
-      "current": 0.976,
-      "yearAgo": 1.001
+      "current": 0.989,
+      "yearAgo": 1.014
     },
     "APU0000717311": {
-      "current": 9.299,
-      "yearAgo": 8.872
+      "current": 9.332,
+      "yearAgo": 9.139
     },
     "APU0000FJ4101": {
-      "current": 1.584,
-      "yearAgo": 1.495
+      "current": 1.578,
+      "yearAgo": 1.533
     },
     "APU0000FN1101": {
-      "current": 2.228,
-      "yearAgo": 2.208
+      "current": 2.273,
+      "yearAgo": 2.234
     },
     "APU000074714": {
-      "current": 4.2,
-      "yearAgo": 3.295
+      "current": 4.482,
+      "yearAgo": 3.339
     },
     "APU000074717": {
-      "current": 5.547,
-      "yearAgo": 3.726
+      "current": 6.331,
+      "yearAgo": 3.73
     },
     "APU000072610": {
       "current": 0.196,
-      "yearAgo": 0.19
+      "yearAgo": 0.188
     },
     "APU000072620": {
-      "current": 1.714,
-      "yearAgo": 1.634
+      "current": 1.7,
+      "yearAgo": 1.613
     }
   },
   "altMeasures": {
@@ -138,10 +138,10 @@
       "yoy": 2.6
     },
     "trimmedCpi": {
-      "yoy": 2.6
+      "yoy": 2.7
     },
     "stickyCpi": {
-      "yoy": 2.7
+      "yoy": 2.8
     },
     "trimmedPce": {
       "yoy": 2.2
@@ -149,23 +149,19 @@
   },
   "weeklyPrices": {
     "gasoline": {
-      "current": 4.354,
-      "yearAgo": 3.124,
-      "asOf": "2026-10-05",
-      "asOfLabel": "Oct 5, 2026"
+      "current": 4.331,
+      "yearAgo": 3.061,
+      "asOf": "2026-10-12",
+      "asOfLabel": "Oct 12, 2026"
     },
     "diesel": {
-      "current": 6.199,
-      "yearAgo": 3.711,
-      "asOf": "2026-10-05",
-      "asOfLabel": "Oct 5, 2026"
+      "current": 6.179,
+      "yearAgo": 3.665,
+      "asOf": "2026-10-12",
+      "asOfLabel": "Oct 12, 2026"
     }
   },
   "trend": [
-    {
-      "month": "Sep 25",
-      "headline": 3
-    },
     {
       "month": "Oct 25",
       "headline": null,
@@ -210,85 +206,89 @@
     {
       "month": "Aug 26",
       "headline": 3.4
+    },
+    {
+      "month": "Sep 26",
+      "headline": 3.7
     }
   ],
   "lines": {
     "rent": {
-      "yoy": 2.749776
+      "yoy": 2.781759
     },
     "upkeep": {
-      "yoy": 1.981848
+      "yoy": 1.554963
     },
     "groceries": {
-      "yoy": 2.190663
+      "yoy": 1.80862
     },
     "dining": {
-      "yoy": 3.36677
+      "yoy": 3.458805
     },
     "gasoline": {
-      "yoy": 27.404926
+      "yoy": 34.169716
     },
     "carIns": {
-      "yoy": -5.127534
+      "yoy": -4.982857
     },
     "carUpkeep": {
-      "yoy": 5.237484
+      "yoy": 5.791669
     },
     "transit": {
-      "yoy": -3.69725
+      "yoy": -0.980476
     },
     "electric": {
-      "yoy": 3.788939
+      "yoy": 4.366981
     },
     "heatGas": {
-      "yoy": 4.385845
+      "yoy": 4.974417
     },
     "heatOil": {
-      "yoy": 52.039475
+      "yoy": 74.176447
     },
     "daycare": {
-      "yoy": 3.985052
+      "yoy": 3.132968
     },
     "tuition": {
-      "yoy": 2.815313
+      "yoy": 3.997223
     },
     "clothing": {
-      "yoy": 3.608634
+      "yoy": 3.410769
     },
     "fun": {
-      "yoy": 2.681868
+      "yoy": 2.839375
     },
     "exShelter": {
-      "yoy": 3.590982
+      "yoy": 4.019365
     },
     "doctor": {
-      "yoy": 0.194294
+      "yoy": -0.288599
     }
   },
   "basket": {
-    "month": "2026-08",
+    "month": "2026-09",
     "weights": {
-      "housing": 35.322438,
-      "groceries": 8.202357,
-      "dining": 5.30412,
-      "energy": 3.442446,
-      "gasoline": 3.85317,
-      "health": 8.229578,
-      "clothing": 2.445064,
-      "fun": 5.062939
+      "housing": 35.237743,
+      "groceries": 8.161187,
+      "dining": 5.285393,
+      "energy": 3.431948,
+      "gasoline": 4.080405,
+      "health": 8.190647,
+      "clothing": 2.48934,
+      "fun": 5.056647
     },
     "rates": {
-      "housing": 3.041144,
-      "groceries": 2.190663,
-      "dining": 3.36677,
-      "energy": 5.047394,
-      "gasoline": 27.404926,
-      "health": 1.563348,
-      "clothing": 3.608634,
-      "fun": 2.681868
+      "housing": 3.223618,
+      "groceries": 1.80862,
+      "dining": 3.458805,
+      "energy": 6.164437,
+      "gasoline": 34.169716,
+      "health": 1.503442,
+      "clothing": 3.410769,
+      "fun": 2.839375
     },
-    "restWeight": 28.137887,
-    "residualYoy": 2.014252,
-    "headlineYoy": 3.396548
+    "restWeight": 28.06669,
+    "residualYoy": 2.182183,
+    "headlineYoy": 3.737685
   }
 }
