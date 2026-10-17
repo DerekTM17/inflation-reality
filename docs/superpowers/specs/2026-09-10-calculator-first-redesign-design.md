@@ -1,8 +1,9 @@
 # Calculator-First Redesign — Design
 
-**Date:** 2026-09-10, revised 2026-09-14 (twice)
+**Date:** 2026-09-10, revised 2026-09-14 (twice), 2026-10-16
 **Project:** inflation-reality
-**Status:** Approved for planning. Revision 2 folds in the owner's picks (toned-down direction, no profiles); revision 3 folds in a second independent review (basket math, BLS parsing, negatives, fallback, verdict rule, audit details). Phase 1 plan: `docs/superpowers/plans/2026-09-14-calculator-phase1-pipeline.md`.
+**Status:** Revision 4 awaiting the owner's review. Revision 2 folds in the owner's picks (toned-down direction, no profiles); revision 3 folds in a second independent review (basket math, BLS parsing, negatives, fallback, verdict rule, audit details). **Revision 4 (2026-10-16)** follows the owner's 5-second test of Phase 2b ("too gray"): the Bolder look, quick-start households back, a compact layout, cards that fold on phones, and hover detail everywhere. See *Revision 4* below; where it conflicts with an earlier section, revision 4 wins. Phase 1 plan: `docs/superpowers/plans/2026-09-14-calculator-phase1-pipeline.md`.
+**Revision 4 mockups (approved):** spending mix https://claude.ai/artifact/K1bqKshUY117QCUU6Em7Ng, Your costs https://claude.ai/artifact/JVd3KnL8NVPBN4PFBMwfyP, National numbers https://claude.ai/artifact/9EDzFvkHYt6EyXfBuXL1n5; copies in `docs/superpowers/mockups/2026-10-02-color-study-*.html`. Use the **Bolder** treatment in each. The mockups take the look, layout and interactions from these; behavior (states, guesses, renewal inputs, rounding, saving) comes from this spec.
 **Mockup (approved):** https://claude.ai/code/artifact/a59d8dd0-a0af-4f74-bec8-08e2d2ba04ed, committed copy `docs/superpowers/mockups/2026-09-14-layout-c-plain.html`. Where the mockup and this spec differ, **this spec wins** (the mockup predates revision 3: negatives, verdict rule, heating option, insurance defaults). The receipt mockup `2026-09-10-layout-c.html` is superseded. Rates marked `*` in mockups are placeholders; none ship.
 
 ## Problem
@@ -21,18 +22,18 @@ Also accepted: compare U.S. inflation with other countries, as **a separate spec
 | Question | Decision |
 |---|---|
 | Audience | Regular people arriving from a shared link, **mostly on a phone** |
-| Spending input | **Monthly dollar amounts**, pre-filled from the person's answers; editable behind "Adjust monthly amounts". No percentage sliders |
-| Profiles | **Dropped** (2026-09-14): they duplicated the questions and pushed the result about two phone screens down |
+| Spending input | **Monthly dollar amounts**, pre-filled from the person's answers. No percentage sliders. **Rev 4:** always open (no "Adjust monthly amounts" disclosure), grouped into family cards, each amount a dollar box plus a dollar slider |
+| Profiles | **Rev 4: back as quick starts** (Young renter, Family with kids, Commuter, Retiree). Revision 2 dropped them because they pushed the result down; the compact layout fixes that. See *Quick starts* |
 | Questions | **Your home** (rent / mortgage, fixed rate / own it outright), **Getting around** (gas car / hybrid / electric car / no car), **Home heating** (electric / natural gas / heating oil / included in my rent), **Health insurance** (through work / I buy my own / I don't pay a premium). Plus **Also paying for** checkboxes: daycare, college tuition. Commuting is a hint on the gas amount, not a question |
 | Insurance rates | Health and home insurance use **the increase on the person's own renewal notice**. Health "through work" starts at the KFF 2025 average employer family premium increase (**6%**), labeled "Average for employer plans, change to yours". Health "I buy my own" and home insurance **start empty** (marketplace premiums moved very differently in 2026, and the BLS insurance index covers contents only, not the home). The CPI health insurance index is **never used as the person's health insurance rate** (it measures insurer retained earnings: +28.2% Sep 2022, −37.3% Sep 2023) |
-| Layout | Questions first, result right below on phones (sticky beside the questions on desktop), amounts collapsed after; a dock on phones while the result is off screen |
+| Layout | **Rev 4:** a sticky result strip at the top on every width, quick starts and questions under it, then the amounts as family cards (two columns on desktop, folding cards on phones). The phone dock goes away. See *Revision 4 layout* |
 | Result | A plain **result panel**: title, the answer as a sentence, your rate vs. the national rate, one verdict sentence, how much is guessed, and "Where the extra money goes". **No receipt metaphor** |
 | First visit | Opens with **the average U.S. household**, nothing selected. "Just want the national numbers?" links to that tab |
 | Guesses | After any answer or checkbox, unanswered questions show common answers **as guesses** (dashed, "our guess"), and the panel says how many answers are guesses |
 | Changing answers | Nothing locks; everything updates live. "Change answers" jumps back to the questions |
 | Remembering | Saved **in this browser only**; returning visitors see "Updated with July 2026 prices.", a summary of their answers, and their result. "Start over" clears it, with **Undo** |
 | Tabs | **Your costs**, **National numbers**, **Price check**, **Sources**. The glossary becomes one-sentence explanations where terms appear |
-| Visual direction | **Toned down**: one type family, flat bordered controls, one accent color, one raised surface per view |
+| Visual direction | ~~Toned down~~ **Rev 4: Bolder**: one type family and flat bordered controls stay; color by kind of spending (and by publisher on National numbers), tinted cards, thicker bars, hover detail cards, and motion that respects reduced-motion settings |
 
 ## Success criteria
 
@@ -46,6 +47,144 @@ Also accepted: compare U.S. inflation with other countries, as **a separate spec
 - A returning visitor sees their result with the newest month without re-entering anything.
 - **A BLS line on a last known value turns the build red** (the site still deploys).
 - Stale-value and `yoyGap` notes keep working.
+- **Rev 4:** with the Commuter quick start, the end of the amounts is within **1,500px** of the page top at 1280px, and within **2,000px** at 390px with every card folded (mockup: 1,347px and 1,828px with one card open).
+- **Rev 4:** every target in the *Hover detail cards* table shows its card on hover and, at 600px and wider, on keyboard focus. Mix slices reach keyboard users through the legend.
+
+## Revision 4 — Bolder look, quick starts, compact layout (2026-10-16)
+
+### What the owner decided
+
+- **Bolder treatment** (2026-10-02): color by kind of spending on Your costs and Price check, and by publisher on National numbers; tinted cards and rows, thicker bars, a shaded area under the trend line; hover cards, a chart crosshair that arrow keys can move, bars grow in, the line draws in, numbers count up. **Color never means good or bad.** Rises and falls are shown by sign and by which side of zero a bar sits.
+- **Quick-start households come back** (2026-10-02).
+- **Less scrolling** (2026-10-02): the compact layout below. Amounts are dollars, never percentage shares; the spending mix bar shows the shares.
+- **Cards fold on phones** (2026-10-16).
+- **Hover** (2026-10-16): the spending-mix mockup's hover cards plus the line-chart crosshair and row cards from the other two mockups cover it.
+
+### Families
+
+Every calculator line belongs to one family. Families always appear in this fixed order (never re-sorted by size, so cards don't jump while someone drags a slider):
+
+| Family | Lines (`config.js` ids) | Light | Dark |
+|---|---|---|---|
+| Home | rent, mortgage, homeIns, upkeep | `#2F6DB5` | `#4C8BD6` |
+| Getting around | gasoline, charging, carIns, carUpkeep, transit | `#D2602E` | `#DE6A35` |
+| Food | groceries, dining | `#1A9473` | `#2AAA85` |
+| Utilities | electric, heatGas, heatOil | `#C48A12` | `#B98312` |
+| Clothing and fun | clothing, fun | `#C9638C` | `#CB668F` |
+| Health | health, doctor | `#3E7D2E` | `#5C9A45` |
+| Kids and school | daycare, tuition | `#5A4AA8` | `#9085E9` |
+| Everything else | rest | `#87919A` | `#7A858F` |
+
+- **Average rows use basket ids** (`BASKET.visible` in `catalog.js`), so they get their own mapping: `housing` → Home, `gasoline` → Getting around, `groceries` and `dining` → Food, `energy` → Utilities, `clothing` and `fun` → Clothing and fun, `health` (all medical care, not insurance) → Health, `rest` → Everything else. Each basket row gets its own `about` text; never look up a line's `about` by a basket id.
+- Add a `family` field to each line in `config.js` and a `FAMILIES` list (id, label, token) there. Tokens `--f-home`, `--f-around`, `--f-food`, `--f-util`, `--f-fun`, `--f-health`, `--f-kids`, `--f-rest` go in `tokens.css` (both dark blocks identical, per `tokens.test.mjs`).
+- **Publishers** on National numbers reuse these colors through alias tokens: `--p-labor` = `--f-home` (Bureau of Labor Statistics measures), `--p-commerce` = `--f-food` (Core PCE), `--p-cleveland` = `--f-kids` (Median, Trimmed mean), `--p-atlanta` = `--f-util` (Sticky price), `--p-dallas` = `--f-fun` (Dallas trimmed-mean PCE).
+- The palette passed the dataviz validator (lightness, chroma, color-blind separation). The original site's palette failed it; don't go back to it.
+- **Family colors are for marks only** (dots, bars, slider fills, tints, slices), never for text. Every mark has a text label next to it.
+- **Text inside tinted cards and rows uses `--ink` and `--ink-2` only, never `--ink-3`** (`--ink-3` drops to about 3.8:1 on a 13% tint; `--ink-2` stays above 4.7:1).
+- **Contrast (token test):** each family color ≥ 3:1 against `--surface` and `--ground` in both themes, except light-mode Utilities (2.74:1 on `--ground`) and Everything else (2.93:1), allowed down to 2.7:1. The test also **composites each family's 13% tint over `--ground`** and checks `--ink` and `--ink-2` ≥ 4.5:1 on it, and the family mark ≥ 2.4:1 on it (light Utilities measures 2.43). The low mark floors are accepted because the labels carry the meaning. The test's pair list takes an optional minimum ratio as a third element; its token-count assert grows with the new tokens.
+- **New token `--track`** (unfilled slider track): light `#E4E9E7`, dark `#2C343B`.
+- **Tints:** cards use the family color at 6% over the ground (`color-mix(in srgb, var(--f-x) 6%, transparent)`), a hovered row 13%, a highlighted card 11% plus a 1.5px inset ring at 55%. Tinted cards have **no border** (they are not raised surfaces).
+
+### Revision 4 layout (Your costs)
+
+Top to bottom:
+
+1. **Headline and lede** (unchanged copy).
+2. **Result strip** (`.strip`), `position: sticky; top: env(safe-area-inset-top, 0px)`, the view's one raised surface (bordered, 10px radius). Under 900px the verdict, mix bar and legend render in an unbordered sibling (`.strip-more`) right after `.strip`, because a sticky element only sticks inside its parent; at 900px and wider they sit inside `.strip`. `scroll-padding-top` is set from the strip's measured height (a ResizeObserver writes a CSS variable), and the old 110px `scroll-padding-bottom` for the dock is removed. The strip's only button is **Answer the questions** in the Average state (scrolls to the questions); **Change answers** lives in the Summary.
+   - **Widths:** desktop is ≥ 900px; 600 to 899px uses the phone strip with cards open (the `columns: 2 380px` rule gives one or two columns by width); phones are < 600px.
+   - **Desktop (≥ 900px):** two columns. Left: panel title, the answer sentence (it counts to its new value over 350ms), the rates line, the Your costs and National (or Outside housing) bars, the verdict. Right: the **spending mix bar** (22px, one slice per family with spending, in family order) and its legend ("Home 41%"); shares are whole percentages that add to 100 (largest remainder).
+   - **Phone:** only title, answer and the two bars are sticky. The verdict, mix bar and legend sit right under the strip and scroll away, so the sticky part stays short.
+   - Average state: title, answer and rates line, plus the mix bar for the average household (families mapped from basket rows); no bars or verdict (as before).
+3. **Basis** line ("Based on 1 answer and 3 guesses.") right under the strip.
+4. **Quick starts:** "Start from a household like yours" and four buttons. Shown in every state.
+5. **Questions**, two columns of fieldsets on desktop. After a quick start or on a returning load they fold into the existing **Summary** (comma-joined, no `·`) with **Change answers** and **Start over**.
+6. **Your monthly amounts:** family cards, two CSS columns on desktop (`columns: 2 380px`), one column on phones.
+   - **Card heading:** dot, family name, and the family's yearly change ("+$930 a year"), which is the sum of its rounded lines, so cards add up to the total.
+   - **Each amount is one tight row:** label, its rate ("+27.4%"), what it adds ("+$980 a year", the line's allocated dollars from `allocateRounded`), the dollar box, and a slider in the family color under it.
+   - **Slider:** 0 to max(500, three times the line's starting amount rounded up to $100), step $10; it updates live on `input`. The box keeps its current commit behavior and clamps at 100,000; an amount above the slider's max pins the thumb at the end. Slider `aria-label` "{label}, dollars a month", `aria-valuetext` "$380 a month".
+   - **Target sizes** (replaces "≥ 44px" for these controls only): the slider's hit area is 32px tall with a 22px thumb; the dollar box is at least 36px tall; fold buttons, quick starts, answer buttons and other buttons stay ≥ 44px. All meet WCAG 2.2's 24px minimum. Renewal lines (health insurance, home insurance) keep their percent box beside the dollar box; an empty one shows "Add your renewal increase" in place of the dollar change (this replaces the panel's prompt rows).
+   - **Average state:** cards hold the basket rows. Each row shows label, rate, adds this year and the monthly amount **as text** (no box, no slider); headings show the family's yearly change, so the rows still add up to the answer. Under the cards: "Answer the questions or pick a household to change these." Editing starts in Personal, as before.
+   - **Phones (< 600px): every card folds** to a full-width button showing dot, name, yearly change and a chevron icon (inline SVG, `aria-hidden`). It has `aria-expanded` and `aria-controls`. Cards start folded; which ones are open lasts for the visit and is not saved. A focused input inside a card keeps it open. A folded card with an empty renewal line shows "Add your renewal increase" on its heading.
+   - **At 600px and wider** the heading is not a button: it is a `tabindex="0"` element that opens the family card on focus (`aria-describedby`).
+7. **Fine print** (price month, rounding, stale and `yoyGap` notes) after the amounts.
+
+**Removed by revision 4:** the "Where the extra money goes" list, "N smaller items", "Show all N items", the panel's renewal prompt rows (the cards now carry all of these), the "Adjust monthly amounts" disclosure, and the phone dock (the sticky strip does its job). "Everything else" stays last as its own card, labelled "Estimated from the national rate". The Undo toast, LiveRegion, saved answers and every state stay.
+
+### Quick starts
+
+| Button | Answers | Also paying for | Amount edits |
+|---|---|---|---|
+| Young renter | home `rent`, car `none`, heat `included`, health `work` | none | rent 1,450; groceries 380; dining 300; fun 180 |
+| Family with kids | home `mortgage`, car `gas`, heat `gas`, health `work` | daycare | groceries 1,100; gasoline 280; dining 260 |
+| Commuter | home `rent`, car `gas`, heat `electric`, health `work` | none | gasoline 380; carUpkeep 90 |
+| Retiree | home `owned`, car `hybrid`, heat `gas`, health `none` ("I don't pay a premium") | none | doctor 220; groceries 520; gasoline 90 |
+
+(Option ids as in `config.js`; the plan must confirm each before building.)
+
+- Tapping one **replaces** all answers, checkboxes and amount edits (renewal rates are kept). All four questions count as **answered**, so nothing shows as a guess. Then the page enters Personal, folds the questions into the Summary, saves, and moves focus to the answer (`tabindex="-1"`). Lines without an edit use their normal starting amount.
+- Because it replaces what the person entered, a quick start shows the Undo toast: "Filled in as {household}. [Undo]". Undo restores the answers, checkboxes and amounts from just before the tap.
+- **Quick starts never show a selected state.** They are plain buttons, not toggles.
+
+### Hover detail cards
+
+One shared `HoverCard` component: fixed position, above the target (below when there's no room), clamped 16px inside the viewport, `--surface` fill, `--rule` border, the only element besides the toast with a shadow (`--shadow`). It names the family with a colored dot in its heading. Text is `--ink` / `--ink-2`.
+
+- **Opens on:** mouse or pen hover; keyboard focus on the target **at 600px and wider** (on phones a fixed card would cover the on-screen keyboard); **tap** on the mix slices, legend items and chart points. Amount rows and card headings don't open a card on touch: a finger on a row is moving its slider, and a tap on a heading folds or unfolds it.
+- **Closes on:** pointer leave, focus leaving, Escape, a tap elsewhere, or scrolling (an unpinned card; a moved mouse brings it back).
+- **Content updates live** while its slider is dragged.
+- `role="tooltip"`; the focused target gets `aria-describedby` pointing at it. Everything in a card is also available elsewhere (row text, Sources), so the card is extra help, not the only path.
+
+| Target | Card shows |
+|---|---|
+| Amount row | label; "Price change since July 2025" with the rate; "You pay now" "$380 a month, $4,560 a year"; "Adds this year" "+$980" (the row's allocated dollars, matching the row); "Same things a year ago" = the yearly amount minus that figure; one plain line on what the price covers (new `about` field per line in `config.js`) |
+| Card heading, mix slice, legend item | family name; "Share of your spending"; "You pay now" per month; "Price change" (the family's combined rate; never "Prices overall", which names the headline); "Adds this year" (sum of its rows); "Biggest mover: Gas for the car, +$980 a year" when the family has more than one line. Shares count only lines in the result (an empty renewal line is left out) |
+| Your costs bar | your rate; "Each amount's price change, weighted by what you spend on it." |
+| National / Outside housing bar | the rate and the existing yardstick sentence |
+| Trend chart point | month and the 12-month change; a missing month says "Not published" |
+| Other official measures row | name, publisher, the measure's blurb, its value, and "0.5 points above prices overall" |
+| Price check mover row | item, family, price now and a year ago with units, and the change |
+| National numbers big number | how it is measured (the current `Stat` sentences) |
+
+Hovering an amount row or card also **links the highlights**: its card gets the highlight tint and ring, its slice in the mix bar grows to 130% height while other slices fade to 30%, and its legend item turns `--ink` and bold while other legend items fade to 45%. Pointing at a slice or legend item highlights its card the same way.
+
+### Charts and the other tabs
+
+- **Trend chart (National numbers):** built as a Recharts `ComposedChart` (Area plus Line; Recharts 2.15.4 is installed), with `accessibilityLayer` for the arrow keys. Remove `aria-hidden="true"` from the chart wrapper (`TrendChart.jsx`), since a focusable chart can't sit inside it; the visually hidden table stays as the full text version. Recharts starts its keyboard index at the oldest point, so on focus set the active index to the latest month. Pass `isAnimationActive={!reducedMotion}` (Recharts ignores the media query). Line in `--accent` with a shaded area under it at 12%; the line draws in over 900ms on first view; an end label on the latest point; a **crosshair with a dot** that follows the pointer, and **ArrowLeft / ArrowRight** step month by month once the chart has focus (the chart is one tab stop, showing the latest month on focus). The visually hidden table stays. Fix the uneven y-axis ticks (0/2/5%) to evenly spaced ones.
+- **Big numbers (National numbers):** "Prices overall" in `--accent`, "Prices other than food and energy" in `--p-labor`; 6% tinted cards (8px radius on all corners; the mockup's 7% and square-bottom corners are not used) with a 3px top rule in their color; the number counts up over 900ms; a filled 12-month sparkline on the overall card; "pace" bars comparing the past year with this month's annualized pace (dashed outline for the pace bar).
+- **Other official measures:** rows tinted in their publisher color, 12px bars that grow from zero, a dashed reference line "Prices overall +3.4%", and publisher chips that toggle (`aria-pressed`) a highlight on that publisher's rows on click or tap, fading the others to 35%. The blurb moves into the row's hover card.
+- **Price check, Biggest price changes:** bars and row dots in the item's family color, growing from a zero line (left for falls); row hover cards. Fix the fuel `.help` paragraphs that run together.
+- **Sources:** no color changes beyond family dots on each series row.
+
+### Motion
+
+- Bars grow from zero (`scaleX`, 400ms, 45ms stagger), the trend line draws in (900ms), big numbers count up (900ms on load), the answer counts to each new value (350ms), a changed row's dollar figure flashes its family color (350ms), hover tints and cards fade in (120–150ms), folding cards turn their chevron (150ms).
+- Motion only plays on first view of a tab and in response to the person's actions; nothing loops.
+- **The page is complete at rest:** every number and bar is readable in its final state if no animation runs. Under `prefers-reduced-motion: reduce`, all of it is off: values appear at once, bars at full length, no flash, no slice growth, no card movement.
+
+### Copy for revision 4
+
+- "a year" and "a month", never "/yr" or "/mo".
+- No `·`: the hover card writes "$380 a month, $4,560 a year"; the Summary joins with commas.
+- Chevrons are SVG icons, not text glyphs, so the banned-string scan stays as it is.
+- New strings: "Start from a household like yours", "Your monthly amounts", "Answer the questions or pick a household to change these.", "Add your renewal increase", "Biggest mover: {line}, {amount} a year", "Not published", "{n} points above prices overall" / "below", and the card labels in the table above.
+
+### Audit and test changes
+
+- **Design rule 5** becomes: one **bordered** raised surface per view (the result strip; the HoverCard and toast are fixed and exempt); tinted cards must stay borderless. Allowed radii add 3px (bars), 5px (slider tracks), and 50% for dots and slider thumbs. Where the mockups differ, the spec wins: chips use 6px (not 999px), tinted rows 6px (not 4px), slider tracks 5px (not 3px).
+- **Design rule 6** becomes: `--accent` for selection, "you" and focus; family and publisher colors for kinds of spending and publishers; no color for up or down; semantic color only on stale or error notes, with text.
+- The dark-mode "light background" check allows family-colored marks (`[data-family]` dots, bars, slices, slider fills).
+- **Numbers are read with reduced motion emulated** (count-up tweens would otherwise be read mid-count against the fake clock); one separate pass with motion on checks that values settle to the same numbers and that there are no console errors.
+- **Rewrite what the removals break:** `panel_sum_ok` and every `.line` selector re-point to the card rows (Average included); delete the Show all and renewal-prompt-row flows (replace the latter with "empty renewal box shows Add your renewal increase in its row and on the folded heading"); the sticky check moves from `.result-col` at 1280 to `.strip` at every width; drop the `.dock` exemption; at 390px the random-amounts fill opens the cards before typing.
+- New audit flows: a quick start folds the questions and the Commuter page height meets the success criterion at both widths; hovering a row shows a card with its dollar figures; arrow keys move the trend crosshair; on 390px a card heading toggles `aria-expanded` and reveals its sliders; with reduced motion emulated, bars are at full width on first paint.
+- Fold in the audit gaps from the Phase 2b reviews: check the Personal state in dark mode at 1280px; scan banned strings in the whole page, not only `main`; remove the dead cpi.json console filter.
+- Token test: add the family tokens and their contrast rule above.
+- **Code the plan must remove or rewrite:** `Dock.jsx`, the IntersectionObserver, `amountsOpen` and `openRenewal` in `YourCosts.jsx`; `ResultPanel.jsx` Show all and prompts; `panel.js` `TOP_ROWS`, `top`, `smaller`, `allCount`, `prompts` and their tests in `panel.test.mjs`; the `.dock` and `.prompts` CSS. **Keep** `model.main` and `model.rest` (the .xlsx personal sheet reads them, `workbook.js`), and the `--dock` / `--dock-ink` tokens (the toast uses them).
+- **Folding:** once the questions fold (returning load or quick start) they stay folded for the visit, including after switching tabs, until **Change answers**.
+- Unit tests: family assignment covers every line id and every `BASKET.visible` id; card totals sum to the rounded total; mix shares sum to 100; quick starts produce the listed answers and edits and count as answered.
+
+### Rollout for revision 4
+
+Built on `redesign/phase2b` on top of Phase 2b. Merge gate unchanged: unit tests, audit, the owner's 5-second test, production data live. Merge and push only on the owner's word.
 
 ## Visual system
 
@@ -70,9 +209,9 @@ Tokens in `src/styles/tokens.css`; components never use literal colors.
 
 - **Type:** Libre Franklin 400–800, fallback `"Franklin Gothic Medium", "Helvetica Neue", Arial, sans-serif`. Tabular figures on numbers. Scale 13 / 15 / 16 / 18 / 20; headings `clamp(30px, 7.6vw, 44px)`; answer sentence `clamp(34px, 9.4vw, 46px)`, weight 800, letter-spacing −0.02em. Every `button`, `input`, `select` sets `font: inherit`.
 - **Controls:** 1.5px `--control-edge` border, 6px radius, ≥ 44px tall. Hover: `--control-hover`, `--ink` border. **Selected:** `--accent` fill, `--accent-ink` text, ✓ prefix, `aria-pressed="true"`. **Guessed:** dashed `--accent` border, `--accent-soft` fill, "our guess" tag, `aria-pressed="false"`. Checkboxes are native inputs inside bordered labels.
-- **Raised surface** = a bordered, filled, radiused box. One per view: the result panel. The returning summary is **not** boxed (plain section with a top `--rule`). Only the dock and toast have shadows.
+- **Raised surface** (rev 4: see *Audit and test changes*; tinted family cards are borderless and allowed) = a bordered, filled, radiused box. One per view: the result panel. The returning summary is **not** boxed (plain section with a top `--rule`). Only the toast and (rev 4) the hover card have shadows; the dock is removed in rev 4.
 - **Navigation:** the four sections are links (`<a href>`), the current one with `aria-current="page"` and a 3px `--ink` underline; the row wraps at phone width.
-- **Motion:** only in response to actions (dock, toast), off under `prefers-reduced-motion`.
+- **Motion:** replaced by revision 4's *Motion* section (still off under `prefers-reduced-motion`).
 
 ## Design rules (testable "not AI-looking" criteria)
 
@@ -82,8 +221,8 @@ Checked by the Playwright audit in *Testing* unless marked (review).
 2. **No all-caps or letter-spaced labels**: no computed `text-transform: uppercase`; no positive letter-spacing on text under 20px.
 3. **No decorative metaphors**: receipts, tickets, torn or scalloped edges, dashed "cut" lines, highlighter marks. (review)
 4. **No template chrome** in rendered text: no `·`, no `—`, no `→`, no emoji (`\p{Extended_Pictographic}` or U+FE0F), no eyebrow labels above headings, no single accented word in a heading (last two: review).
-5. **One raised surface per view** (definition above); radius by role only (controls 6px, panel 10px).
-6. **One accent color** for selection, "you" and focus; no red or green for up/down; semantic color only on stale or error notes, always with text.
+5. (Rev 4 rewrites this rule; see *Audit and test changes*.) **One raised surface per view** (definition above); radius by role only (controls 6px, panel 10px).
+6. (Rev 4 rewrites this rule; see *Audit and test changes*.) **One accent color** for selection, "you" and focus; no red or green for up/down; semantic color only on stale or error notes, always with text.
 7. **Contrast**, both themes, checked by a unit test over token pairs: text ≥ 4.5:1 for `--ink`, `--ink-2`, `--ink-3` on `--ground` and `--surface`, `--accent-ink` on `--accent`, `--dock-ink` on `--dock`; non-text ≥ 3:1 for `--control-edge`, `--accent`, `--bar-us`, `--bar-line` on `--surface`, and `--accent` on `--ground` (focus ring). `--rule` is decorative and exempt.
 8. **Voice guide** banned strings (scan of rendered text; see scope below).
 9. **5-second test** (owner, before Phase 2 merge): 5 non-designers, first screen on a phone, "What does this page do?" and "Is that number yours?" At least 4 of 5 answer both correctly.
@@ -132,6 +271,8 @@ Checked by the Playwright audit in *Testing* unless marked (review).
 
 ### States
 
+(Rev 4: the Dock column no longer applies, and the Average "lines list" becomes the Average family cards.)
+
 | State | When | Questions | Panel | Dock (phones, two lines) |
 |---|---|---|---|---|
 | **Average** | First visit; after Start over | Nothing selected | Title, answer, rates line, lines list, **Answer the questions**. No bars, verdict or basis | "Average U.S. household" / answer |
@@ -141,15 +282,21 @@ Checked by the Playwright audit in *Testing* unless marked (review).
 - Common answers used as guesses: rent, gas car, natural gas heat, health insurance through work.
 - "Answered" means the person tapped an option in that question. Checkboxes never count as answers or guesses (unchecked = not paying).
 - **Amounts in Average** are read-only under "See the monthly amounts" (the average household's shares × $5,750). Editing starts in Personal.
-- The page never folds while someone is answering; folding happens only on load.
+- The page never folds while someone is answering; folding happens only on load (rev 4: and after a quick start).
 - **Saved data** (`inflation-reality:answers:v1`): answered choices, checkboxes, amount edits keyed by line id, renewal rates. Unknown ids or options are ignored individually; unparseable JSON or another version is discarded.
 
 ### Order
+
+**Replaced by *Revision 4 layout*.** Kept for history:
+
 
 - **Phone:** headline, lede, skip link → questions → result panel → "Adjust monthly amounts" (collapsed). The dock hides while the panel is on screen; **See details** scrolls to it. `scroll-padding-bottom` keeps focused controls clear of the dock.
 - **Desktop (≥ 900px):** questions and amounts on the left; panel sticky on the right.
 
 ### Result panel
+
+**Revision 4 splits this into the result strip and the family cards; see *Revision 4 layout* for what is removed.** Kept for history:
+
 
 Title → answer → rates line → your-costs vs. national bars (one shared grid) → verdict → basis → "Where the extra money goes": rows sorted by absolute dollars (label with optional note: "Fixed payment", "Average for employer plans, change to yours", "Estimate"; rate; dollars; bar); the top **6** rows **excluding Everything else**; then "N smaller items" with their sum; then **Everything else, always last, secondary ink, "Estimated from the national rate"**; empty-renewal prompt rows (their buttons open "Adjust monthly amounts" and focus that input) → **Change answers** (or **Answer the questions**) and "Show all N items" (N counts every row, including Everything else) → fine print: "Estimates based on BLS consumer price data for July 2026. Dollar amounts are rounded." plus stale or `yoyGap` notes.
 
@@ -162,7 +309,7 @@ Routes: Your costs = no hash (`/inflation-reality/`); `#national-numbers`, `#pri
 - **National numbers:** headline and core with month-over-month and annualized, the 12-month headline trend (no personal line), other official measures, gap/stale notes, a reserved spot for the country comparison.
 - **Price check:** average-price table, EIA weekly fuel, Biggest Movers (fixing its color-index bug).
 - **Sources:** how the estimate is worked out (plain-words formula, fixed mortgage, the rolled weights and residual, proxies named), every series with a FRED or BLS link, caveats, the .xlsx download.
-- **Chart rules:** Recharts styled from tokens only; text `--ink-2`, gridlines `--rule`; one series `--accent`; comparisons `--accent` vs `--bar-us`; the other-official-measures bars use one neutral hue with direct value labels; direction by sign and label, not red/green; tooltips on `--surface` with a `--rule` border.
+- **Chart rules** (rev 4: colors, crosshair and motion per *Charts and the other tabs*; the token-only rule stays): Recharts styled from tokens only; text `--ink-2`, gridlines `--rule`; one series `--accent`; comparisons `--accent` vs `--bar-us`; the other-official-measures bars use one neutral hue with direct value labels; direction by sign and label, not red/green; tooltips on `--surface` with a `--rule` border.
 
 ## Calculation model
 
@@ -316,6 +463,7 @@ Questions: buttons with `aria-pressed` in `fieldset`/`legend`; guessed answers s
 
 - **Phase 1 — pipeline** (plan written): ships to `main`; invisible to today's UI (its shape check reads only `trend` and `categories`).
 - **Phase 2a — shell and Your costs:** tokens, section nav and routing, the calculator, saved answers; branch `redesign/calculator-first`.
+- **Revision 4 — Bolder look:** on `redesign/phase2b` before its merge; see *Rollout for revision 4*.
 - **Phase 2b — other tabs, export, audit:** National numbers, Price check, Sources, .xlsx, the audit script, link previews; merge gate: unit tests, audit, 5-second test, production data live.
 
 ## Out of scope
