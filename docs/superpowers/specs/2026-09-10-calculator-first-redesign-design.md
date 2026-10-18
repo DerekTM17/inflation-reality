@@ -182,6 +182,16 @@ Hovering an amount row or card also **links the highlights**: its card gets the 
 - **Folding:** once the questions fold (returning load or quick start) they stay folded for the visit, including after switching tabs, until **Change answers**.
 - Unit tests: family assignment covers every line id and every `BASKET.visible` id; card totals sum to the rounded total; mix shares sum to 100; quick starts produce the listed answers and edits and count as answered.
 
+### Plan decisions (2026-10-17)
+
+Owner defaults settled while planning (`docs/superpowers/plans/2026-10-17-calculator-rev4-bolder.md`):
+
+- **Average-state wording:** in the Average state the hover cards say "Share of spending" and "Average spending now", never "your" or "You pay now", so nobody reads the average household's numbers as their own.
+- **Measure blurbs:** under 600px each Other official measures row shows its blurb as visible help text under the row (those rows open no card on a phone). At 600px and wider the blurb is in the row's hover card, plus visually hidden text in the row.
+- **Big numbers:** the number text stays `--ink`. `--accent` and `--p-labor` color only the card's marks (top rule, tint, sparkline, pace bars), because family and publisher colors are for marks only.
+- **Phone strip:** under 900px the rates line and the Average state's **Answer the questions** button go in `.strip-more` with the verdict and mix bar, so only the title, answer and bars stick.
+- **Scrolling (deliberate exception to "Closes on … scrolling"):** a card whose target holds keyboard focus stays open on scroll and follows its target. Focusing an off-screen row scrolls the page, and closing its card then would hide every keyboard-opened card.
+
 ### Rollout for revision 4
 
 Built on `redesign/phase2b` on top of Phase 2b. Merge gate unchanged: unit tests, audit, the owner's 5-second test, production data live. Merge and push only on the owner's word.
