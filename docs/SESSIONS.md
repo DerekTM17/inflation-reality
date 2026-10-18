@@ -284,3 +284,50 @@ npm test                                         # expect 184/184
 npx vite build && npx vite preview --port 4730 --strictPort --host   # owner can open http://localhost:4730/inflation-reality/
 # main checkout: ~/projects/inflation-reality is clean on main at 5adc80d plus this handoff commit
 ```
+
+### 2026-10-17
+
+#### Handoff — Spec revision 4 approved and its build plan written (supersedes all earlier handoffs)
+
+**Goal:** Turn the owner's Bolder decisions into an approved spec and a reviewed build plan for `redesign/phase2b`, ready to build in a fresh session.
+
+**Done (all on branch `redesign/phase2b`, worktree `~/projects/inflation-reality-phase2b`; branch NOT pushed; nothing merged or deployed):**
+- `478d7ca` added hover detail cards, linked highlights and phone fold-up cards to the spending-mix mockup, published at https://claude.ai/artifact/K1bqKshUY117QCUU6Em7Ng. Checked with Python Playwright at 1280 and 390: zero console errors, no sideways scroll, and at 390 the Commuter page ended at 1,828px with one card open.
+- The owner said yes to cards that fold on phones (2026-10-16). They also said the Bolder hover plus the line-chart crosshair "covers" the hover they were missing.
+- **Spec revision 4** is in `docs/superpowers/specs/2026-09-10-calculator-first-redesign-design.md`, section "Revision 4 — Bolder look, quick starts, compact layout". Commits: `1d0f55e` written, `d1b8c63` approved by the owner 2026-10-17 ("this looks good"). A fresh reviewer checked it against the code first. It found 3 blockers, now fixed: Average rows had no family mapping, Average cards were undefined, and `--ink-3` text on tints was too faint. Rendered: https://claude.ai/artifact/HjDnVtGkcictTE8CU6yZ6f
+- **Plan** `docs/superpowers/plans/2026-10-17-calculator-rev4-bolder.md` (`9112bad`, 11 tasks, about 5,300 lines). How it was checked:
+  - The drafter applied every code block to a scratch copy of `d1b8c63`: 221 tests pass, `vite build` ok, audit 223/223 at a random seed and at `--seed 1`.
+  - The audit still fails on an injected fault.
+  - An independent reviewer found no blockers and re-ran Tasks 1–3: 206 tests, matching the plan.
+  - The review's fixes were applied and re-validated.
+  - The plan also added a "Plan decisions (2026-10-17)" note to the spec.
+  - Rendered: https://claude.ai/artifact/QqPg3sH9xYW6h3very4keQ
+- The branch itself is unchanged apart from docs and mockups: 184/184 tests (run 2026-10-14 this session).
+
+**Next:**
+1. The owner reviews the plan and picks an execution method. Recommend **subagent-driven**: 11 tasks with heavy interface coupling across tasks (`cards.js`, `useHover` and the CSS classes the audit selects). Phase 2b ran subagent-driven successfully.
+2. Execute on `redesign/phase2b` in the worktree (superpowers:subagent-driven-development). Task 11 includes an audit run with `--real-fonts`, which needs network access to Google Fonts. The page-height limits (≤ 1,500px at 1280, ≤ 2,000px at 390, Commuter household) must pass with real fonts before the 5-second test. With fallback fonts the plan measured 1,423 and 1,793.
+3. The owner runs the 5-second test again. Merge to `main` from `~/projects/inflation-reality` and push only on the owner's word, then run the audit with `--base-url https://derektm17.github.io/inflation-reality/`, then the ledger steps in Task 11.
+
+**Decisions (don't re-litigate):**
+- Bolder look, quick starts back, compact layout, cards fold on phones under 600px, hover cards. The "Where the extra money goes" list, Show all and the phone dock are removed. The family cards and the sticky result strip replace them.
+- A quick start counts all four answers as answered. It shows a "Filled in as {household}. [Undo]" toast and never shows a selected state.
+- Average-state hover wording stays neutral ("Share of spending"), for the "Is that number yours?" test.
+- Measure blurbs show as visible text under each row on phones, and in the hover card at 600px and wider.
+- Big-number text stays `--ink`; color goes on the marks only.
+- A card whose target has focus stays open when the page scrolls. This deviates from the spec on purpose, because Tab scrolls the page.
+- Recharts is pinned to exactly 2.15.4. The trend chart starts on the latest month through the internal `accessibilityManager.setIndex()`. The arrow-key audit check would catch it if that breaks.
+
+**Gotchas:**
+- Use Python Playwright, never the Playwright MCP (it's a shared browser). Kill preview servers by PID only.
+- `vite preview` falls back to `src/data/fallback.json`.
+- Chrome re-sends pointer events after a scroll, so park the mouse in the margin before running focus checks.
+- The main checkout gets ledger commits from other sessions. Build only in the worktree.
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality-phase2b
+git status -sb && git log --oneline -3   # expect clean, head 9112bad, ahead of origin
+npm test                                 # expect 184/184 before Task 1
+# then: superpowers:subagent-driven-development on docs/superpowers/plans/2026-10-17-calculator-rev4-bolder.md
+```
