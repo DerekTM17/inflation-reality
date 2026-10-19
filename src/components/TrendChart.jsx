@@ -1,48 +1,89 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
-import { formatRate } from "../calculator/format.js";
+import { useRef } from "react";
+import {
+  ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, LabelList,
+} from "recharts";
+import { HoverCardBody } from "./HoverCard.jsx";
+import { trendHover } from "../tabs/national.js";
+import { useReducedMotion } from "./useMedia.js";
 
 const TICK = { fill: "var(--ink-2)", fontSize: 13 };
+const MINUS = "−";
+
+/** The crosshair's card: the shared hover-card body inside Recharts' tooltip. */
+function TrendTip({ active, payload }) {
+  const point = payload?.[0]?.payload;
+  if (!active || !point) return null;
+  return <div className="hover-card chart-card"><HoverCardBody content={trendHover(point)} /></div>;
+}
+
+/** A label on the latest point only. */
+function EndLabel({ x, y, index, value, last }) {
+  if (index !== last || value == null || value === "Not published") return null;
+  return <text x={x + 8} y={y} dy={4} fill="var(--ink)" fontSize={13} fontWeight={700}>{value}</text>;
+}
 
 /**
- * The 12-month change in prices overall, month by month: one series in --accent,
- * gridlines in --rule, text in --ink-2 (spec "Chart rules"). Gap months are null,
- * so the line breaks there instead of guessing. The same numbers are in a
- * visually hidden table for screen readers.
- * points: [{ short, long, value, valueText }] from nationalModel().trend.
+ * The 12-month change in prices overall (spec "Charts and the other tabs"): a line in
+ * --accent with a 12% shaded area under it, evenly spaced ticks, an end label, and a
+ * crosshair with a dot. The chart is one tab stop (Recharts' accessibilityLayer):
+ * focus shows the latest month and ArrowLeft / ArrowRight step month by month. Gap
+ * months are null, so the line breaks there. The line draws in over 900ms on a first
+ * view, never under reduced motion (Recharts ignores the media query). The visually
+ * hidden table carries the same numbers as text.
+ * points: nationalModel().trend; ticks: nationalModel().trendTicks; animate: first view.
  */
-export default function TrendChart({ points }) {
+export default function TrendChart({ points, ticks, animate }) {
+  const chart = useRef(null);
+  const reduced = useReducedMotion();
+  const last = points.length - 1;
+  const drawIn = animate && !reduced;
+  // Recharts starts its keyboard index at the oldest point. Its onFocus moves the
+  // crosshair to accessibilityManager's index, so set that to the latest month first
+  // (capture runs before Recharts' own handler). Recharts 2.15 instance API.
+  const toLatest = () => chart.current?.accessibilityManager?.setIndex(last);
   return (
     <>
-      <div className="trend-chart" aria-hidden="true">
+      <div className="trend-chart" onFocusCapture={toLatest}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={points} margin={{ top: 8, right: 28, bottom: 0, left: 0 }}>
+          <ComposedChart
+            ref={chart}
+            data={points}
+            accessibilityLayer
+            title="Change over 12 months in prices overall, by month"
+            margin={{ top: 8, right: 48, bottom: 0, left: 0 }}
+          >
             <CartesianGrid stroke="var(--rule)" vertical={false} />
             <XAxis
               dataKey="short" tick={TICK} tickLine={false} axisLine={{ stroke: "var(--rule)" }}
               interval="preserveStartEnd" minTickGap={24}
-              padding={{ left: 8, right: 32 }} tickMargin={8}
+              padding={{ left: 8, right: 16 }} tickMargin={8}
             />
             <YAxis
-              width={44} tick={TICK} tickLine={false} axisLine={false}
-              tickFormatter={(v) => `${v}%`} tickMargin={8}
-              domain={[(min) => Math.min(0, Math.floor(min)), (max) => Math.max(0, Math.ceil(max))]}
+              width={44} tick={TICK} tickLine={false} axisLine={false} tickMargin={8}
+              domain={ticks.domain} ticks={ticks.ticks} interval={0}
+              tickFormatter={(v) => (v < 0 ? `${MINUS}${Math.abs(v)}%` : `${v}%`)}
             />
             <ReferenceLine y={0} stroke="var(--control-edge)" />
             <Tooltip
-              formatter={(v) => [formatRate(v), "Prices overall"]}
-              labelFormatter={(_, payload) => payload?.[0]?.payload?.long ?? ""}
-              separator=": "
-              contentStyle={{ background: "var(--surface)", border: "1px solid var(--rule)", borderRadius: 6, color: "var(--ink)" }}
-              labelStyle={{ color: "var(--ink)", fontWeight: 700 }}
-              itemStyle={{ color: "var(--ink)" }}
-              cursor={{ stroke: "var(--rule)" }}
+              content={<TrendTip />}
+              filterNull={false}
+              cursor={{ stroke: "var(--ink-2)", strokeWidth: 1 }}
+              isAnimationActive={false}
+              wrapperStyle={{ outline: "none", zIndex: 5 }}
+            />
+            <Area
+              type="linear" dataKey="value" stroke="none" fill="var(--accent)" fillOpacity={0.12}
+              connectNulls={false} activeDot={false}
+              isAnimationActive={drawIn} animationDuration={900}
             />
             <Line
-              type="linear" dataKey="value" stroke="var(--accent)" strokeWidth={2.5}
-              dot={{ r: 3, fill: "var(--accent)", stroke: "var(--accent)" }}
-              connectNulls={false} isAnimationActive={false}
-            />
-          </LineChart>
+              type="linear" dataKey="value" stroke="var(--accent)" strokeWidth={2.5} dot={false}
+              activeDot={{ r: 5, fill: "var(--accent)", stroke: "var(--surface)", strokeWidth: 2 }}
+              connectNulls={false} isAnimationActive={drawIn} animationDuration={900}
+            >
+              <LabelList dataKey="valueText" content={<EndLabel last={last} />} />
+            </Line>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
       <table className="sr">
