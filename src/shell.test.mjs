@@ -27,12 +27,12 @@ test("every route has a view with a focusable #page-title heading", () => {
   }
 });
 
-test("revision 4 removals stay removed: dock, result panel list, renewal prompt rows", () => {
-  for (const gone of ["components/Dock.jsx", "components/ResultPanel.jsx"]) {
+test("revision 4 removals stay removed: dock, result panel list, renewal prompt rows, amounts disclosure", () => {
+  for (const gone of ["components/Dock.jsx", "components/ResultPanel.jsx", "components/Amounts.jsx"]) {
     assert.ok(!existsSync(resolve(here, gone)), `${gone} is deleted`);
   }
   const view = readFileSync(resolve(here, "views/YourCosts.jsx"), "utf8");
-  for (const word of ["IntersectionObserver", "openRenewal", "showAll", "Dock", "ResultPanel"]) {
+  for (const word of ["IntersectionObserver", "openRenewal", "showAll", "Dock", "ResultPanel", "amountsOpen", "Amounts"]) {
     assert.ok(!view.includes(word), `YourCosts.jsx still has ${word}`);
   }
   const panel = readFileSync(resolve(here, "calculator/panel.js"), "utf8");
@@ -41,7 +41,7 @@ test("revision 4 removals stay removed: dock, result panel list, renewal prompt 
   }
   const css = readdirSync(join(here, "styles")).filter((f) => f.endsWith(".css"))
     .map((f) => readFileSync(join(here, "styles", f), "utf8")).join("\n");
-  for (const sel of [".dock", ".prompts", "scroll-padding-bottom"]) {
+  for (const sel of [".dock", ".prompts", "scroll-padding-bottom", ".disclosure", ".amt-row", ".amounts-body"]) {
     assert.ok(!css.includes(sel), `CSS still has ${sel}`);
   }
 });

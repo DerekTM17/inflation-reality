@@ -4,8 +4,7 @@
 
 .btn,
 .opt,
-.check,
-.disclosure {
+.check {
   color: var(--ink);
   background: var(--surface);
   border: 1.5px solid var(--control-edge);
@@ -19,8 +18,7 @@
 
 .btn:hover,
 .opt:hover,
-.check:hover,
-.disclosure:hover {
+.check:hover {
   background: var(--control-hover);
   border-color: var(--ink);
 }
@@ -73,20 +71,6 @@
 .check input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
 .check:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
 
-.disclosure {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  min-height: 50px;
-  padding: 12px 16px;
-  font-weight: 700;
-  font-size: 18px;
-  text-align: left;
-}
-.disclosure::after { content: "+"; font-size: 24px; font-weight: 500; line-height: 1; }
-.disclosure[aria-expanded="true"]::after { content: "\2212"; }
-
 .money { display: inline-flex; align-items: center; gap: 6px; }
 .money input {
   width: 6.5em;
@@ -124,7 +108,6 @@
 .opt:focus-visible,
 .text-btn:focus-visible,
 .text-link:focus-visible,
-.disclosure:focus-visible,
 .section-link:focus-visible,
 .brand:focus-visible,
 .money input:focus-visible,

@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BASKET } from "../data/catalog.js";
 import { emptyAnswers, isPersonal, applyQuickStart } from "../calculator/model.js";
 import { summaryText, finePrint } from "../calculator/panel.js";
-import { familyCards, familyHover, compareHover } from "../calculator/cards.js";
-import { createVisit, foldOnMount } from "../calculator/visit.js";
+import { familyCards, familyHover, compareHover, rowHover } from "../calculator/cards.js";
+import { createVisit, foldOnMount, toggleOpen } from "../calculator/visit.js";
 import { estimateFor } from "../tabs/estimate.js";
 import { getStorage, storageAvailable, loadAnswers, saveAnswers } from "../calculator/storage.js";
 import YourCostsIntro from "./YourCostsIntro.jsx";
@@ -11,7 +10,7 @@ import ResultStrip from "../components/ResultStrip.jsx";
 import QuickStarts from "../components/QuickStarts.jsx";
 import Questions from "../components/Questions.jsx";
 import Summary from "../components/Summary.jsx";
-import Amounts from "../components/Amounts.jsx";
+import FamilyCards from "../components/FamilyCards.jsx";
 import Toast from "../components/Toast.jsx";
 import LiveRegion from "../components/LiveRegion.jsx";
 import HoverCard from "../components/HoverCard.jsx";
@@ -37,7 +36,8 @@ export default function YourCosts({ data, base, onNavigate }) {
   const canSave = useMemo(() => storageAvailable(storage), [storage]);
   const [answers, setAnswers] = useState(() => loadAnswers(storage) ?? emptyAnswers());
   const [folded, setFoldedState] = useState(() => foldOnMount(visit, isPersonal(answers)));
-  const [amountsOpen, setAmountsOpen] = useState(false);
+  const [open, setOpen] = useState(() => visit.open); // family cards open on a phone, for the visit
+  const [hl, setHl] = useState(null); // the family card the pointer is over, for linked highlights
   const [cleared, setCleared] = useState(null); // { answers, folded, refold, message, key } while the Undo toast is up
   const [pendingFocus, setPendingFocus] = useState(null);
   const stripRef = useRef(null);
@@ -138,7 +138,13 @@ export default function YourCosts({ data, base, onNavigate }) {
     if (insideToast) setPendingFocus("questions");
   }, []);
 
-  const highlight = hover.state?.family ?? null;
+  const toggleCard = (id) => {
+    const next = toggleOpen(open, id);
+    visit.open = next;
+    setOpen(next);
+  };
+  // Linked highlights: the card under the pointer, else the family whose card is open.
+  const highlight = hl ?? hover.state?.family ?? null;
   // Card content comes from the latest numbers on every render, so an open card
   // follows its slider live (spec "Hover detail cards").
   const hoverContent = (key) => {
@@ -147,6 +153,10 @@ export default function YourCosts({ data, base, onNavigate }) {
     if (kind === "fam") {
       const card = cards.find((c) => c.id === id);
       return card ? familyHover(card, personal) : null;
+    }
+    if (kind === "row") {
+      const row = cards.flatMap((c) => c.rows).find((r) => r.id === id);
+      return row ? rowHover(row, data.referenceMonth, personal) : null;
     }
     if (kind === "cmp") return compareHover(model, id);
     return null;
@@ -190,12 +200,15 @@ export default function YourCosts({ data, base, onNavigate }) {
             </>
           )}
         </div>
-        <Amounts
-          rows={rows}
+        <FamilyCards
+          cards={cards}
           personal={personal}
-          monthlyMean={BASKET.ceMonthlyMean}
-          open={amountsOpen}
-          onToggle={() => setAmountsOpen((v) => !v)}
+          narrow={!hover.wide}
+          open={open}
+          onToggle={toggleCard}
+          highlight={highlight}
+          onHighlight={setHl}
+          hover={hover}
           onAmount={onAmount}
           onRenewal={onRenewal}
         />

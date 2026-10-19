@@ -138,23 +138,105 @@ fieldset.q legend { margin-bottom: 10px; padding: 0; font-weight: 700; font-size
 .fine { font-size: 13px; color: var(--ink-3); }
 .fine p { margin: 0 0 6px; }
 
-/* Monthly amounts: the disclosure list. */
-.amounts-body { margin-top: 12px; }
-.amounts-body > p { margin: 0 0 12px; max-width: 36em; color: var(--ink-2); }
-.amt-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 16px;
-  padding-block: 12px;
-  border-top: 1px solid var(--rule);
+/* Your monthly amounts: one tinted card per family (6% tint, no border: not a raised
+   surface), two CSS columns when there is room. Text inside uses --ink and --ink-2 only. */
+.amounts { display: grid; gap: 8px; }
+.amounts h2 { margin: 0; font-weight: 700; font-size: 20px; }
+.amounts-note { margin: 0; color: var(--ink-2); }
+.fam-cols { columns: 2 380px; column-gap: 16px; }
+.fam {
+  break-inside: avoid;
+  margin: 0 0 6px;
+  padding: 2px 12px 6px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--c) 6%, transparent);
+  transition: background-color 150ms ease, box-shadow 150ms ease;
 }
-.amt-label { display: grid; min-width: 0; font-weight: 600; }
-.amt-hint { font-weight: 400; font-size: 15px; color: var(--ink-2); }
-.per { font-size: 15px; color: var(--ink-2); }
-.amt-value { font-weight: 600; }
-.amt-sub { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 15px; color: var(--ink-2); }
+.fam.hl {
+  background: color-mix(in srgb, var(--c) 11%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 55%, transparent);
+}
+.fam-h { margin: 0; font-weight: 700; font-size: 16px; }
+.fam-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+}
+button.fam-head { flex-wrap: wrap; min-height: 44px; cursor: pointer; } /* a fold button: a 44px target */
+span.fam-head { min-height: 32px; }
+.fam-name { flex: 1 1 auto; min-width: 0; }
+.chev { flex: none; color: var(--ink-2); transition: transform 150ms ease; }
+.fam-head[aria-expanded="true"] .chev { transform: rotate(180deg); }
+/* The empty-renewal prompt: a second line inside the fold button, part of its name. */
+.fam-prompt { flex-basis: 100%; margin: -8px 0 8px 18px; font-weight: 500; font-size: 13px; color: var(--ink-2); }
+
+.amt {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: "label adds boxes" "slider slider slider";
+  align-items: center;
+  column-gap: 10px;
+  margin-inline: -6px;
+  padding: 4px 6px 2px;
+  border-radius: 6px;
+  transition: background-color 120ms ease;
+}
+.amt:hover,
+.amt:focus-within { background: color-mix(in srgb, var(--c) 13%, transparent); }
+.amt.avg { grid-template-areas: "label adds boxes"; padding-block: 8px; }
+/* Above the slider's overlapping hit area, so their clicks never land on the slider. */
+.amt-label { position: relative; z-index: 1; grid-area: label; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.amt-rate { margin-left: 6px; font-weight: 400; font-size: 13px; color: var(--ink-2); }
+.amt-note { display: block; font-weight: 400; font-size: 13px; color: var(--ink-2); }
+.amt-adds { grid-area: adds; font-weight: 600; font-size: 15px; text-align: right; white-space: nowrap; }
+.amt-adds.prompt { max-width: 8em; font-weight: 500; font-size: 13px; color: var(--ink-2); white-space: normal; }
+.amt-boxes { position: relative; z-index: 1; grid-area: boxes; display: inline-flex; align-items: center; gap: 8px; }
+.amt-value { grid-area: boxes; font-weight: 600; text-align: right; white-space: nowrap; }
+.amt .money input { width: 5.4em; min-height: 36px; padding: 5px 8px; font-size: 16px; }
+.amt .money input.pct { width: 3.6em; }
+@media (max-width: 599px) {
+  .amt-boxes { flex-direction: column; align-items: flex-end; gap: 4px; }
+}
+
+/* Dollar sliders: 32px hit area, 22px thumb, 10px track filled in the family color. The
+   hit area overlaps 6px of the row's spacing above and below, which keeps rows tight. */
+.slider {
+  grid-area: slider;
+  width: 100%;
+  height: 32px;
+  margin: -6px 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.slider::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 5px;
+  background: linear-gradient(to right, var(--c) var(--p), var(--track) var(--p));
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 3px solid var(--c);
+}
+.slider::-moz-range-track { height: 10px; border-radius: 5px; background: var(--track); }
+.slider::-moz-range-progress { height: 10px; border-radius: 5px; background: var(--c); }
+.slider::-moz-range-thumb { box-sizing: border-box; width: 22px; height: 22px; border-radius: 50%; background: var(--surface); border: 3px solid var(--c); }
 
 /* Undo toast: with the hover card, the only shadows; motion only in response to actions. */
 .toast {
