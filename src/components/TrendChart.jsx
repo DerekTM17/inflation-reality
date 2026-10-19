@@ -41,9 +41,14 @@ export default function TrendChart({ points, ticks, animate }) {
   // crosshair to accessibilityManager's index, so set that to the latest month first
   // (capture runs before Recharts' own handler). Recharts 2.15 instance API.
   const toLatest = () => chart.current?.accessibilityManager?.setIndex(last);
+  // Recharts' keyboard layer has no blur or Escape handling, so its card would stay
+  // open after focus leaves. Its mouse-leave handler (an instance property) hides it.
+  const hide = () => chart.current?.handleMouseLeave?.();
+  const onBlur = (e) => { if (!e.currentTarget.contains(e.relatedTarget)) hide(); };
+  const onKeyDown = (e) => { if (e.key === "Escape") hide(); };
   return (
     <>
-      <div className="trend-chart" onFocusCapture={toLatest}>
+      <div className="trend-chart" onFocusCapture={toLatest} onBlurCapture={onBlur} onKeyDown={onKeyDown}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             ref={chart}
