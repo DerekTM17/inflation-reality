@@ -1,17 +1,26 @@
 import { useMemo } from "react";
-import { avgPriceGroups, movers, fuelRows, priceNotes } from "../tabs/prices.js";
+import { avgPriceGroups, movers, fuelRows, priceNotes, moverHover } from "../tabs/prices.js";
 import BarList from "../components/BarList.jsx";
+import HoverCard from "../components/HoverCard.jsx";
+import { useHover } from "../components/useHover.js";
+import { useFirstView } from "../components/useMotion.js";
 
-/** The Price check tab (spec "Other tabs"). Lays out prices.js output; computes nothing. */
+/** The Price check tab (spec "Other tabs", revision 4 "Charts"). Lays out prices.js output; computes nothing. */
 export default function PriceCheck({ data }) {
   const groups = useMemo(() => avgPriceGroups(data), [data]);
   const fuel = useMemo(() => fuelRows(data), [data]);
   const moved = useMemo(() => movers(data), [data]);
   const notes = useMemo(() => priceNotes(data), [data]);
+  const hover = useHover();
+  const play = useFirstView("price-check");
   const month = data.referenceMonthLabel;
+  const content = (key) => {
+    const row = key ? moved.find((r) => `bar:${r.key}` === key) : null;
+    return row ? moverHover(row) : null;
+  };
 
   return (
-    <article className="tab" aria-labelledby="page-title">
+    <article className={play ? "tab play" : "tab"} aria-labelledby="page-title">
       <header className="tab-intro">
         <h1 id="page-title" tabIndex={-1}>Price check</h1>
         <p className="lede">
@@ -73,7 +82,7 @@ export default function PriceCheck({ data }) {
         <h2 id="movers-title">Biggest price changes</h2>
         <p>The items above whose prices changed the most over the year, up or down.</p>
         {moved.length > 0
-          ? <BarList rows={moved} label="Biggest price changes, largest first" />
+          ? <BarList rows={moved} label="Biggest price changes, largest first" hover={hover} />
           : <p>These figures are not available right now.</p>}
       </section>
 
@@ -82,6 +91,7 @@ export default function PriceCheck({ data }) {
           {notes.map((text) => <p key={text}>{text}</p>)}
         </div>
       )}
+      <HoverCard anchor={hover.state?.el ?? null} content={content(hover.state?.key)} />
     </article>
   );
 }

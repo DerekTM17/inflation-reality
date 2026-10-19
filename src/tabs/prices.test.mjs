@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { unitWords, pctChange, formatPrice, avgPriceGroups, movers, fuelRows, priceNotes } from "./prices.js";
+import {
+  unitWords, pctChange, formatPrice, avgPriceGroups, movers, fuelRows, priceNotes, priceFamily, moverHover,
+} from "./prices.js";
 import { AVG_PRICE_ITEMS } from "../data/catalog.js";
 import { viewData } from "./testdata.mjs";
 
@@ -71,4 +73,19 @@ test("fuelRows: weekly price, week, year-ago change and the monthly average; mis
 
 test("priceNotes: stale prices by name", () => {
   assert.deepEqual(priceNotes(viewData()), ["Using the last known price for Butter, Stick."]);
+});
+
+test("movers: each item has a kind of spending, prices with units, and a hover card", () => {
+  const by = Object.fromEntries(movers(viewData()).map((r) => [r.key, r]));
+  assert.equal(by.APU0000708111.family, "food");
+  assert.equal(by.APU000074714.family, "around");
+  assert.equal(by.APU000072610.family, "util");
+  assert.equal(priceFamily("APU000074717"), "around");
+  assert.equal(priceFamily("APU000072620"), "util");
+  assert.equal(priceFamily("APU0000709112"), "food");
+  assert.deepEqual(moverHover(by.APU0000708111), {
+    title: "Eggs, Grade A Large", family: "food",
+    items: [["Kind of spending", "Food"], ["Price now", "$2.27 a dozen"], ["A year ago", "$3.59 a dozen"], ["Change", "−36.7%"]],
+    lines: [], note: "",
+  });
 });

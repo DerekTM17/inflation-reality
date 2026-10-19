@@ -37,8 +37,12 @@
 }
 .bar-name { font-weight: 500; overflow-wrap: anywhere; }
 .bar-val { text-align: right; font-weight: 700; }
-.bar-row .bar-track { grid-column: 1 / -1; height: 6px; margin-top: 8px; }
-.bar-row .bar { background: var(--bar-line); }
+.bar-row .bar-track { grid-column: 1 / -1; height: 10px; margin-top: 8px; }
+.bar-row .bar { background: var(--c, var(--bar-line)); }
+.bar-row:hover,
+.bar-row:focus-visible { background: color-mix(in srgb, var(--c, var(--bar-line)) 13%, transparent); }
+.bar-row .bar-name { display: flex; align-items: center; gap: 8px; }
+.zero-line { position: absolute; top: -3px; bottom: -3px; width: 0; border-left: 1px solid var(--control-edge); }
 
 .data-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-variant-numeric: tabular-nums; }
 .data-table th,
@@ -54,6 +58,8 @@
 .fuel h3 { margin: 0; font-size: 16px; }
 .fuel-price { margin: 0; font-weight: 700; font-size: 20px; font-variant-numeric: tabular-nums; }
 .fuel p { margin: 0; }
+/* Each fuel note is its own paragraph, not one run of text. */
+.fuel .help { margin-top: 6px; }
 
 .status { min-height: 1.5em; color: var(--ink-2); }
 
@@ -133,3 +139,5 @@
 .mrow .bar { background: var(--c); }
 .ref-line { position: absolute; top: -4px; bottom: -4px; width: 0; border-left: 1.5px dashed var(--ink-2); }
 .mrow-blurb { display: block; grid-column: 1 / -1; margin: 6px 0 0; }
+.series-table th .dot { margin-right: 8px; }
+.line-note { display: block; font-weight: 400; font-size: 13px; color: var(--ink-2); }

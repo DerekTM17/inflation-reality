@@ -4,9 +4,9 @@
 // the page and the download never disagree.
 
 import { BASKET } from "../data/catalog.js";
-import { LINES, EMPLOYER_HEALTH_DEFAULT } from "../calculator/config.js";
+import { LINES, BASKET_ROWS, EMPLOYER_HEALTH_DEFAULT } from "../calculator/config.js";
 import { formatDollars } from "../calculator/format.js";
-import { pctChange } from "./prices.js";
+import { pctChange, priceFamily } from "./prices.js";
 
 /** Where a person can check a series: FRED for FRED-sourced ids, the BLS data viewer otherwise. */
 export function sourceUrl(seriesId, source) {
@@ -15,8 +15,9 @@ export function sourceUrl(seriesId, source) {
     : `https://fred.stlouisfed.org/series/${seriesId}`;
 }
 
-const row = (name, seriesId, source, yoy = null) => ({
-  name, seriesId, source: source === "bls" ? "BLS" : "FRED", url: sourceUrl(seriesId, source), yoy,
+// family: the kind of spending the series stands for (a FAMILIES id, shown as a dot), or null.
+const row = (name, seriesId, source, yoy = null, family = null) => ({
+  name, seriesId, source: source === "bls" ? "BLS" : "FRED", url: sourceUrl(seriesId, source), yoy, family,
 });
 
 /**
@@ -41,8 +42,8 @@ export function seriesGroups(catalog, data) {
       id: "household",
       title: "Lines on Your costs",
       rows: [
-        ...household.map((l) => row(l.label, l.seriesId, l.source, lineYoy(l.id))),
-        ...CALC_COMBOS.flatMap((c) => c.parts.map((p) => row(`${c.label}: ${p.label.toLowerCase()}`, p.seriesId, c.source))),
+        ...household.map((l) => row(l.label, l.seriesId, l.source, lineYoy(l.id), LINES[l.id]?.family ?? null)),
+        ...CALC_COMBOS.flatMap((c) => c.parts.map((p) => row(`${c.label}: ${p.label.toLowerCase()}`, p.seriesId, c.source, null, LINES[c.id]?.family ?? null))),
       ],
     },
     {
@@ -56,7 +57,7 @@ export function seriesGroups(catalog, data) {
     {
       id: "average",
       title: "The average household",
-      rows: BASKET.visible.map((v) => row(v.label, v.seriesId, "fred", basketRate(v.id))),
+      rows: BASKET.visible.map((v) => row(v.label, v.seriesId, "fred", basketRate(v.id), BASKET_ROWS[v.id]?.family ?? null)),
     },
     {
       id: "national",
@@ -76,11 +77,11 @@ export function seriesGroups(catalog, data) {
       rows: [
         ...AVG_PRICE_ITEMS.map((p) => {
           const a = avg(p.seriesId);
-          return row(p.item, p.seriesId, "fred", pctChange(a?.current ?? null, a?.yearAgo ?? null));
+          return row(p.item, p.seriesId, "fred", pctChange(a?.current ?? null, a?.yearAgo ?? null), priceFamily(p.seriesId));
         }),
         ...WEEKLY_PRICES.map((w) => {
           const x = weekly(w.key);
-          return row(`${w.label}, weekly`, w.seriesId, "fred", pctChange(x?.current ?? null, x?.yearAgo ?? null));
+          return row(`${w.label}, weekly`, w.seriesId, "fred", pctChange(x?.current ?? null, x?.yearAgo ?? null), "around");
         }),
       ],
     },

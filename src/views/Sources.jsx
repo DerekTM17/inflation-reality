@@ -57,7 +57,10 @@ export default function Sources({ data }) {
               <tbody>
                 {g.rows.map((r) => (
                   <tr key={`${g.id}-${r.seriesId}-${r.name}`}>
-                    <th scope="row">{r.name}</th>
+                    <th scope="row">
+                      {r.family && <span className="dot" data-family={r.family} aria-hidden="true" />}
+                      {r.name}
+                    </th>
                     <td><a href={r.url} {...EXTERNAL}>{r.seriesId}</a></td>
                     <td>{r.source}</td>
                   </tr>

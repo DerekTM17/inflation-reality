@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import * as catalog from "../data/catalog.js";
 import { seriesGroups, sourceUrl, NO_SERIES_LINES, METHOD, CAVEATS, SOURCE_LINKS } from "./sources.js";
 import { viewData } from "./testdata.mjs";
+import { FAMILIES } from "../calculator/config.js";
 
 const groups = seriesGroups(catalog, viewData());
 const byId = Object.fromEntries(groups.map((g) => [g.id, g]));
@@ -73,4 +74,16 @@ test("copy follows the voice guide", () => {
   }
   assert.ok(METHOD.some((s) => s.paragraphs.some((p) => p.includes("$5,750 a month"))));
   for (const l of SOURCE_LINKS) assert.match(l.url, /^https:\/\//);
+});
+
+test("series rows carry a family dot where the series is a kind of spending", () => {
+  const ids = new Set(FAMILIES.map((f) => f.id));
+  for (const r of byId.household.rows) assert.ok(ids.has(r.family), `${r.name} has a family`);
+  assert.equal(byId.household.rows.find((r) => r.seriesId === "CUUR0000SETB01").family, "around");
+  assert.equal(byId.household.rows.find((r) => r.name.startsWith("Doctor and pharmacy: ")).family, "health");
+  assert.equal(byId.average.rows.find((r) => r.seriesId === "CPIMEDNS").family, "health");
+  assert.equal(byId.average.rows.find((r) => r.seriesId === "CUUR0000SAH1").family, "home");
+  assert.equal(byId.prices.rows.find((r) => r.seriesId === "APU000072610").family, "util");
+  assert.equal(byId.prices.rows.find((r) => r.seriesId === "GASREGW").family, "around");
+  for (const g of [byId.yardstick, byId.national]) for (const r of g.rows) assert.equal(r.family, null, r.name);
 });
