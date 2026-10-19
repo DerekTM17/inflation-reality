@@ -92,7 +92,8 @@ RULES_JS = r"""
       note(`rule 5: tinted ${name(el)} has a border`);
     }
     if (dark && !transparent(cs.backgroundColor) && lum(cs.backgroundColor) > 0.4
-        && !el.closest(".bar-track, .toast, [aria-pressed='true'], .check, [data-family], [data-publisher], .slider")) {
+        && !el.closest(".bar-track, .toast, [aria-pressed='true'], .check")
+        && !el.matches(".dot, .slice, .bar, .pace-bar, .slider")) {   // family-colored marks only
       note(`dark: light background ${cs.backgroundColor} on ${name(el)}`);
     }
   }
@@ -107,10 +108,13 @@ RULES_JS = r"""
 }
 """
 
-# True when no bar is mid-animation: a scaleX transform makes the drawn width differ from the layout width.
+# True when there are bars and none is mid-animation: a scaleX transform makes the drawn width differ from
+# the layout width. An empty list is false, so a selector that matches nothing cannot pass.
 FULL_BARS_JS = r"""
-(sel) => [...document.querySelectorAll(sel)].filter((b) => b.offsetWidth > 0)
-  .every((b) => Math.abs(b.getBoundingClientRect().width - b.offsetWidth) < 0.5)
+(sel) => {
+  const bars = [...document.querySelectorAll(sel)].filter((b) => b.offsetWidth > 0);
+  return bars.length > 0 && bars.every((b) => Math.abs(b.getBoundingClientRect().width - b.offsetWidth) < 0.5);
+}
 """
 
 # Sets a range input the way a drag does, so React's onChange runs.
@@ -565,9 +569,11 @@ def desktop_flows(browser, args, base, seen):
     body = card_text(page)
     check("Price now" in body and "A year ago" in body, f"a price change row's card shows both prices ({body!r})")
 
-    # Reduced motion: bars are at full width on first paint.
+    # Reduced motion: bars are at full width on first paint. National numbers was viewed above, so
+    # reload for a true first view (the bars get .play); a hash change alone would not replay them.
     page.goto(base + "#national-numbers")
-    page.wait_for_selector("#page-title")
+    page.reload()
+    page.wait_for_selector(".play .grow")
     check(page.evaluate(FULL_BARS_JS, ".bar, .pace-bar"), "reduced motion: bars are at full width on first paint")
 
     check(errors == [], f"no console errors in the desktop flows {errors}")
