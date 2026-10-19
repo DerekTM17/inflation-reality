@@ -40,6 +40,8 @@ Items we want to tackle in the near term but aren't started yet.
   Owner picked the Bolder mockup, wants quick-start households back and a compact two-column layout. Open: collapsible family cards on phones. Mockups in docs/superpowers/mockups/2026-10-02-color-study-*.html on branch redesign/phase2b; palette and plan in the 2026-10-14 handoff in docs/SESSIONS.md.
 - [ ] Make the dark-mode color check catch pale tinted backgrounds <!-- added 2026-10-18 -->
   scripts/audit/ui-audit.py lum() misreads Chrome's color(srgb …) values, so color-mix tints on .fam/.mrow can never fail the dark light-background check. Parse color(srgb r g b) as 0–1 floats. Found in the 2026-10-18 rev 4 final review.
+- [ ] Polish leftovers from the bolder look review <!-- added 2026-10-18 -->
+  Parked 2026-10-18: card folds and drops focus when crossing 600px with focus inside (FamilyCards narrow flip); .lg.hl bold reflows legend; tiny shares draw ≤1px slices (min-width); trend EndLabel clips past ~6 chars (right margin 48); useHover dismissed key clears only on pointerleave; dedupe useReducedMotion/MINUS/'around'.
 
 ## Someday
 
