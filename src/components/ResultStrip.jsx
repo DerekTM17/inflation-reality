@@ -1,6 +1,17 @@
-/** A bar from zero: right for increases, left for decreases (spec "Numbers"). */
-function Bar({ bar, kind }) {
-  return <span className={`bar ${kind}`} style={{ left: `${bar.left}%`, width: `${bar.width}%` }} />;
+import CountUp from "./CountUp.jsx";
+import { answerSentence } from "../calculator/panel.js";
+import { roundToStep } from "../calculator/format.js";
+
+const MINUS = "−";
+
+/** A bar from zero: right for increases, left for decreases (spec "Numbers"). Grows in on a first view. */
+function Bar({ bar, kind, i, neg }) {
+  return (
+    <span
+      className={`bar ${kind} grow${neg ? " neg" : ""}`}
+      style={{ left: `${bar.left}%`, width: `${bar.width}%`, "--i": i }}
+    />
+  );
 }
 
 /** Your costs vs. the yardstick. Each bar is a hover target and, for keyboard users, a tab stop. */
@@ -9,12 +20,12 @@ function Compare({ compare, hover }) {
     <div className="compare">
       <span>Your costs</span>
       <span className="bar-track" tabIndex={0} role="img" aria-label={`Your costs ${compare.you.text}`} {...hover.target("cmp:you")}>
-        <Bar bar={compare.you.bar} kind="you" />
+        <Bar bar={compare.you.bar} kind="you" i={0} neg={compare.you.text.startsWith(MINUS)} />
       </span>
       <span className="cmp-val">{compare.you.text}</span>
       <span>{compare.usLabel}</span>
       <span className="bar-track" tabIndex={0} role="img" aria-label={`${compare.usLabel} ${compare.us.text}`} {...hover.target("cmp:us")}>
-        <Bar bar={compare.us.bar} kind="us" />
+        <Bar bar={compare.us.bar} kind="us" i={1} neg={compare.us.text.startsWith(MINUS)} />
       </span>
       <span className="cmp-val">{compare.us.text}</span>
     </div>
@@ -77,7 +88,11 @@ export default function ResultStrip({ model, mix, personal, wide, hover, highlig
       <section className="strip" ref={stripRef} aria-labelledby="result-title">
         <div className="strip-main">
           <h2 id="result-title">{model.title}</h2>
-          <p className="answer" id="answer" tabIndex={-1}>{model.answer}</p>
+          <p className="answer" id="answer" tabIndex={-1}>
+            {model.total != null
+              ? <CountUp value={model.total} duration={350} format={(v) => answerSentence(roundToStep(v, 50))} />
+              : model.answer}
+          </p>
           {wide && rates}
           {model.compare && <Compare compare={model.compare} hover={hover} />}
           {wide && verdict}

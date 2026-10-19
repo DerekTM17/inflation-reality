@@ -2,6 +2,7 @@ import { LINES } from "../calculator/config.js";
 import { formatDollars, parseAmountInput, parseRenewalInput, clampAmount } from "../calculator/format.js";
 import NumberField from "./NumberField.jsx";
 import { isMouse, CARD_ID } from "./useHover.js";
+import { useFlashKey } from "./useMotion.js";
 
 /** The fold chevron: an SVG icon, never a text glyph (the banned-string scan reads text). */
 function Chevron() {
@@ -21,6 +22,7 @@ function Chevron() {
 function AmountRow({ row, hover, onAmount, onRenewal }) {
   const hint = Object.hasOwn(LINES, row.id) ? LINES[row.id].hint : null;
   const hintId = hint ? `hint-${row.id}` : undefined;
+  const flash = useFlashKey(row.monthly); // only the row whose amount changed flashes its dollar figure
   // Focus lands on the box or the slider, so they (not the row) point at the open card.
   const cardOpen = hover.state?.key === `row:${row.id}`;
   const boxDescribedBy = [hintId, cardOpen ? CARD_ID : null].filter(Boolean).join(" ") || undefined;
@@ -32,7 +34,9 @@ function AmountRow({ row, hover, onAmount, onRenewal }) {
         {row.note && <span className="amt-note">{row.note}</span>}
         {hint && <span className="amt-note" id={hintId}>{hint}</span>}
       </label>
-      <span className={row.renewalMissing ? "amt-adds prompt" : "amt-adds"}>{row.addsYearText}</span>
+      <span key={flash} className={["amt-adds", row.renewalMissing && "prompt", flash > 0 && "flash"].filter(Boolean).join(" ")}>
+        {row.addsYearText}
+      </span>
       <span className="amt-boxes">
         <span className="money">
           $

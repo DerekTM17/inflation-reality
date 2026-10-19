@@ -16,6 +16,7 @@ import LiveRegion from "../components/LiveRegion.jsx";
 import HoverCard from "../components/HoverCard.jsx";
 import { useHover } from "../components/useHover.js";
 import { useMediaQuery } from "../components/useMedia.js";
+import { useFirstView } from "../components/useMotion.js";
 
 const withPeriod = (s) => (s.endsWith(".") ? s : `${s}.`);
 const prefersReducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
@@ -43,6 +44,7 @@ export default function YourCosts({ data, base, onNavigate }) {
   const stripRef = useRef(null);
   const wide = useMediaQuery("(min-width: 900px)");
   const hover = useHover();
+  const play = useFirstView("your-costs");
 
   // One source for the strip's numbers, shared with the spreadsheet download.
   const { mode, rows, model } = useMemo(() => estimateFor(answers, data), [answers, data]);
@@ -166,7 +168,7 @@ export default function YourCosts({ data, base, onNavigate }) {
 
   return (
     <>
-      <section className="calc" aria-label="Your costs">
+      <section className={play ? "calc play" : "calc"} aria-label="Your costs">
         <YourCostsIntro data={data} base={base} onNavigate={onNavigate} returning={folded && visit.returning} />
         <ResultStrip
           model={model}
