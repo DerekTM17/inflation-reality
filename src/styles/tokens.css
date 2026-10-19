@@ -1,7 +1,8 @@
-/* Visual system tokens (spec "Visual system"). Components never use literal colors:
-   every color below is the only place it is written. Light first, then dark for
-   the system setting, then dark for an explicit data-theme="dark". The two dark
-   blocks must stay identical (tokens.test.mjs checks). */
+/* Visual system tokens (spec "Visual system", revision 4 "Families"). Components never
+   use literal colors: every color below is the only place it is written. Light first,
+   then dark for the system setting, then dark for an explicit data-theme="dark". The two
+   dark blocks must stay identical (tokens.test.mjs checks). Family colors are for marks
+   only (dots, bars, slider fills, tints, slices), never for text. */
 :root {
   --ground: #F3F5F4;
   --surface: #FFFFFF;
@@ -18,6 +19,22 @@
   --bar-line: #87919A;
   --dock: #1F2933;
   --dock-ink: #FFFFFF;
+  --track: #E4E9E7;
+  --f-home: #2F6DB5;
+  --f-around: #D2602E;
+  --f-food: #1A9473;
+  --f-util: #C48A12;
+  --f-fun: #C9638C;
+  --f-health: #3E7D2E;
+  --f-kids: #5A4AA8;
+  --f-rest: #87919A;
+  /* Publishers on National numbers reuse family colors. The aliases live here only:
+     a dark block that resets a family color on :root changes its alias with it. */
+  --p-labor: var(--f-home);
+  --p-commerce: var(--f-food);
+  --p-cleveland: var(--f-kids);
+  --p-atlanta: var(--f-util);
+  --p-dallas: var(--f-fun);
   --shadow: 0 6px 20px rgba(20, 25, 30, 0.28);
   --font: "Libre Franklin", "Franklin Gothic Medium", "Helvetica Neue", Arial, sans-serif;
 }
@@ -39,6 +56,15 @@
     --bar-line: #7A858F;
     --dock: #E7ECEA;
     --dock-ink: #161A1E;
+    --track: #2C343B;
+    --f-home: #4C8BD6;
+    --f-around: #DE6A35;
+    --f-food: #2AAA85;
+    --f-util: #B98312;
+    --f-fun: #CB668F;
+    --f-health: #5C9A45;
+    --f-kids: #9085E9;
+    --f-rest: #7A858F;
   }
 }
 
@@ -58,6 +84,15 @@
   --bar-line: #7A858F;
   --dock: #E7ECEA;
   --dock-ink: #161A1E;
+  --track: #2C343B;
+  --f-home: #4C8BD6;
+  --f-around: #DE6A35;
+  --f-food: #2AAA85;
+  --f-util: #B98312;
+  --f-fun: #CB668F;
+  --f-health: #5C9A45;
+  --f-kids: #9085E9;
+  --f-rest: #7A858F;
 }
 
 html {
