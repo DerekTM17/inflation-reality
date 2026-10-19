@@ -1,0 +1,59 @@
+/* Marks (spec "Revision 4": Families, Hover detail cards). Family and publisher colors
+   reach elements only through --c, set here from data attributes, and paint marks
+   (dots, bars, slider fills, tints, slices), never text. Colors live in tokens.css. */
+
+[data-family="home"] { --c: var(--f-home); }
+[data-family="around"] { --c: var(--f-around); }
+[data-family="food"] { --c: var(--f-food); }
+[data-family="util"] { --c: var(--f-util); }
+[data-family="fun"] { --c: var(--f-fun); }
+[data-family="health"] { --c: var(--f-health); }
+[data-family="kids"] { --c: var(--f-kids); }
+[data-family="rest"] { --c: var(--f-rest); }
+[data-publisher="labor"] { --c: var(--p-labor); }
+[data-publisher="commerce"] { --c: var(--p-commerce); }
+[data-publisher="cleveland"] { --c: var(--p-cleveland); }
+[data-publisher="atlanta"] { --c: var(--p-atlanta); }
+[data-publisher="dallas"] { --c: var(--p-dallas); }
+
+.dot { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+
+/* The shared hover card. Text is --ink / --ink-2 on --surface. */
+.hover-card {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 20;
+  width: max-content;
+  max-width: min(340px, calc(100vw - 32px));
+  padding: 10px 12px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  pointer-events: none;
+}
+.hc-title { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-weight: 700; }
+.hover-card dl { display: grid; gap: 2px; margin: 0; }
+.hc-item { display: flex; justify-content: space-between; gap: 16px; }
+.hc-item dt { color: var(--ink-2); white-space: nowrap; }
+.hc-item dd { margin: 0; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.hc-line { margin-top: 6px; font-weight: 600; }
+.hc-note { margin-top: 8px; font-size: 13px; color: var(--ink-2); }
+
+/* Focus rings for the revision 4 targets: the same ring as every other control. */
+.lg:focus-visible,
+.fam-head:focus-visible,
+.slider:focus-visible,
+.chip:focus-visible,
+.bar-track[tabindex]:focus-visible,
+.amt.avg:focus-visible,
+.mrow:focus-visible,
+.bar-row:focus-visible,
+.stat:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
