@@ -331,3 +331,67 @@ git status -sb && git log --oneline -3   # expect clean, head 9112bad, ahead of 
 npm test                                 # expect 184/184 before Task 1
 # then: superpowers:subagent-driven-development on docs/superpowers/plans/2026-10-17-calculator-rev4-bolder.md
 ```
+
+### 2026-10-18
+
+#### Handoff — Revision 4 built, reviewed and verified on `redesign/phase2b`; waiting on the owner's 5-second test (supersedes all earlier handoffs)
+
+**Goal:** Build the approved revision 4 plan (`docs/superpowers/plans/2026-10-17-calculator-rev4-bolder.md`, Tasks 1–10, plus Task 11's controller checks) subagent-driven in the worktree.
+
+**Done (branch `redesign/phase2b`, worktree `~/projects/inflation-reality-phase2b`; NOT pushed, NOT merged, nothing deployed):**
+- Tasks 1–10, one commit each, `9ffcde9` … `94fc255`. Each was built by a fresh implementer and passed a task review (spec and quality) with no open Critical or Important findings.
+- A final whole-branch review (Opus) said "with fixes": 0 critical, 3 important, 12 minor. One fix wave followed (`120ba15`, `252014d`, `33f62ed`), and a scoped re-review found all 10 targeted findings fixed with nothing broken. What the wave fixed:
+  - The trend-chart card now closes on Escape and when focus leaves the chart, and the audit checks both.
+  - The audit's reduced-motion "bars full width on first paint" check reloads the page and fails when it finds no bars. It was proved to fail when the reduced-motion rule is removed.
+  - The dark-mode light-background check now exempts only the marks.
+  - Hover: an Escape-closed card stays closed, a keyboard-opened card comes back after the mouse passes over another target, and hint text is read once.
+  - The renewal box gets `aria-describedby`; focusable rows get names.
+  - Undo after a quick start restores the returning lede.
+  - The slider has hover and pressed states.
+- Verified at the branch tip `33f62ed` (2026-10-18, by the controller):
+  - `npm test`: tests 221, pass 221, fail 0.
+  - `vite build` ok.
+  - No literal colors; the dark token blocks are identical.
+  - The audit with the fixture passed at seed 236974 and at `--seed 1`.
+  - The audit with `--real-fonts` passed, and Libre Franklin 400/800 was confirmed loaded.
+  - Page heights with Commuter: 1,423px at 1280 (limit 1,500) and 1,793px at 390 with every card folded (limit 2,000). They are the same as with fallback fonts because fixed control heights dominate.
+  - The fault injection (a `.fam` border) makes the audit exit 1.
+- Screenshots for the spec walk-through and the 5-second test (20 of them: 390/1280 × light/dark × Average, Commuter and three tabs) are at `/tmp/ir-rev4-*.png`. The phone first screen is `/tmp/ir-rev4-390-light-first-screen.png`. I checked the phone first screen by eye. The other 19 have NOT been compared against the mockups yet. `/tmp` may be wiped; Task 11 Step 3 has the script to regenerate them.
+
+**Next:**
+1. The owner runs the 5-second test (Task 11 Step 4): 5 non-designers see the first phone screen and are asked "What does this page do?" and "Is that number yours?". Pass is at least 4 of 5 answering both correctly. Use the first-screen image above, or serve the preview to the LAN with `--host 0.0.0.0`; the command is in Task 11 Step 4. Record the result here. Do not merge without it.
+2. Optional before the test: compare the 20 screenshots with the Bolder mockups (`docs/superpowers/mockups/2026-10-02-color-study-*.html`, `data-v="c"`) and list any differences that aren't spec-wins cases as owner questions.
+3. On the owner's word only: merge per Task 11 Step 5 (read `git log redesign/phase2b..main` first; `main` has new docs and ledger commits, so expect a merge commit, not a fast-forward). Then push, run the audit against `https://derektm17.github.io/inflation-reality/` with and without `--live-data` (Step 6), and run the ledger steps (Step 7): `ledger ship`, then `ledger done` for the "owner's 5-second test" and "Phase 2b: rebuild National numbers" items. Add one `ledger idea` per plan open question the owner leaves unsettled. `ledger ship` was deliberately NOT run yet, because nothing is live.
+
+**Decisions this session (controller rulings; each lists its cost if wrong):**
+- The changed-row flash tints the row's background at 13% (`color-mix(... var(--c) 13% ...)`), not the text color. This satisfies both the spec's "flashes its family color" and "family colors are for marks only". Cost if wrong: a softer flash, one keyframe to change.
+- `.line-note` was re-added to `tabs.css`. Task 5's rewrite of `calculator.css` had dropped its only definition while Price check still uses it.
+- A mouse click pins a hover card (Escape or a click elsewhere unpins it). Cost: if unwanted, gate the pin to touch only.
+- Plan-mandated duplication was left in place: `useReducedMotion` is re-implemented in YourCosts, `MINUS` is declared twice, and `"around"` is hard-coded in `sources.js`. Cost: a small cleanup.
+- Measure and price-change list rows got `aria-labelledby` but not `role="group"`, because that role on an `li` breaks list semantics.
+- Parked (real, not blocking):
+  - Crossing 600px while focus is inside a card folds it and drops focus. This is rare and happens on rotation.
+  - `.lg.hl` bold text makes the legend reflow.
+  - Very small shares can draw slices 1px wide or less.
+  - The end label can clip at about −10.5%.
+  - The audit's `lum()` misreads Chrome `color(srgb …)` values, so a pale tint in dark mode can't fail the light-background check.
+  - The useHover `dismissed` key clears only on pointer leave.
+- For the owner (spec choices the final reviewer declined to judge):
+  - Hover cards close on pointer leave, so they aren't hoverable (WCAG 1.4.13).
+  - Dimmed rows, legend items and slices sit below contrast while another is highlighted.
+  - The sticky phone strip takes a big share of the screen while the on-screen keyboard is up.
+  - Decision 9 adds many tab stops.
+
+**Gotchas:**
+- The preview procedure's `echo $! > /tmp/ir-preview.pid` after `setsid … &` often records the wrong PID (setsid forks). Get the real listener from `ss -ltnp | grep 4719` and kill that PID only.
+- Use Python Playwright, never the Playwright MCP.
+- The main checkout gets ledger and doc commits from other sessions. Build only in the worktree.
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality-phase2b
+git status -sb && git log --oneline -1     # expect clean, head 33f62ed, ahead of origin
+npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 221, fail 0
+# preview: npm run build && setsid node node_modules/vite/bin/vite.js preview --port 4719 --strictPort </dev/null >/tmp/ir-preview.log 2>&1 & disown; ss -ltnp | grep 4719
+# then: Task 11 Step 4 (owner's 5-second test) → Step 5 merge only on the owner's word
+```
