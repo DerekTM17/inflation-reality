@@ -27,6 +27,10 @@ export function useHover() {
   ref.current = state;
   const wide = useMediaQuery("(min-width: 600px)");
   const lastPointer = useRef({ type: "", at: -Infinity });
+  // The key Escape closed: the mouse resting on that target must not reopen it until it leaves.
+  const dismissed = useRef(null);
+  // The target holding keyboard focus, so its card comes back when the mouse passes over another.
+  const focused = useRef(null);
 
   useEffect(() => {
     const record = (e) => { lastPointer.current = { type: e.pointerType, at: performance.now() }; };
@@ -42,7 +46,9 @@ export function useHover() {
 
   useEffect(() => {
     if (!state) return undefined;
-    const onKey = (e) => { if (e.key === "Escape") setState(null); };
+    const onKey = (e) => {
+      if (e.key === "Escape") { dismissed.current = ref.current?.key ?? null; setState(null); }
+    };
     const onScroll = () => {
       const s = ref.current;
       if (s && !s.pinned && !s.el.contains(document.activeElement)) setState(null);
@@ -61,17 +67,37 @@ export function useHover() {
     };
   }, [state]);
 
-  /** Props for a hover target. A moved mouse brings back a card that scrolling closed. */
+  /**
+   * Props for a hover target. A moved mouse brings back a card that scrolling closed (not
+   * one Escape closed). Leaving a target hides only its own card, and brings back the card
+   * of a target that still holds keyboard focus.
+   */
   const target = (key, family = null, { focus = true, tap = false, describe = true } = {}) => ({
     ...(describe ? { "aria-describedby": state?.key === key ? CARD_ID : undefined } : {}),
     onPointerEnter: (e) => { if (isMouse(e)) show(key, e.currentTarget, { family }); },
-    onPointerMove: (e) => { if (isMouse(e) && ref.current?.key !== key) show(key, e.currentTarget, { family }); },
+    onPointerMove: (e) => {
+      if (isMouse(e) && ref.current?.key !== key && dismissed.current !== key) show(key, e.currentTarget, { family });
+    },
     onPointerLeave: (e) => {
-      if (isMouse(e) && !ref.current?.pinned && !e.currentTarget.contains(document.activeElement)) hide();
+      if (!isMouse(e)) return;
+      if (dismissed.current === key) dismissed.current = null;
+      const s = ref.current;
+      if (!s || s.key !== key || s.pinned || e.currentTarget.contains(document.activeElement)) return;
+      const f = focused.current;
+      if (wide && f && f.key !== dismissed.current && f.el.contains(document.activeElement)) show(f.key, f.el, { family: f.family });
+      else hide();
     },
     ...(focus ? {
-      onFocus: (e) => { if (wide && !touchedJustNow()) show(key, e.currentTarget, { family }); },
-      onBlur: (e) => { if (!e.currentTarget.contains(e.relatedTarget) && ref.current?.key === key) hide(); },
+      onFocus: (e) => {
+        if (!wide || touchedJustNow()) return;
+        focused.current = { key, el: e.currentTarget, family };
+        show(key, e.currentTarget, { family });
+      },
+      onBlur: (e) => {
+        if (e.currentTarget.contains(e.relatedTarget)) return;
+        if (focused.current?.key === key) focused.current = null;
+        if (ref.current?.key === key) hide();
+      },
     } : {}),
     ...(tap ? { onClick: (e) => show(key, e.currentTarget, { family, pinned: true }) } : {}),
   });

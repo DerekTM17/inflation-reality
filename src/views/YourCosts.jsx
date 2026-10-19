@@ -104,9 +104,10 @@ export default function YourCosts({ data, base, onNavigate }) {
     setFoldedState(value);
   };
   // A quick start replaces everything the person entered (renewal rates are kept), so it
-  // offers Undo like Start over. Undo also puts the questions back as they were.
+  // offers Undo like Start over. Undo also puts the questions back as they were, and the
+  // returning lede if the fold came from saved answers on load.
   const onQuickStart = (quick) => {
-    setCleared((c) => ({ answers, folded, refold: true, message: `Filled in as ${quick.label}.`, key: (c?.key ?? 0) + 1 }));
+    setCleared((c) => ({ answers, folded, returning: visit.returning, refold: true, message: `Filled in as ${quick.label}.`, key: (c?.key ?? 0) + 1 }));
     setAnswers((prev) => applyQuickStart(prev, quick));
     visit.returning = false;
     fold(true);
@@ -126,7 +127,10 @@ export default function YourCosts({ data, base, onNavigate }) {
   const undo = () => {
     if (cleared) {
       setAnswers(cleared.answers);
-      if (cleared.refold) fold(cleared.folded);
+      if (cleared.refold) {
+        visit.returning = cleared.returning;
+        fold(cleared.folded);
+      }
     }
     setCleared(null);
     setPendingFocus(cleared?.refold && cleared.folded ? "answer" : "questions");

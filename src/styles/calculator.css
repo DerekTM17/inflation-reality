@@ -237,6 +237,18 @@ span.fam-head { min-height: 32px; }
 .slider::-moz-range-track { height: 10px; border-radius: 5px; background: var(--track); }
 .slider::-moz-range-progress { height: 10px; border-radius: 5px; background: var(--c); }
 .slider::-moz-range-thumb { box-sizing: border-box; width: 22px; height: 22px; border-radius: 50%; background: var(--surface); border: 3px solid var(--c); }
+/* Hover rings the thumb; pressing also fills it with its color. Neither moves or resizes
+   anything (the ring stays inside the 32px hit area), so reduced motion needs no override. */
+.slider:hover::-webkit-slider-thumb { box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 20%, transparent); }
+.slider:hover::-moz-range-thumb { box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 20%, transparent); }
+.slider:active::-webkit-slider-thumb {
+  background: color-mix(in srgb, var(--c) 35%, var(--surface));
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 30%, transparent);
+}
+.slider:active::-moz-range-thumb {
+  background: color-mix(in srgb, var(--c) 35%, var(--surface));
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 30%, transparent);
+}
 
 /* Undo toast: with the hover card, the only shadows; motion only in response to actions. */
 .toast {

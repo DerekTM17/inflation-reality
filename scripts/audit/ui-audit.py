@@ -497,8 +497,8 @@ def desktop_flows(browser, args, base, seen):
     check("You pay now" in body and "$380 a month, $4,560 a year" in body and "Adds this year" in body and adds in body,
           f"hovering a row shows its dollar figures ({body!r})")
     described = page.locator("#amount-gasoline").get_attribute("aria-describedby") or ""
-    check("hover-card" in described.split() and "hint-gasoline" in described.split() and row.get_attribute("aria-describedby") is None,
-          f"the row's dollar box points at its card and its hint, the row itself at nothing ({described!r})")
+    check(described == "hover-card" and row.get_attribute("aria-describedby") is None,
+          f"the row's dollar box points at its card (its hint is in its label, so read once), the row itself at nothing ({described!r})")
     check(page.locator(".fam.hl[data-family='around']").count() == 1, "the row's card is highlighted")
     check(page.locator(".mix.dim .slice.hl[data-family='around']").count() == 1, "its mix slice stands out")
     check(page.locator(".mix-legend .lg.hl[data-family='around']").count() == 1, "its legend item stands out")

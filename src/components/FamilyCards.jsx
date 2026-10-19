@@ -21,18 +21,18 @@ function Chevron() {
  */
 function AmountRow({ row, hover, onAmount, onRenewal }) {
   const hint = Object.hasOwn(LINES, row.id) ? LINES[row.id].hint : null;
-  const hintId = hint ? `hint-${row.id}` : undefined;
   const flash = useFlashKey(row.monthly); // only the row whose amount changed flashes its dollar figure
-  // Focus lands on the box or the slider, so they (not the row) point at the open card.
+  // Focus lands on the boxes or the slider, so they (not the row) point at the open card.
+  // The hint sits inside the box's label, so it is already part of the box's name.
   const cardOpen = hover.state?.key === `row:${row.id}`;
-  const boxDescribedBy = [hintId, cardOpen ? CARD_ID : null].filter(Boolean).join(" ") || undefined;
+  const describedBy = cardOpen ? CARD_ID : undefined;
   return (
     <div className="amt" data-family={row.family} {...hover.target(`row:${row.id}`, row.family, { describe: false })}>
       <label className="amt-label" htmlFor={`amount-${row.id}`}>
         {row.label}
         {row.rateText && <span className="amt-rate">{row.rateText}</span>}
         {row.note && <span className="amt-note">{row.note}</span>}
-        {hint && <span className="amt-note" id={hintId}>{hint}</span>}
+        {hint && <span className="amt-note">{hint}</span>}
       </label>
       <span key={flash} className={["amt-adds", row.renewalMissing && "prompt", flash > 0 && "flash"].filter(Boolean).join(" ")}>
         {row.addsYearText}
@@ -46,7 +46,7 @@ function AmountRow({ row, hover, onAmount, onRenewal }) {
             parse={parseAmountInput}
             onCommit={(v) => onAmount(row.id, v)}
             inputMode="numeric"
-            describedBy={boxDescribedBy}
+            describedBy={describedBy}
           />
         </span>
         {row.renewal && (
@@ -59,6 +59,7 @@ function AmountRow({ row, hover, onAmount, onRenewal }) {
               parse={parseRenewalInput}
               onCommit={(v) => onRenewal(row.id, v)}
               inputMode="decimal"
+              describedBy={describedBy}
             />
             %
           </span>
@@ -74,7 +75,7 @@ function AmountRow({ row, hover, onAmount, onRenewal }) {
         value={row.sliderValue}
         aria-label={`${row.label}, dollars a month`}
         aria-valuetext={`${formatDollars(row.monthly)} a month`}
-        aria-describedby={cardOpen ? CARD_ID : undefined}
+        aria-describedby={describedBy}
         style={{ "--p": `${(row.sliderValue / row.max) * 100}%` }}
         onChange={(e) => onAmount(row.id, clampAmount(Number(e.target.value)))}
       />
@@ -85,14 +86,18 @@ function AmountRow({ row, hover, onAmount, onRenewal }) {
 /** The average household's row: label, rate, what it adds and the monthly amount, as text. */
 function AverageRow({ row, hover, wide }) {
   return (
-    <div className="amt avg" data-family={row.family} tabIndex={wide ? 0 : undefined} {...hover.target(`row:${row.id}`, row.family)}>
-      <span className="amt-label">
+    <div
+      className="amt avg" data-family={row.family} tabIndex={wide ? 0 : undefined}
+      role="group" aria-labelledby={`avg-${row.id}-label avg-${row.id}-value`}
+      {...hover.target(`row:${row.id}`, row.family)}
+    >
+      <span className="amt-label" id={`avg-${row.id}-label`}>
         {row.label}
         {row.rateText && <span className="amt-rate">{row.rateText}</span>}
         {row.note && <span className="amt-note">{row.note}</span>}
       </span>
       <span className="amt-adds">{row.addsYearText}</span>
-      <span className="amt-value">{formatDollars(row.monthly)} a month</span>
+      <span className="amt-value" id={`avg-${row.id}-value`}>{formatDollars(row.monthly)} a month</span>
     </div>
   );
 }

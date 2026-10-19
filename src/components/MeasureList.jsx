@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 
 /**
  * Other official measures (spec "Charts and the other tabs"): rows tinted in their
@@ -10,6 +10,7 @@ import { useState } from "react";
  */
 export default function MeasureList({ rows, publishers, refLine, hover }) {
   const [pub, setPub] = useState(null);
+  const uid = useId();
   return (
     <>
       <div className="chips" role="group" aria-label="Highlight one publisher's measures">
@@ -37,14 +38,15 @@ export default function MeasureList({ rows, publishers, refLine, hover }) {
             className={pub === r.publisher ? "mrow on" : "mrow"}
             data-publisher={r.publisher}
             tabIndex={0}
+            aria-labelledby={`${uid}${r.key}-name ${uid}${r.key}-val`}
             {...hover.target(`m:${r.key}`)}
           >
-            <span className="bar-name">
+            <span className="bar-name" id={`${uid}${r.key}-name`}>
               <span className="dot" aria-hidden="true" />
               {r.name}
               <span className="sr">{hover.wide ? `, ${r.publisherLabel}. ${r.note}` : `, ${r.publisherLabel}.`}</span>
             </span>
-            <span className="bar-val">{r.valueText}</span>
+            <span className="bar-val" id={`${uid}${r.key}-val`}>{r.valueText}</span>
             <span className="bar-track" aria-hidden="true">
               <span
                 className={r.value < 0 ? "bar grow neg" : "bar grow"}

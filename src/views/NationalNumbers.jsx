@@ -43,9 +43,12 @@ function Pace({ pace }) {
 /** A big number on a 6% tinted card; it counts up over 900ms on the tab's first view. */
 function Stat({ card, kind, hover, play }) {
   return (
-    <div className={`stat ${kind}`} tabIndex={0} {...hover.target(`stat:${kind}`)}>
-      <h2>{card.title}</h2>
-      <p className="stat-value">
+    <div
+      className={`stat ${kind}`} tabIndex={0} role="group" aria-labelledby={`stat-${kind}-title stat-${kind}-value`}
+      {...hover.target(`stat:${kind}`)}
+    >
+      <h2 id={`stat-${kind}-title`}>{card.title}</h2>
+      <p className="stat-value" id={`stat-${kind}-value`}>
         {card.value == null
           ? card.yearText
           : <CountUp value={card.value} from={play ? 0 : null} duration={900} format={formatRate} />}
