@@ -95,9 +95,10 @@
   --f-rest: #7A858F;
 }
 
+/* Focused controls and in-page jumps land below the sticky result strip. YourCosts
+   writes the strip's height to --strip-h; other tabs leave it unset. */
 html {
-  scroll-padding-top: 16px;
-  scroll-padding-bottom: 110px; /* keeps focused controls clear of the phone dock */
+  scroll-padding-top: calc(var(--strip-h, 0px) + 16px);
 }
 
 body {

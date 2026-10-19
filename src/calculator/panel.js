@@ -1,4 +1,4 @@
-// Everything the result panel, lede, summary and fine print display, as plain data.
+// Everything the result strip, lede, summary and fine print display, as plain data.
 // Pure, so the wording and the "dollar lines add up to the total" rule are unit-tested
 // and the React components only lay it out.
 
@@ -9,17 +9,25 @@ import {
   barGeometry, monthLabel, joinAnd,
 } from "./format.js";
 
-/** Rows shown before "N smaller items" (Everything else is never counted here). */
-export const TOP_ROWS = 6;
-
 const UNAVAILABLE = "Average household figures are not available right now.";
 
+/** "About $1,450 more a year", "About $120 less a year", "About the same as a year ago". total is already rounded to $50. */
+export function answerSentence(total) {
+  if (total > 0) return `About ${formatDollars(total)} more a year`;
+  if (total < 0) return `About ${formatDollars(total)} less a year`;
+  return "About the same as a year ago";
+}
+
 /**
+ * Everything the result strip says, plus every line as rounded dollars. `main` holds the
+ * lines other than Everything else, largest dollars first, and `rest` holds Everything
+ * else; the family cards regroup them (cards.js) and the .xlsx personal sheet reads them
+ * as they are (src/tabs/workbook.js).
  * @param {object} p
  * @param {"average"|"personal"} p.mode
  * @param {object[]|null} p.rows  personalRows() or averageRows() output; null = basket unusable
  * @param {number|null} p.headlinePct  data.headline.yoy
- * @param {number|null} [p.exShelterPct]  data.lines.exShelter.yoy — owners' yardstick
+ * @param {number|null} [p.exShelterPct]  data.lines.exShelter.yoy, the owners' yardstick
  * @param {string|null} p.referenceMonth  "YYYY-MM"
  * @param {object} p.answers
  */
@@ -27,33 +35,24 @@ export function panelModel({ mode, rows, headlinePct, exShelterPct = null, refer
   const personal = mode === "personal";
   const title = `${personal ? "Your costs" : "The average U.S. household"} vs. ${monthLabel(referenceMonth, -1)}`;
   const nationalLine = headlinePct == null ? "" : `Prices overall ${movePhrase(headlinePct)}.`;
-  const empty = {
-    title, compare: null, verdict: null, basis: null, top: [], main: [], smaller: null, rest: null,
-    allCount: 0, prompts: [], bars: personal, actionLabel: personal ? "Change answers" : "Answer the questions",
-  };
+  const empty = { title, compare: null, verdict: null, basis: null, main: [], rest: null, bars: personal };
 
   if (rows == null) return { ...empty, answer: UNAVAILABLE, ratesLine: nationalLine, zero: false };
 
   const result = computeResult(rows);
-  const prompts = result.excluded
-    .filter((r) => r.missing === "renewal")
-    .map((r) => ({ id: r.id, text: `${r.label}: add your renewal increase` }));
   const basisText = personal ? basis(answers) : null;
 
   if (result.totalAnnual === 0) {
     const dataMissing = result.lines.length === 0 && result.excluded.some((r) => r.missing === "data");
     return {
-      ...empty, prompts, basis: basisText, zero: true,
+      ...empty, basis: basisText, zero: true,
       answer: dataMissing ? "Price data is not available right now." : "Enter your monthly amounts to see your estimate.",
       ratesLine: nationalLine,
     };
   }
 
   const total = roundToStep(result.totalExtra, 50);
-  const answer =
-    total > 0 ? `About ${formatDollars(total)} more a year`
-    : total < 0 ? `About ${formatDollars(total)} less a year`
-    : "About the same as a year ago";
+  const answer = answerSentence(total);
   // The national rate counts what owners would pay to rent their own home, a cost
   // owners never pay in cash, so owners are measured against prices other than housing.
   const home = personal ? effectiveChoices(answers).home : null;
@@ -83,13 +82,6 @@ export function panelModel({ mode, rows, headlinePct, exShelterPct = null, refer
     .filter((r) => !r.quiet)
     .sort((a, b) => b.abs - a.abs || a.order - b.order);
   const rest = display.find((r) => r.quiet) ?? null;
-  const tail = main.slice(TOP_ROWS);
-  const smaller = tail.length === 0 ? null : {
-    count: tail.length,
-    text: `${tail.length} smaller ${tail.length === 1 ? "item" : "items"}`,
-    dollars: tail.reduce((s, r) => s + r.dollars, 0),
-    dollarText: signedDollars(tail.reduce((s, r) => s + r.dollars, 0)),
-  };
 
   let compare = null;
   if (personal && result.rate != null && yard.pct != null) {
@@ -110,12 +102,8 @@ export function panelModel({ mode, rows, headlinePct, exShelterPct = null, refer
     compare,
     verdict: personal ? verdict(result, yard.pct, yard.name) : null,
     basis: basisText,
-    top: main.slice(0, TOP_ROWS),
     main,
-    smaller,
     rest,
-    allCount: main.length + (rest ? 1 : 0),
-    prompts,
   };
 }
 

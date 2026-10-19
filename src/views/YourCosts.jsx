@@ -1,19 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BASKET } from "../data/catalog.js";
 import { emptyAnswers, isPersonal, applyQuickStart } from "../calculator/model.js";
-import { createVisit, foldOnMount } from "../calculator/visit.js";
 import { summaryText, finePrint } from "../calculator/panel.js";
+import { familyCards, familyHover, compareHover } from "../calculator/cards.js";
+import { createVisit, foldOnMount } from "../calculator/visit.js";
 import { estimateFor } from "../tabs/estimate.js";
 import { getStorage, storageAvailable, loadAnswers, saveAnswers } from "../calculator/storage.js";
 import YourCostsIntro from "./YourCostsIntro.jsx";
+import ResultStrip from "../components/ResultStrip.jsx";
 import QuickStarts from "../components/QuickStarts.jsx";
 import Questions from "../components/Questions.jsx";
 import Summary from "../components/Summary.jsx";
-import ResultPanel from "../components/ResultPanel.jsx";
 import Amounts from "../components/Amounts.jsx";
-import Dock from "../components/Dock.jsx";
 import Toast from "../components/Toast.jsx";
 import LiveRegion from "../components/LiveRegion.jsx";
+import HoverCard from "../components/HoverCard.jsx";
+import { useHover } from "../components/useHover.js";
+import { useMediaQuery } from "../components/useMedia.js";
 
 const withPeriod = (s) => (s.endsWith(".") ? s : `${s}.`);
 const prefersReducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
@@ -24,9 +27,10 @@ const prefersReducedMotion = () => window.matchMedia?.("(prefers-reduced-motion:
 const visit = createVisit();
 
 /**
- * The Your costs tab. States (spec "States"): Average until any answer or checkbox,
- * then Personal; a load with saved personal answers starts folded (Returning).
- * Folding happens only on load, never while someone is answering.
+ * The Your costs tab (spec "Revision 4 layout"): headline, the sticky result strip,
+ * basis, quick starts, the questions (or the Summary), the monthly amounts, fine print.
+ * States (spec "States"): Average until any answer or checkbox, then Personal; a load
+ * with saved personal answers starts folded (Returning).
  */
 export default function YourCosts({ data, base, onNavigate }) {
   const storage = useMemo(getStorage, []);
@@ -34,39 +38,48 @@ export default function YourCosts({ data, base, onNavigate }) {
   const [answers, setAnswers] = useState(() => loadAnswers(storage) ?? emptyAnswers());
   const [folded, setFoldedState] = useState(() => foldOnMount(visit, isPersonal(answers)));
   const [amountsOpen, setAmountsOpen] = useState(false);
-  const [showAll, setShowAll] = useState(false);
   const [cleared, setCleared] = useState(null); // { answers, folded, refold, message, key } while the Undo toast is up
-  const [panelOnScreen, setPanelOnScreen] = useState(true);
   const [pendingFocus, setPendingFocus] = useState(null);
-  const panelRef = useRef(null);
+  const stripRef = useRef(null);
+  const wide = useMediaQuery("(min-width: 900px)");
+  const hover = useHover();
 
-  // One source for the panel's numbers, shared with the spreadsheet download.
+  // One source for the strip's numbers, shared with the spreadsheet download.
   const { mode, rows, model } = useMemo(() => estimateFor(answers, data), [answers, data]);
   const personal = mode === "personal";
   const fine = useMemo(() => finePrint({ mode, rows, data }), [mode, rows, data]);
+  const { cards, mix } = useMemo(() => familyCards({ mode, rows, model, answers }), [mode, rows, model, answers]);
 
   useEffect(() => {
     if (canSave) saveAnswers(storage, answers);
   }, [answers, canSave, storage]);
 
-  // The dock shows only while the panel is off screen.
+  // Focused controls and in-page jumps must land below the sticky strip, whose height
+  // changes with its content: keep it in a CSS variable that scroll-padding-top reads.
   useEffect(() => {
-    const el = panelRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return undefined;
-    const io = new IntersectionObserver(([entry]) => setPanelOnScreen(entry.isIntersecting));
-    io.observe(el);
-    return () => io.disconnect();
+    const el = stripRef.current;
+    const root = document.documentElement;
+    if (!el || typeof ResizeObserver === "undefined") return undefined;
+    const ro = new ResizeObserver(() => {
+      root.style.setProperty("--strip-h", `${Math.ceil(el.getBoundingClientRect().height)}px`);
+    });
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root.style.removeProperty("--strip-h");
+    };
   }, []);
 
-  // Move focus after the render that makes the target exist (unfolded questions,
-  // opened amounts, the Undo toast). The toast case skips scrollIntoView so
-  // pressing Start over on a phone doesn't jump the page.
+  // Move focus after the render that makes the target exist (unfolded questions, the
+  // answer after a quick start, the Undo toast). The toast and the answer skip
+  // scrollIntoView: the toast so Start over on a phone doesn't jump the page, the answer
+  // because it sits in the sticky strip, which is always on screen.
   useEffect(() => {
     if (!pendingFocus) return;
     const el = document.getElementById(pendingFocus);
     if (el) {
       el.focus({ preventScroll: true });
-      if (pendingFocus !== "undo-button") {
+      if (pendingFocus !== "undo-button" && pendingFocus !== "answer") {
         el.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
       }
     }
@@ -74,7 +87,7 @@ export default function YourCosts({ data, base, onNavigate }) {
   }, [pendingFocus]);
 
   // Any real change to the answers closes a pending Undo toast, so Undo can never
-  // silently overwrite newer answers with the cleared ones.
+  // silently overwrite newer answers with the earlier ones.
   const update = (fn) => {
     setAnswers((prev) => fn(prev));
     setCleared(null);
@@ -106,7 +119,6 @@ export default function YourCosts({ data, base, onNavigate }) {
     setAnswers(emptyAnswers());
     visit.returning = false;
     fold(false);
-    setShowAll(false);
     setPendingFocus("undo-button");
   };
   const undo = () => {
@@ -125,12 +137,20 @@ export default function YourCosts({ data, base, onNavigate }) {
     setCleared(null);
     if (insideToast) setPendingFocus("questions");
   }, []);
-  const openRenewal = (id) => {
-    setAmountsOpen(true);
-    setPendingFocus(`renewal-${id}`);
+
+  const highlight = hover.state?.family ?? null;
+  // Card content comes from the latest numbers on every render, so an open card
+  // follows its slider live (spec "Hover detail cards").
+  const hoverContent = (key) => {
+    if (!key) return null;
+    const [kind, id] = key.split(":");
+    if (kind === "fam") {
+      const card = cards.find((c) => c.id === id);
+      return card ? familyHover(card, personal) : null;
+    }
+    if (kind === "cmp") return compareHover(model, id);
+    return null;
   };
-  const seeDetails = () =>
-    panelRef.current?.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
 
   const liveText = [model.title, model.answer, model.verdict].filter(Boolean).map(withPeriod).join(" ");
 
@@ -138,8 +158,19 @@ export default function YourCosts({ data, base, onNavigate }) {
     <>
       <section className="calc" aria-label="Your costs">
         <YourCostsIntro data={data} base={base} onNavigate={onNavigate} returning={folded && visit.returning} />
+        <ResultStrip
+          model={model}
+          mix={mix}
+          personal={personal}
+          wide={wide}
+          hover={hover}
+          highlight={highlight}
+          onAnswerQuestions={toQuestions}
+          stripRef={stripRef}
+        />
+        {model.basis && <p className="basis">{model.basis}</p>}
+        <QuickStarts onPick={onQuickStart} />
         <div className="questions-area">
-          <QuickStarts onPick={onQuickStart} />
           {folded ? (
             <Summary
               text={summaryText(answers, rows)}
@@ -159,17 +190,6 @@ export default function YourCosts({ data, base, onNavigate }) {
             </>
           )}
         </div>
-        <div className="result-col">
-          <ResultPanel
-            ref={panelRef}
-            model={model}
-            fine={fine}
-            showAll={showAll}
-            onToggleShowAll={() => setShowAll((v) => !v)}
-            onAction={toQuestions}
-            onPrompt={openRenewal}
-          />
-        </div>
         <Amounts
           rows={rows}
           personal={personal}
@@ -179,15 +199,13 @@ export default function YourCosts({ data, base, onNavigate }) {
           onAmount={onAmount}
           onRenewal={onRenewal}
         />
+        <div className="fine">
+          {fine.map((text) => <p key={text}>{text}</p>)}
+        </div>
       </section>
       <LiveRegion text={liveText} />
-      <Dock
-        label={personal ? "Your costs" : "Average U.S. household"}
-        answer={model.answer}
-        away={panelOnScreen}
-        onSeeDetails={seeDetails}
-      />
       {cleared && <Toast key={cleared.key} message={cleared.message} onUndo={undo} onClose={closeToast} />}
+      <HoverCard anchor={hover.state?.el ?? null} content={hoverContent(hover.state?.key)} />
     </>
   );
 }

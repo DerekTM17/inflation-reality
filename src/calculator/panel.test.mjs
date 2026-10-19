@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { emptyAnswers, personalRows, averageRows, effectiveChoices, activeLines, computeResult } from "./model.js";
-import { panelModel, ledeText, summaryText, finePrint, TOP_ROWS } from "./panel.js";
+import { panelModel, ledeText, summaryText, finePrint, answerSentence } from "./panel.js";
 import { fakeData } from "./testdata.mjs";
 import { QUESTIONS, ALSO, LINES } from "./config.js";
 
@@ -15,12 +15,12 @@ function personalModel(answers, data = fakeData()) {
   });
 }
 
-// Every dollar row the panel shows, counted once: top rows + smaller items + Everything else.
+// Every dollar row the model carries, counted once: every line in main + Everything else.
 function shownSum(m) {
-  return m.top.reduce((s, r) => s + r.dollars, 0) + (m.smaller?.dollars ?? 0) + (m.rest?.dollars ?? 0);
+  return m.main.reduce((s, r) => s + r.dollars, 0) + (m.rest?.dollars ?? 0);
 }
 
-test("average panel: title, answer, national line, 6 rows + smaller items + Everything else, no bars/verdict/basis", () => {
+test("average panel: title, answer, national line, every line + Everything else, no bars/verdict/basis", () => {
   const data = fakeData();
   const m = panelModel({
     mode: "average", rows: averageRows(data, 5750), headlinePct: 3.4, referenceMonth: "2026-08", answers: emptyAnswers(),
@@ -32,27 +32,22 @@ test("average panel: title, answer, national line, 6 rows + smaller items + Ever
   assert.equal(m.verdict, null);
   assert.equal(m.basis, null);
   assert.equal(m.bars, false);
-  assert.equal(m.actionLabel, "Answer the questions");
-  assert.equal(m.top.length, TOP_ROWS);
-  assert.equal(m.smaller.count, 2);
-  assert.equal(m.smaller.text, "2 smaller items");
   assert.equal(m.rest.label, "Everything else");
   assert.equal(m.rest.note, "Estimated from the national rate");
-  assert.equal(m.allCount, 9);
   assert.equal(m.main.length, 8);
-  assert.ok(m.top.every((r, i) => i === 0 || m.top[i - 1].abs >= r.abs), "sorted by absolute dollars");
+  assert.ok(m.main.every((r, i) => i === 0 || m.main[i - 1].abs >= r.abs), "sorted by absolute dollars");
+  for (const gone of ["top", "smaller", "allCount", "prompts", "actionLabel"]) assert.ok(!(gone in m), `${gone} is gone`);
   assert.equal(shownSum(m), m.total);
 });
 
-test("personal panel with a mortgage: 0% line, prompt for home insurance, basis, verdict", () => {
+test("personal panel with a mortgage: 0% line, home insurance off the total, basis, verdict", () => {
   const m = personalModel(answersWith({ answered: { home: "mortgage" } }));
   assert.equal(m.title, "Your costs vs. August 2025");
-  assert.equal(m.actionLabel, "Change answers");
   const mortgage = m.main.find((r) => r.id === "mortgage");
   assert.equal(mortgage.rateText, "0%");
   assert.equal(mortgage.note, "Fixed payment");
   assert.equal(mortgage.dollarText, "$0");
-  assert.deepEqual(m.prompts, [{ id: "homeIns", text: "Home insurance: add your renewal increase" }]);
+  assert.ok(!m.main.some((r) => r.id === "homeIns"), "an empty renewal line is off the rows (its card row says so)");
   assert.equal(m.basis, "Based on 1 answer and 3 guesses. Monthly amounts are starting estimates.");
   assert.match(m.verdict, /prices other than housing/);
   assert.match(m.ratesLine, /^Your costs (rose|fell) \d+\.\d%\. Prices other than housing rose 3\.6%\.$/);
@@ -96,7 +91,7 @@ test("panel: zero total replaces the answer and hides lines, bars and verdict", 
   const m = personalModel(answersWith({ answered: { home: "rent" }, amounts }));
   assert.equal(m.zero, true);
   assert.equal(m.answer, "Enter your monthly amounts to see your estimate.");
-  assert.deepEqual(m.top, []);
+  assert.deepEqual(m.main, []);
   assert.equal(m.compare, null);
   assert.equal(m.verdict, null);
 });
@@ -104,7 +99,7 @@ test("panel: zero total replaces the answer and hides lines, bars and verdict", 
 test("panel: unusable basket in Average says so and invents nothing", () => {
   const m = panelModel({ mode: "average", rows: null, headlinePct: 3.4, referenceMonth: "2026-08", answers: emptyAnswers() });
   assert.equal(m.answer, "Average household figures are not available right now.");
-  assert.deepEqual(m.top, []);
+  assert.deepEqual(m.main, []);
   assert.equal(m.ratesLine, "Prices overall rose 3.4%.");
 });
 
@@ -154,7 +149,7 @@ test("panel: every line missing (no data at all) says price data unavailable, no
   assert.equal(m.zero, true);
   assert.equal(m.answer, "Price data is not available right now.");
   assert.equal(m.ratesLine, "Prices overall rose 3.4%.");
-  assert.deepEqual(m.top, []);
+  assert.deepEqual(m.main, []);
   assert.equal(m.rest, null);
   assert.equal(m.verdict, null);
 });
@@ -236,4 +231,10 @@ test("owners fall back to the national rate when the outside-housing figure is m
   assert.match(m.ratesLine, /Prices overall rose 3\.4%\.$/);
   assert.match(m.verdict, /national rate/);
   assert.equal(m.compare.usLabel, "National");
+});
+
+test("answerSentence: more, less, about the same", () => {
+  assert.equal(answerSentence(1450), "About $1,450 more a year");
+  assert.equal(answerSentence(-150), "About $150 less a year");
+  assert.equal(answerSentence(0), "About the same as a year ago");
 });
