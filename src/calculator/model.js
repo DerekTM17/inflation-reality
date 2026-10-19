@@ -191,3 +191,17 @@ export function basis(answers) {
   else s = `Based on ${answersText} and ${guessesText}.`;
   return Object.keys(answers.amounts).length === 0 ? `${s} Monthly amounts are starting estimates.` : s;
 }
+
+/**
+ * A quick start (config QUICK_STARTS) replaces every answer, checkbox and amount edit;
+ * the renewal rates the person typed are kept. Returns new objects, so the answers the
+ * Undo toast holds stay exactly as they were.
+ */
+export function applyQuickStart(answers, quick) {
+  return {
+    answered: { ...quick.answered },
+    also: { ...quick.also },
+    amounts: { ...quick.amounts },
+    renewals: { ...answers.renewals },
+  };
+}

@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BASKET } from "../data/catalog.js";
-import { emptyAnswers, isPersonal } from "../calculator/model.js";
+import { emptyAnswers, isPersonal, applyQuickStart } from "../calculator/model.js";
+import { createVisit, foldOnMount } from "../calculator/visit.js";
 import { summaryText, finePrint } from "../calculator/panel.js";
 import { estimateFor } from "../tabs/estimate.js";
 import { getStorage, storageAvailable, loadAnswers, saveAnswers } from "../calculator/storage.js";
 import YourCostsIntro from "./YourCostsIntro.jsx";
+import QuickStarts from "../components/QuickStarts.jsx";
 import Questions from "../components/Questions.jsx";
 import Summary from "../components/Summary.jsx";
 import ResultPanel from "../components/ResultPanel.jsx";
@@ -16,9 +18,10 @@ import LiveRegion from "../components/LiveRegion.jsx";
 const withPeriod = (s) => (s.endsWith(".") ? s : `${s}.`);
 const prefersReducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
-// Fold on the first mount of a page load only; a later remount (tab switch, since
-// App unmounts this view on route change) must not re-fold and lose an open toast.
-let foldedThisLoad = false;
+// Lasts for the visit, never saved: once the questions fold (saved answers on load, or a
+// quick start) they stay folded across tab switches (App unmounts this view on route
+// change) until Change answers or Start over.
+const visit = createVisit();
 
 /**
  * The Your costs tab. States (spec "States"): Average until any answer or checkbox,
@@ -29,14 +32,10 @@ export default function YourCosts({ data, base, onNavigate }) {
   const storage = useMemo(getStorage, []);
   const canSave = useMemo(() => storageAvailable(storage), [storage]);
   const [answers, setAnswers] = useState(() => loadAnswers(storage) ?? emptyAnswers());
-  const [folded, setFolded] = useState(() => {
-    if (foldedThisLoad) return false;
-    foldedThisLoad = true;
-    return isPersonal(answers);
-  });
+  const [folded, setFoldedState] = useState(() => foldOnMount(visit, isPersonal(answers)));
   const [amountsOpen, setAmountsOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
-  const [cleared, setCleared] = useState(null); // { answers, key } while the Undo toast is up
+  const [cleared, setCleared] = useState(null); // { answers, folded, refold, message, key } while the Undo toast is up
   const [panelOnScreen, setPanelOnScreen] = useState(true);
   const [pendingFocus, setPendingFocus] = useState(null);
   const panelRef = useRef(null);
@@ -85,21 +84,38 @@ export default function YourCosts({ data, base, onNavigate }) {
   const onAmount = (id, value) => update((a) => ({ ...a, amounts: { ...a.amounts, [id]: value } }));
   const onRenewal = (id, value) => update((a) => ({ ...a, renewals: { ...a.renewals, [id]: value } }));
 
+  const fold = (value) => {
+    visit.folded = value;
+    setFoldedState(value);
+  };
+  // A quick start replaces everything the person entered (renewal rates are kept), so it
+  // offers Undo like Start over. Undo also puts the questions back as they were.
+  const onQuickStart = (quick) => {
+    setCleared((c) => ({ answers, folded, refold: true, message: `Filled in as ${quick.label}.`, key: (c?.key ?? 0) + 1 }));
+    setAnswers((prev) => applyQuickStart(prev, quick));
+    visit.returning = false;
+    fold(true);
+    setPendingFocus("answer");
+  };
   const toQuestions = () => {
-    setFolded(false);
+    fold(false);
     setPendingFocus("questions");
   };
   const startOver = () => {
-    setCleared((c) => ({ answers, key: (c?.key ?? 0) + 1 }));
+    setCleared((c) => ({ answers, folded: false, refold: false, message: "Answers cleared.", key: (c?.key ?? 0) + 1 }));
     setAnswers(emptyAnswers());
-    setFolded(false);
+    visit.returning = false;
+    fold(false);
     setShowAll(false);
     setPendingFocus("undo-button");
   };
   const undo = () => {
-    if (cleared) setAnswers(cleared.answers);
+    if (cleared) {
+      setAnswers(cleared.answers);
+      if (cleared.refold) fold(cleared.folded);
+    }
     setCleared(null);
-    setPendingFocus("questions");
+    setPendingFocus(cleared?.refold && cleared.folded ? "answer" : "questions");
   };
   // Also covers the toast closing on its own (its timer never runs while focus is
   // inside it, but this stays correct if that ever changes): don't strand focus on
@@ -121,8 +137,9 @@ export default function YourCosts({ data, base, onNavigate }) {
   return (
     <>
       <section className="calc" aria-label="Your costs">
-        <YourCostsIntro data={data} base={base} onNavigate={onNavigate} returning={folded} />
+        <YourCostsIntro data={data} base={base} onNavigate={onNavigate} returning={folded && visit.returning} />
         <div className="questions-area">
+          <QuickStarts onPick={onQuickStart} />
           {folded ? (
             <Summary
               text={summaryText(answers, rows)}
@@ -170,7 +187,7 @@ export default function YourCosts({ data, base, onNavigate }) {
         away={panelOnScreen}
         onSeeDetails={seeDetails}
       />
-      {cleared && <Toast key={cleared.key} onUndo={undo} onClose={closeToast} />}
+      {cleared && <Toast key={cleared.key} message={cleared.message} onUndo={undo} onClose={closeToast} />}
     </>
   );
 }

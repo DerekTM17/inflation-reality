@@ -174,3 +174,36 @@ export const BASKET_ROWS = {
 
 /** The note on a health line that is still using EMPLOYER_HEALTH_DEFAULT. */
 export const EMPLOYER_DEFAULT_NOTE = "Average for employer plans, change to yours";
+
+/**
+ * Quick-start households (spec "Quick starts"). Tapping one replaces every answer,
+ * checkbox and amount edit (renewal rates are kept); all four questions count as
+ * answered. Lines without an edit use their normal starting amount. Plain buttons,
+ * never toggles: a quick start has no selected state.
+ */
+export const QUICK_STARTS = [
+  {
+    id: "renter", label: "Young renter",
+    answered: { home: "rent", car: "none", heat: "included", health: "work" },
+    also: { daycare: false, tuition: false },
+    amounts: { rent: 1450, groceries: 380, dining: 300, fun: 180 },
+  },
+  {
+    id: "family", label: "Family with kids",
+    answered: { home: "mortgage", car: "gas", heat: "gas", health: "work" },
+    also: { daycare: true, tuition: false },
+    amounts: { groceries: 1100, gasoline: 280, dining: 260 },
+  },
+  {
+    id: "commuter", label: "Commuter",
+    answered: { home: "rent", car: "gas", heat: "electric", health: "work" },
+    also: { daycare: false, tuition: false },
+    amounts: { gasoline: 380, carUpkeep: 90 },
+  },
+  {
+    id: "retiree", label: "Retiree",
+    answered: { home: "owned", car: "hybrid", heat: "gas", health: "none" },
+    also: { daycare: false, tuition: false },
+    amounts: { doctor: 220, groceries: 520, gasoline: 90 },
+  },
+];

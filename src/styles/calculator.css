@@ -194,3 +194,8 @@ fieldset.q legend { margin-bottom: 10px; padding: 0; font-weight: 700; font-size
 @media (prefers-reduced-motion: reduce) {
   .dock { transition: none; }
 }
+
+/* Quick starts: plain buttons that fill everything in. Never a selected state. */
+.quick { display: grid; gap: 10px; }
+.quick h2 { margin: 0; font-weight: 700; font-size: 18px; }
+.quick-row { display: flex; flex-wrap: wrap; gap: 8px; }

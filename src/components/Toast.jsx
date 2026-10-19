@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
 
 /**
- * "Answers cleared. [Undo]" for 8 seconds. The timer pauses while the pointer is
+ * "Answers cleared. [Undo]" (or "Filled in as Commuter. [Undo]") for 8 seconds. The timer pauses while the pointer is
  * over the toast or focus is inside it, and resumes with the time that was left.
  */
-export default function Toast({ onUndo, onClose, duration = 8000 }) {
+export default function Toast({ message = "Answers cleared.", onUndo, onClose, duration = 8000 }) {
   const remaining = useRef(duration);
   const startedAt = useRef(0);
   const timer = useRef(null);
@@ -47,7 +47,7 @@ export default function Toast({ onUndo, onClose, duration = 8000 }) {
       onFocus={set(focused, true)}
       onBlur={set(focused, false)}
     >
-      <span>Answers cleared.</span>
+      <span>{message}</span>
       <button type="button" id="undo-button" className="text-btn" onClick={onUndo}>Undo</button>
     </div>
   );
