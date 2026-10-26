@@ -6,6 +6,12 @@ also include **Tradeoffs / Alternatives considered**.
 
 Curated, not exhaustive — `git log` has every commit.
 
+## 2026-10-26
+
+### Inflation Reality moved to inflation.translatingpolicy.com
+
+**Why:** It is now part of the Translating Policy family of sites. The old address still works. It sends people to the new one.
+
 ## 2026-10-01
 
 ### Homeowners are compared with prices other than housing
