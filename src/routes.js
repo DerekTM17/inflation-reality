@@ -14,7 +14,7 @@ export function routeFromHash(hash) {
   return id !== "your-costs" && ROUTES.some((r) => r.id === id) ? id : "your-costs";
 }
 
-/** Link target for a route under the site base path ("/inflation-reality/"). */
+/** Link target for a route under the site base path ("/", the root of inflation.translatingpolicy.com). */
 export function hrefFor(id, base) {
   return id === "your-costs" ? base : `${base}#${id}`;
 }
