@@ -8,6 +8,10 @@ Curated, not exhaustive — `git log` has every commit.
 
 ## 2026-10-26
 
+### Added a link back to the Translating Policy home page
+
+**Why:** Visitors can now reach the other policy tools from here. The monthly price data now loads from the new address.
+
 ### Inflation Reality moved to inflation.translatingpolicy.com
 
 **Why:** It is now part of the Translating Policy family of sites. The old address still works. It sends people to the new one.
