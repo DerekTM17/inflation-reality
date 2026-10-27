@@ -44,6 +44,8 @@ Items we want to tackle in the near term but aren't started yet.
   Parked 2026-10-18: card folds and drops focus when crossing 600px with focus inside (FamilyCards narrow flip); .lg.hl bold reflows legend; tiny shares draw ≤1px slices (min-width); trend EndLabel clips past ~6 chars (right margin 48); useHover dismissed key clears only on pointerleave; dedupe useReducedMotion/MINUS/'around'.
 - [ ] Point the price-data script at the new address <!-- added 2026-10-26 -->
   scripts/fetch-fred.mjs:16 still fetches derektm17.github.io/inflation-reality/cpi.json; works via 301 redirect. Switch to https://inflation.translatingpolicy.com/cpi.json.
+- [ ] Base the calculator's starting dollar amounts on government spending surveys <!-- added 2026-10-27 -->
+  None of the 21 defaults has a source (rent 1650, hybrid x0.55, +80 electric heat, 650 own insurance...). Sources page now calls them example numbers. Spec 2026-09-10 planned Consumer Expenditure tenure tables. Found by the methodology rewrite, branch docs/methodology-update.
 
 ## Someday
 
