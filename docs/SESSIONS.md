@@ -411,3 +411,64 @@ npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 221, fail 0
 2. After a pass: merge `redesign/phase2b`, then `docs/methodology-update`, per Task 11 Step 5. Both go only on the owner's word.
 
 **Gotchas:** the LAN preview on :4719 may still be running. Find the PID with `ss -ltnp | grep 4719` and kill that PID only.
+
+#### Handoff — Spec revision 5 approved ("whose number is this" fix); build it next (supersedes all earlier handoffs)
+
+**Goal:** Fix the failed 5-second test (2026-10-27: 5 of 5 knew what the page does, 0 of 5 could tell whether the number was theirs) with the owner's pick, option 3 layout B. Then re-test and merge.
+
+**Done (on `redesign/phase2b`, worktree `~/projects/inflation-reality-phase2b`, not pushed):**
+- `4fafbab` + `43e5ba3`: spec revision 5 in `docs/superpowers/specs/2026-09-10-calculator-first-redesign-design.md`, section "## Revision 5 — Say whose number it is". **The owner approved it on 2026-10-27.**
+  - A fresh agent checked it against the code before approval, and its 9 findings were folded in.
+  - Approved page: https://claude.ai/artifact/5EzyNsNYRpJpRwNsTwZdVr
+  - Mockup: https://claude.ai/artifact/9CCZbYqNX1DgyN2FLo74Bp
+- The test result and the methodology branch (`docs/methodology-update`, `233c574`, stacked on phase2b 33f62ed) are recorded in the handoff above. Main commit `8e1664a`.
+- No code has changed yet. The build has not started.
+
+**Next:**
+1. **Build revision 5** on `redesign/phase2b` in the worktree, following the spec section exactly. It is small enough to do inline or with one implementer. Touch points:
+   - `src/calculator/panel.js`:
+     - The Average title becomes "Compared with {month}".
+     - `answerLead` is added.
+     - `model.answer` becomes the full sentence "The average U.S. household pays about $X more a year".
+     - `answerSentence` gets a lowercase option.
+   - `src/components/ResultStrip.jsx`:
+     - The lead-in is a static span with a literal space before the amount, both inside `p.answer`.
+     - CountUp formats the lowercase amount when not personal.
+     - A pointer button uses `.text-btn` plus an accent, weight-700 modifier, placed after the answer, with `onClick={onAnswerQuestions}`.
+     - The old `action` button is removed.
+     - The lead-in and pointer show only when `model.total != null`.
+   - CSS for `.answer-lead` (800 weight, `clamp(17px, 4.6vw, 22px)`, line-height 1.15) and the modifier.
+   - Tests: update `panel.test.mjs` and `src/tabs/estimate.test.mjs`.
+   - Audit: `scripts/audit/ui-audit.py`:
+     - the Average-title checks around :256 and :358,
+     - `answer_total` at :147-154 (accept the lead-in and a lowercase "about"),
+     - the `.strip-more .btn` check at :259, which becomes a pointer-in-`.strip` check at 390 and 1280.
+2. **Verify:**
+   - `npm test`: all pass. The baseline is 221; report the new count.
+   - `vite build`.
+   - The audit with the fixture, at `--seed 1`, and with `--real-fonts`.
+   - Page heights: at most 1,500px at 1280 and at most 2,000px at 390 with the cards folded.
+   - **Manual:** a 390×844 light screenshot of the Average state, where the answer, the pointer and the mix bar are all visible without scrolling.
+   - Regenerate the first-screen image (Task 11 Step 3 script in `docs/superpowers/plans/2026-10-17-calculator-rev4-bolder.md`) and republish the test page artifact https://claude.ai/artifact/Rnw4XP2uZz3VTxkxgKB1aZ with the new image. To do that, rebuild `five-second-test.html`: an inline base64 PNG, the same two questions, and the pass line.
+3. **The owner re-runs the 5-second test** with 5 NEW people. The same two questions, and a pass is at least 4 of 5 answering both.
+4. **On a pass, and only on the owner's word: merge.** First carry over main's domain changes (see Gotchas). Then merge `redesign/phase2b`, then `docs/methodology-update`. Then Task 11 Steps 5–7: push, run the live audit, run ledger.
+
+**Decisions:**
+- Layout B (a bold lead-in above the number) over A (the whole sentence in big type), because A pushed the mix bar off the first phone screen.
+- `model.answer` stays a full sentence, so the LiveRegion announcement and the .xlsx stay whole without changes.
+- The pointer keeps today's focus target, `#questions` (the container), not the first question.
+- The sticky phone band grows by about 70px. This was accepted and is stated in the spec.
+
+**Gotchas:**
+- **The merge will break the live site unless main's domain move comes over first.** Main now serves from https://inflation.translatingpolicy.com (commit ba1c9ad): `vite.config.js` `base: "/"`, `public/CNAME`, `test/domain.test.js`, plus a "← Translating Policy" back-link. Phase2b still has `base: "/inflation-reality/"`. Merge main into phase2b first, or apply the same changes. The audit's `/inflation-reality/` paths need updating too.
+- The worktree has an **uncommitted note in `docs/SESSIONS.md`** from another session (2026-10-26) about that domain move. It isn't ours; leave it, or fold it in when merging main.
+- The LAN preview may still be running on :4719. Find the PID with `ss -ltnp | grep 4719` and kill that PID only.
+- Use Python Playwright, not the Playwright MCP.
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality-phase2b
+git status -sb && git log --oneline -1     # expect head 43e5ba3; " M docs/SESSIONS.md" is the other session's note
+npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 221, fail 0 before the build
+awk '/^## Revision 5/,/^## Visual system/' docs/superpowers/specs/2026-09-10-calculator-first-redesign-design.md
+```
