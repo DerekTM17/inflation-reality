@@ -472,3 +472,49 @@ git status -sb && git log --oneline -1     # expect head 43e5ba3; " M docs/SESSI
 npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 221, fail 0 before the build
 awk '/^## Revision 5/,/^## Visual system/' docs/superpowers/specs/2026-09-10-calculator-first-redesign-design.md
 ```
+
+#### Handoff — Revision 5 built and verified on `redesign/phase2b`; waiting on the owner's new 5-second test (supersedes all earlier handoffs)
+
+**Goal:** Build spec revision 5 ("Say whose number it is"), then re-test and merge.
+
+**Done (on `redesign/phase2b`, worktree `~/projects/inflation-reality-phase2b`, not pushed):**
+- `4c8456a` builds revision 5 exactly as the spec section says:
+  - The Average title is now "Compared with August 2025".
+  - The answer reads "The average U.S. household pays" (the lead-in) over "about $2,250 more a year".
+  - The pointer button "That's the average. Answer four questions to see yours." replaces the Answer the questions button.
+  - `model.answer` stays the full sentence, and the audit was updated.
+- **Verified:**
+  - `npm test`: pass 222, fail 0 (221 before, plus one new lowercase `answerSentence` test).
+  - `vite build`: OK.
+  - Audit `--seed 1`: passed. Audit `--seed 1 --real-fonts`: passed. Both include the new pointer checks at 390 and 1280 (inside the strip, next Tab stop after the answer, focus ring visible).
+  - Heights: 1,423px at 1280 (limit 1,500) and 1,793px at 390 with the cards folded (limit 2,000).
+  - **Manual first screen**, 390×844, light, Libre Franklin loaded:
+    - Answer: 483–579px.
+    - Pointer: 580–627px.
+    - Mix bar: 691–713px.
+    - So all three sit above the fold. The legend runs past the fold, which the spec allows.
+    - The screenshot matches layout B in the mockup.
+- Test page republished with the new image (version 2): https://claude.ai/artifact/Rnw4XP2uZz3VTxkxgKB1aZ. It has the same two questions and the same pass line.
+- Ledger: shipped "The calculator now says its first number is the average, not yours".
+
+**Next:**
+1. **The owner re-runs the 5-second test** with 5 NEW people (none from the 2026-10-27 test). Use the test page above. The questions are "What does this page do?" and "Is that number yours?". A pass is at least 4 of 5 answering both.
+2. **On a pass, and only on the owner's word: merge.**
+   - First bring main's domain move into phase2b. Main serves from inflation.translatingpolicy.com: `base: "/"`, `public/CNAME`, `test/domain.test.js`, and the back-link. Phase2b still has `/inflation-reality/`, and so do the audit's default base URL and paths.
+   - Then merge `redesign/phase2b`, then `docs/methodology-update` (`233c574`).
+   - Then push, run the live audit, run `ledger done inflation-reality "owner's 5-second test"` and the Phase 2b done item.
+3. **On a fail:** record what testers said in this file, and go back to the mockup with the owner before changing code.
+
+**Decisions:** All decisions are in the spec, and none were reopened. One small choice: the lead-in inherits the answer's -0.02em letter-spacing, since the spec gives none.
+
+**Gotchas:**
+- The worktree still has the other session's uncommitted note in `docs/SESSIONS.md`. Leave it.
+- The LAN preview is still running on :4719 (pid 62805, serving the worktree's `dist/`). It now shows revision 5. Kill only that PID when done.
+- When republishing the test page, the file saved by `Artifact read` has a publish-time wrapper on line 1 and `</body></html>` at the end. Strip both before republishing. The current source is at `/tmp/claude-1000/-home-dynomatic/5e9df078-2ad7-44c6-8bca-993f02a864e6/scratchpad/five-second-test.html` (scratch, may be gone).
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality-phase2b
+git status -sb && git log --oneline -1     # expect head 4c8456a; " M docs/SESSIONS.md" is the other session's note
+npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 222, fail 0
+```
