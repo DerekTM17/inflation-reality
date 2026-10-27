@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import * as catalog from "../data/catalog.js";
-import { METHOD, CAVEATS, NO_SERIES_LINES, SOURCE_LINKS, seriesGroups } from "../tabs/sources.js";
+import { METHOD, CAVEATS, LINE_GUIDE, LINE_GUIDE_INTRO, SOURCE_LINKS, seriesGroups } from "../tabs/sources.js";
 import { savedEstimate } from "../tabs/estimate.js";
 import { downloadWorkbook } from "../tabs/download.js";
 import { getStorage } from "../calculator/storage.js";
 
 const EXTERNAL = { target: "_blank", rel: "noopener noreferrer" };
 
-/** The Sources tab (spec "Other tabs"): method, every series with a link, caveats, the download. */
+/** The Sources tab (spec "Other tabs"): method, each line's data, formula and starting amount, every series with a link, caveats, the download. */
 export default function Sources({ data }) {
   const groups = useMemo(() => seriesGroups(catalog, data), [data]);
   const [status, setStatus] = useState("");
@@ -43,6 +43,32 @@ export default function Sources({ data }) {
         ))}
       </section>
 
+      <section aria-labelledby="lines-title">
+        <h2 id="lines-title">Each line, one at a time</h2>
+        {LINE_GUIDE_INTRO.map((p) => <p key={p}>{p}</p>)}
+        {LINE_GUIDE.map((l) => (
+          <div key={l.id}>
+            <h3 id={`line-${l.id}`}>
+              {l.family && <span className="dot" data-family={l.family} aria-hidden="true" />}
+              {l.name}
+            </h3>
+            <dl className="line-facts" aria-labelledby={`line-${l.id}`}>
+              <dt>Price data</dt>
+              <dd>
+                {l.data}
+                {l.series.map((s) => (
+                  <span key={s.seriesId}> Series <a href={s.url} {...EXTERNAL}>{s.seriesId}</a> ({s.source}).</span>
+                ))}
+              </dd>
+              <dt>How the rate is set</dt>
+              <dd>{l.formula}</dd>
+              <dt>Starting amount</dt>
+              <dd>{l.start}</dd>
+            </dl>
+          </div>
+        ))}
+      </section>
+
       <section aria-labelledby="series-title">
         <h2 id="series-title">Where each number comes from</h2>
         <p>Each series links to its page at FRED or the Bureau of Labor Statistics (BLS), where you can download the same numbers.</p>
@@ -69,16 +95,6 @@ export default function Sources({ data }) {
             </table>
           </div>
         ))}
-        <h3 id="series-no-series">Lines without their own series</h3>
-        <table className="data-table" aria-labelledby="series-no-series">
-          <colgroup><col style={{ width: "40%" }} /><col style={{ width: "60%" }} /></colgroup>
-          <thead><tr><th scope="col">Line</th><th scope="col">How its rate is set</th></tr></thead>
-          <tbody>
-            {NO_SERIES_LINES.map((l) => (
-              <tr key={l.name}><th scope="row">{l.name}</th><td>{l.how}</td></tr>
-            ))}
-          </tbody>
-        </table>
         <h3>Background</h3>
         <ul className="link-list">
           {SOURCE_LINKS.map((l) => (

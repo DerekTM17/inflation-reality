@@ -68,6 +68,17 @@
 .link-list li,
 .plain-list li { margin-bottom: 8px; max-width: 36em; }
 .tab .btn { margin-top: 4px; }
+
+/* Sources, "Each line, one at a time": three labelled facts per line, stacked on
+   phones, label beside text from 720px. */
+.tab h3 .dot { margin-right: 8px; }
+.line-facts { display: grid; grid-template-columns: 1fr; gap: 2px 16px; margin: 0; max-width: 36em; }
+.line-facts dt { margin-top: 8px; font-weight: 600; color: var(--ink-2); }
+.line-facts dd { margin: 0; }
+@media (min-width: 720px) {
+  .line-facts { grid-template-columns: 11em 1fr; row-gap: 8px; }
+  .line-facts dt { margin-top: 0; }
+}
 .series-table td { font-size: 15px; }
 .series-table td:last-child { overflow-wrap: normal; }
 

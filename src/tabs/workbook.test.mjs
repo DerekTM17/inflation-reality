@@ -119,3 +119,14 @@ test("round trip through the real xlsx package", () => {
   const trend = XLSX.utils.sheet_to_json(back.Sheets["Monthly trend"], { header: 1 });
   assert.ok(trend.some((r) => r[0] === "October 2025" && r[2] === "Not published"));
 });
+
+test("How it works lists each line's price data, formula and starting amount", () => {
+  const how = buildWorkbook({ catalog, data, estimate: mortgage }).find((s) => s.name === "How it works").rows;
+  const at = how.findIndex((r) => r[0] === "Car insurance");
+  assert.ok(at > 0);
+  assert.match(how[at + 1][0], /^Price data: The BLS price index for motor vehicle insurance/);
+  assert.equal(how[at + 1][1], "CUUR0000SETE (BLS)");
+  assert.match(how[at + 2][0], /^How the rate is set: /);
+  assert.match(how[at + 3][0], /^Starting amount: \$160 a month/);
+  assert.ok(how.some((r) => /^How the rate is set: The increase you type in\. Through work, it starts at 6%/.test(r[0] ?? "")));
+});
