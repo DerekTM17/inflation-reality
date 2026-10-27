@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-10, revised 2026-09-14 (twice), 2026-10-16
 **Project:** inflation-reality
-**Status:** Revision 4 approved by the owner 2026-10-17. Revision 2 folds in the owner's picks (toned-down direction, no profiles); revision 3 folds in a second independent review (basket math, BLS parsing, negatives, fallback, verdict rule, audit details). **Revision 4 (2026-10-16)** follows the owner's 5-second test of Phase 2b ("too gray"): the Bolder look, quick-start households back, a compact layout, cards that fold on phones, and hover detail everywhere. See *Revision 4* below; where it conflicts with an earlier section, revision 4 wins. Phase 1 plan: `docs/superpowers/plans/2026-09-14-calculator-phase1-pipeline.md`.
+**Status:** Revision 4 approved by the owner 2026-10-17. Revision 2 folds in the owner's picks (toned-down direction, no profiles); revision 3 folds in a second independent review (basket math, BLS parsing, negatives, fallback, verdict rule, audit details). **Revision 5 (2026-10-27)** follows a failed 5-second test: the Average state's strip says whose number it is; see *Revision 5*. **Revision 4 (2026-10-16)** follows the owner's 5-second test of Phase 2b ("too gray"): the Bolder look, quick-start households back, a compact layout, cards that fold on phones, and hover detail everywhere. See *Revision 4* below; where it conflicts with an earlier section, revision 4 wins. Phase 1 plan: `docs/superpowers/plans/2026-09-14-calculator-phase1-pipeline.md`.
 **Revision 4 mockups (approved):** spending mix https://claude.ai/artifact/K1bqKshUY117QCUU6Em7Ng, Your costs https://claude.ai/artifact/JVd3KnL8NVPBN4PFBMwfyP, National numbers https://claude.ai/artifact/9EDzFvkHYt6EyXfBuXL1n5; copies in `docs/superpowers/mockups/2026-10-02-color-study-*.html`. Use the **Bolder** treatment in each. The mockups take the look, layout and interactions from these; behavior (states, guesses, renewal inputs, rounding, saving) comes from this spec.
 **Mockup (approved):** https://claude.ai/code/artifact/a59d8dd0-a0af-4f74-bec8-08e2d2ba04ed, committed copy `docs/superpowers/mockups/2026-09-14-layout-c-plain.html`. Where the mockup and this spec differ, **this spec wins** (the mockup predates revision 3: negatives, verdict rule, heating option, insurance defaults). The receipt mockup `2026-09-10-layout-c.html` is superseded. Rates marked `*` in mockups are placeholders; none ship.
 
@@ -195,6 +195,48 @@ Owner defaults settled while planning (`docs/superpowers/plans/2026-10-17-calcul
 ### Rollout for revision 4
 
 Built on `redesign/phase2b` on top of Phase 2b. Merge gate unchanged: unit tests, audit, the owner's 5-second test, production data live. Merge and push only on the owner's word.
+
+## Revision 5 — Say whose number it is (2026-10-27)
+
+**Why.** The owner's 5-second test of revision 4 (2026-10-27) failed. All 5 testers answered "What does this page do?" correctly. None answered "Is that number yours?" correctly. They said "I don't know if it is me or not" and "No numbers look familiar to me". In a quick look, people read the big "About $2,250 more a year" and miss the small panel title "The average U.S. household vs. August 2025". Nobody noticed that answering the questions gives their own number. The owner picked "option 3, layout B" from the mockup https://claude.ai/artifact/9CCZbYqNX1DgyN2FLo74Bp, which has "average" inside the big answer and a pointer to the questions right under it. Where this section conflicts with an earlier one, revision 5 wins.
+
+**Scope.** This changes only the Average state of the Your costs result strip, at every width. The Personal state, the cards, the quick starts and the other tabs do not change.
+
+### Average state of the result strip
+
+Top to bottom inside `.strip-main`:
+
+1. **Panel title:** "Compared with {month a year earlier}", for example "Compared with August 2025". It replaces "The average U.S. household vs. August 2025", so "average household" is not said twice. The Personal title stays "Your costs vs. August 2025".
+2. **Answer** (`p.answer#answer`, still the focus target and still one element, so a screen reader reads one sentence). It has two lines:
+   - **Lead-in** (`span.answer-lead`, display block): "The average U.S. household pays". Weight 800, `font-size: clamp(17px, 4.6vw, 22px)`, line-height 1.15. It sits directly above the amount with no gap beyond the line-height.
+   - **Amount**, same size as today: "about $2,250 more a year" / "about $120 less a year" / "about the same as a year ago". The first word is lowercase because it continues the lead-in. The count-up (CountUp, 350ms) formats with this lowercase Average variant.
+   - The lead-in shows only when the strip shows a dollar answer. With no data ("Average household figures are not available right now." or "Price data is not available right now."), the answer is that sentence alone, with no lead-in and no pointer.
+3. **Pointer:** a button styled as a text link (accent color, weight 700, underlined, no border or fill, min-height 44px), placed right after the answer, reading "That's the average. Answer four questions to see yours." It does what **Answer the questions** did: it scrolls to the questions and focuses the first one. On phones it is inside the sticky part of the strip, taking the place the bars hold in the Personal state. On desktop it sits in the left column under the answer.
+4. The rates line, the mix bar and the legend stay where they are (under the strip on phones, inside it on desktop).
+
+**Removed:** the **Answer the questions** button in the Average state (in `.strip-more` on phones and in the left column on desktop). The pointer replaces it. "Answer the questions or pick a household to change these." under the cards stays.
+
+### Copy for revision 5
+
+| Where | Copy |
+|---|---|
+| Panel title (Average) | Compared with August 2025 |
+| Answer lead-in (Average) | The average U.S. household pays |
+| Answer amount (Average) | about $2,250 more a year / about $120 less a year / about the same as a year ago |
+| Pointer (Average) | That's the average. Answer four questions to see yours. |
+
+The Personal strings ("Your costs vs. August 2025", "About $1,450 more a year" and the rest) do not change. The lead-in is part of the answer sentence. It is not one of the bold lead-ins the voice guide bans, which are labels in front of explanations. "four" matches the lede and the four questions in `QUESTIONS`.
+
+### Checks for revision 5
+
+- Unit tests (`panel.test.mjs`) cover the Average title, the lead-in, all three lowercase amount variants, and the no-data case having no lead-in or pointer. Existing tests that assert the old Average title or the capitalized Average answer are updated, not deleted. That includes any `.xlsx` sheet that copies the panel title.
+- The audit still passes with the fixture and with `--real-fonts`. The page height stays within the limits (1,500px at 1280, 2,000px at 390 with the cards folded).
+- **First screen:** at 390×844, light theme, the Average state, the whole of the answer, the pointer and the mix bar are visible without scrolling. Check with the real fonts and a screenshot.
+- The audit's banned-string scan passes, and the pointer is reachable by keyboard with a visible focus ring.
+
+### Rollout for revision 5
+
+Built on `redesign/phase2b` as one change. The merge gate is a new 5-second test with 5 people who did not take part in the 2026-10-27 test, asking the same two questions, with the same pass mark of 4 of 5 answering both. Merge and push only on the owner's word. `docs/methodology-update` merges after `redesign/phase2b`.
 
 ## Visual system
 
