@@ -144,10 +144,16 @@ def dollars(text):
     return (-1 if t.startswith(MINUS) else 1) * int(re.sub(r"[^\d]", "", t))
 
 
+AVERAGE_LEAD = "The average U.S. household pays "
+POINTER = "That's the average. Answer four questions to see yours."
+
+
 def answer_total(text):
-    if text.startswith("About the same"):
+    """The answer in dollars. Average reads 'The average U.S. household pays about $2,250 more a year'."""
+    text = text.removeprefix(AVERAGE_LEAD)
+    if re.match(r"[Aa]bout the same", text):
         return 0
-    m = re.fullmatch(r"About \$([\d,]+) (more|less) a year", text)
+    m = re.fullmatch(r"[Aa]bout \$([\d,]+) (more|less) a year", text)
     if not m:
         return None
     v = int(m.group(1).replace(",", ""))
@@ -205,6 +211,20 @@ def focus_opens(page, locator):
     return page.locator("#hover-card").count() == 1
 
 
+def pointer_ok(page, where):
+    """The Average pointer to the questions (spec revision 5): inside the strip, the next Tab stop after
+    the answer, with a visible focus ring."""
+    pointer = page.locator(".strip .answer + button.text-btn.pointer")
+    check(pointer.count() == 1 and pointer.text_content() == POINTER, f"{where}: the pointer sits in the strip under the answer")
+    page.locator("#answer").focus()
+    page.keyboard.press("Tab")
+    ring = page.evaluate("""() => {
+        const el = document.activeElement, cs = getComputedStyle(el);
+        return el.classList.contains("pointer") && cs.outlineStyle !== "none" && parseFloat(cs.outlineWidth) >= 2;
+    }""")
+    check(ring, f"{where}: the pointer is keyboard-reachable with a visible focus ring")
+
+
 def card_text(page):
     card = page.locator("#hover-card")
     return card.inner_text() if card.count() else ""
@@ -253,10 +273,11 @@ def flows(browser, args, base):
     # Average first screen: the strip, folded cards holding basket rows as text.
     go(page, base)
     check(page.title() == "Inflation Reality", "Your costs title")
-    check(text(".strip h2").startswith("The average U.S. household vs. "), "Average title")
-    check(answer_total(text(".answer")) is not None, "Average answer")
+    check(text(".strip h2").startswith("Compared with "), "Average title")
+    check(text(".answer").startswith(AVERAGE_LEAD + "about ") and answer_total(text(".answer")) is not None,
+          "Average answer says whose number it is")
     check(page.locator(".verdict").count() == 0 and page.locator(".compare").count() == 0, "Average has no verdict or bars")
-    check(page.locator(".strip-more .btn", has_text="Answer the questions").count() == 1, "390: Answer the questions sits under the strip")
+    pointer_ok(page, "390")
     check(page.locator(".mix-legend .lg").count() == 7, "Average spending mix has one legend item per family")
     check(page.locator("button.fam-head").count() == 7
           and page.locator("button.fam-head[aria-expanded='true']").count() == 0, "390: every card starts folded")
@@ -355,7 +376,7 @@ def flows(browser, args, base):
     page.get_by_role("button", name="Start over").click()
     page.wait_for_timeout(200)
     check(text(".toast").startswith("Answers cleared."), "Undo toast")
-    check(text(".strip h2").startswith("The average U.S. household"), "Start over returns to Average")
+    check(text(".strip h2").startswith("Compared with "), "Start over returns to Average")
     page.clock.fast_forward(9000)
     page.wait_for_timeout(200)
     check(page.locator(".toast").count() == 1, "toast stays while Undo has focus")
@@ -481,6 +502,7 @@ def desktop_flows(browser, args, base, seen):
           "1280: the mix bar sits inside the strip")
     check(page.locator(".fam-head[tabindex='0']").count() == page.locator(".fam").count() > 0,
           "1280: card headings are focusable labels, not fold buttons")
+    pointer_ok(page, "1280")
     check(focus_opens(page, page.locator(".amt.avg").first), "1280: keyboard focus on an Average row opens its card")
     page.locator("#page-title").focus()
     quick_start(page, "Commuter")

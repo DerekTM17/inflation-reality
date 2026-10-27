@@ -83,6 +83,13 @@ fieldset.q legend { margin-bottom: 10px; padding: 0; font-weight: 700; font-size
   letter-spacing: -0.02em;
   text-wrap: balance;
 }
+/* Average state (spec revision 5): whose number it is, above the amount. */
+.answer-lead {
+  display: block;
+  font-size: clamp(17px, 4.6vw, 22px);
+  line-height: 1.15;
+}
+.text-btn.pointer { color: var(--accent); font-weight: 700; text-align: left; }
 .rates { margin: 8px 0 0; color: var(--ink-2); }
 .compare {
   display: grid;

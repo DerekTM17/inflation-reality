@@ -25,8 +25,9 @@ test("average panel: title, answer, national line, every line + Everything else,
   const m = panelModel({
     mode: "average", rows: averageRows(data, 5750), headlinePct: 3.4, referenceMonth: "2026-08", answers: emptyAnswers(),
   });
-  assert.equal(m.title, "The average U.S. household vs. August 2025");
-  assert.equal(m.answer, "About $2,250 more a year");
+  assert.equal(m.title, "Compared with August 2025");
+  assert.equal(m.answerLead, "The average U.S. household pays");
+  assert.equal(m.answer, "The average U.S. household pays about $2,250 more a year");
   assert.equal(m.ratesLine, "Prices overall rose 3.4%.");
   assert.equal(m.compare, null);
   assert.equal(m.verdict, null);
@@ -99,6 +100,8 @@ test("panel: zero total replaces the answer and hides lines, bars and verdict", 
 test("panel: unusable basket in Average says so and invents nothing", () => {
   const m = panelModel({ mode: "average", rows: null, headlinePct: 3.4, referenceMonth: "2026-08", answers: emptyAnswers() });
   assert.equal(m.answer, "Average household figures are not available right now.");
+  assert.equal(m.answerLead, undefined);
+  assert.equal(m.total, undefined);
   assert.deepEqual(m.main, []);
   assert.equal(m.ratesLine, "Prices overall rose 3.4%.");
 });
@@ -237,4 +240,10 @@ test("answerSentence: more, less, about the same", () => {
   assert.equal(answerSentence(1450), "About $1,450 more a year");
   assert.equal(answerSentence(-150), "About $150 less a year");
   assert.equal(answerSentence(0), "About the same as a year ago");
+});
+
+test("answerSentence lower: the Average amount continues the lead-in", () => {
+  assert.equal(answerSentence(2250, { lower: true }), "about $2,250 more a year");
+  assert.equal(answerSentence(-120, { lower: true }), "about $120 less a year");
+  assert.equal(answerSentence(0, { lower: true }), "about the same as a year ago");
 });

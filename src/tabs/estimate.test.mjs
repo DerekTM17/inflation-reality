@@ -11,7 +11,7 @@ test("no saved answers: the average household, as the panel shows it", () => {
   const e = savedEstimate(viewData(), store(null));
   assert.equal(e.mode, "average");
   assert.equal(e.rows.length, 9);
-  assert.equal(e.model.title, "The average U.S. household vs. August 2025");
+  assert.equal(e.model.title, "Compared with August 2025");
 });
 
 test("blocked, missing or corrupt storage falls back to the average household", () => {

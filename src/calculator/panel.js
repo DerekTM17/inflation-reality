@@ -11,11 +11,18 @@ import {
 
 const UNAVAILABLE = "Average household figures are not available right now.";
 
-/** "About $1,450 more a year", "About $120 less a year", "About the same as a year ago". total is already rounded to $50. */
-export function answerSentence(total) {
-  if (total > 0) return `About ${formatDollars(total)} more a year`;
-  if (total < 0) return `About ${formatDollars(total)} less a year`;
-  return "About the same as a year ago";
+const AVERAGE_LEAD = "The average U.S. household pays";
+
+/**
+ * "About $1,450 more a year", "About $120 less a year", "About the same as a year ago".
+ * total is already rounded to $50. `lower` starts with "about", for the Average state,
+ * where the amount continues the lead-in "The average U.S. household pays".
+ */
+export function answerSentence(total, { lower = false } = {}) {
+  const about = lower ? "about" : "About";
+  if (total > 0) return `${about} ${formatDollars(total)} more a year`;
+  if (total < 0) return `${about} ${formatDollars(total)} less a year`;
+  return `${about} the same as a year ago`;
 }
 
 /**
@@ -33,7 +40,10 @@ export function answerSentence(total) {
  */
 export function panelModel({ mode, rows, headlinePct, exShelterPct = null, referenceMonth, answers }) {
   const personal = mode === "personal";
-  const title = `${personal ? "Your costs" : "The average U.S. household"} vs. ${monthLabel(referenceMonth, -1)}`;
+  // Average says "average household" once, in the answer's lead-in (spec revision 5).
+  const title = personal
+    ? `Your costs vs. ${monthLabel(referenceMonth, -1)}`
+    : `Compared with ${monthLabel(referenceMonth, -1)}`;
   const nationalLine = headlinePct == null ? "" : `Prices overall ${movePhrase(headlinePct)}.`;
   const empty = { title, compare: null, verdict: null, basis: null, main: [], rest: null, bars: personal };
 
@@ -52,7 +62,10 @@ export function panelModel({ mode, rows, headlinePct, exShelterPct = null, refer
   }
 
   const total = roundToStep(result.totalExtra, 50);
-  const answer = answerSentence(total);
+  // Average keeps the full sentence in `answer`, so the live region and the .xlsx read
+  // whole; the strip lays it out as `answerLead` over the lowercase amount.
+  const answerLead = personal ? null : AVERAGE_LEAD;
+  const answer = personal ? answerSentence(total) : `${AVERAGE_LEAD} ${answerSentence(total, { lower: true })}`;
   // The national rate counts what owners would pay to rent their own home, a cost
   // owners never pay in cash, so owners are measured against prices other than housing.
   const home = personal ? effectiveChoices(answers).home : null;
@@ -96,6 +109,7 @@ export function panelModel({ mode, rows, headlinePct, exShelterPct = null, refer
   return {
     ...empty,
     answer,
+    answerLead,
     ratesLine,
     zero: false,
     total,

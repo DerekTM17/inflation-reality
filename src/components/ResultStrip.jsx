@@ -72,16 +72,15 @@ function MixBar({ mix, hover, highlight }) {
 /**
  * The sticky result strip, the view's one bordered raised surface. At 900px and wider it
  * has two columns: title, answer, rates line, bars and verdict on the left, the spending
- * mix on the right. Narrower, only the title, answer and bars stick; the rates line,
- * verdict, mix and the Average state's button go in .strip-more right after it, because
- * a sticky element only sticks inside its parent and these must scroll away.
+ * mix on the right. Narrower, only the title, answer, bars and the Average state's pointer
+ * stick; the rates line, verdict and mix go in .strip-more right after it, because a
+ * sticky element only sticks inside its parent and these must scroll away.
  */
 export default function ResultStrip({ model, mix, personal, wide, hover, highlight, onAnswerQuestions, stripRef }) {
   const rates = model.ratesLine ? <p className="rates">{model.ratesLine}</p> : null;
   const verdict = model.verdict ? <p className="verdict">{model.verdict}</p> : null;
-  const action = personal ? null : (
-    <button type="button" className="btn" onClick={onAnswerQuestions}>Answer the questions</button>
-  );
+  // Spec revision 5: the Average state says whose number it is and points to the questions.
+  const average = !personal && model.total != null;
   const mixBar = mix.length > 0 ? <MixBar mix={mix} hover={hover} highlight={highlight} /> : null;
   return (
     <>
@@ -89,19 +88,24 @@ export default function ResultStrip({ model, mix, personal, wide, hover, highlig
         <div className="strip-main">
           <h2 id="result-title">{model.title}</h2>
           <p className="answer" id="answer" tabIndex={-1}>
+            {average && <><span className="answer-lead">{model.answerLead}</span>{" "}</>}
             {model.total != null
-              ? <CountUp value={model.total} duration={350} format={(v) => answerSentence(roundToStep(v, 50))} />
+              ? <CountUp value={model.total} duration={350} format={(v) => answerSentence(roundToStep(v, 50), { lower: !personal })} />
               : model.answer}
           </p>
+          {average && (
+            <button type="button" className="text-btn pointer" onClick={onAnswerQuestions}>
+              That's the average. Answer four questions to see yours.
+            </button>
+          )}
           {wide && rates}
           {model.compare && <Compare compare={model.compare} hover={hover} />}
           {wide && verdict}
-          {wide && action}
         </div>
         {wide && mixBar && <div className="strip-side">{mixBar}</div>}
       </section>
-      {!wide && (rates || verdict || mixBar || action) && (
-        <div className="strip-more">{rates}{verdict}{mixBar}{action}</div>
+      {!wide && (rates || verdict || mixBar) && (
+        <div className="strip-more">{rates}{verdict}{mixBar}</div>
       )}
     </>
   );
