@@ -6,6 +6,12 @@ also include **Tradeoffs / Alternatives considered**.
 
 Curated, not exhaustive — `git log` has every commit.
 
+## 2026-10-27
+
+### The calculator now says its first number is the average, not yours
+
+**Why:** In the last 5-second test, nobody could tell whether the big number was theirs. Now it starts with the words the average household pays, and a link right under it says to answer four questions to see your own. It waits on a new test before going live.
+
 ## 2026-10-26
 
 ### Added a link back to the Translating Policy home page
