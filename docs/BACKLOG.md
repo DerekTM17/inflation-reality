@@ -46,6 +46,8 @@ Items we want to tackle in the near term but aren't started yet.
   scripts/fetch-fred.mjs:16 still fetches derektm17.github.io/inflation-reality/cpi.json; works via 301 redirect. Switch to https://inflation.translatingpolicy.com/cpi.json.
 - [ ] Base the calculator's starting dollar amounts on government spending surveys <!-- added 2026-10-27 -->
   None of the 21 defaults has a source (rent 1650, hybrid x0.55, +80 electric heat, 650 own insurance...). Sources page now calls them example numbers. Spec 2026-09-10 planned Consumer Expenditure tenure tables. Found by the methodology rewrite, branch docs/methodology-update.
+- [ ] Check the health insurance through work default against what workers actually pay <!-- added 2026-10-27 -->
+  Default applies KFF 2025's 6% family-premium rise to the worker's own share, which may grow differently; the 180 a month start matches no KFF figure. KFF also publishes single-plan and worker-contribution numbers.
 
 ## Someday
 
