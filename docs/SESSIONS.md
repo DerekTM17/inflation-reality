@@ -395,3 +395,19 @@ npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 221, fail 0
 # preview: npm run build && setsid node node_modules/vite/bin/vite.js preview --port 4719 --strictPort </dev/null >/tmp/ir-preview.log 2>&1 & disown; ss -ltnp | grep 4719
 # then: Task 11 Step 4 (owner's 5-second test) → Step 5 merge only on the owner's word
 ```
+
+#### Handoff — 5-second test FAILED on "Is that number yours?"; merge on hold; methodology branch built (supersedes all earlier handoffs)
+
+**5-second test result (Task 11 Step 4, 2026-10-27):** FAIL. The owner showed the first phone screen (artifact https://claude.ai/artifact/Rnw4XP2uZz3VTxkxgKB1aZ, the image `/tmp/ir-rev4-390-light-first-screen.png`) to 5 non-designers. People looked at it longer than 5 seconds, which makes the test easier, not harder.
+- "What does this page do?": 5 of 5 right. Person 1 said "Shows additional cost compared to last year." Person 2 said "an amount of money Americans are paying more for essential items on average over a period of time I didn't catch, maybe 2026 over 2025."
+- "Is that number yours?": not answered correctly. Person 1 said "I don't know if it is me or not." Person 2 said "No numbers look familiar to me." That is a no based on whether the number looked familiar, not on reading "average household". The owner said the other 3 answered "essentially the same as the first ones."
+- So it was about 1 of 5 at best on both questions, against a pass mark of 4.
+- The diagnosis: the big "About $2,250 more a year" gets read, and the small label "The average U.S. household vs. August 2025" doesn't. Nobody mentioned answering the questions to get their own number.
+
+**Also built (not merged):** branch `docs/methodology-update` (`233c574`, stacked on `redesign/phase2b` 33f62ed) answers outside feedback that the Sources page was out of date. It says car insurance is left out, and it describes an older model. The branch adds per-line entries for all 21 lines (source, formula, default) and a reading-level test on the Sources copy. Tests: 226 pass, 0 fail. Open owner questions: the starting amounts have no source (they are now labeled as example numbers); KFF's 6% rise is for the whole family premium, but it is applied to the worker's share; "Everything else" overlaps lines the user has already entered. Worktree: `.claude/worktrees/agent-af0d23f23ef1dee60`.
+
+**Next:**
+1. The owner picks the copy fix for "whose number is this". Per the plan, a copy change goes through the spec first, then gets built on `redesign/phase2b`, then is re-tested with 5 new people.
+2. After a pass: merge `redesign/phase2b`, then `docs/methodology-update`, per Task 11 Step 5. Both go only on the owner's word.
+
+**Gotchas:** the LAN preview on :4719 may still be running. Find the PID with `ss -ltnp | grep 4719` and kill that PID only.
