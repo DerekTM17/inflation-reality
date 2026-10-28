@@ -110,7 +110,7 @@ test("each series-backed line links the series the calculator reads", () => {
   const doctor = catalog.CALC_COMBOS.find((c) => c.id === "doctor");
   assert.deepEqual(guide.doctor.series.map((s) => s.seriesId), doctor.parts.map((p) => p.seriesId));
   assert.deepEqual(guide.charging.series.map((s) => s.seriesId), ["CUUR0000SEHF01"]);
-  for (const id of ["mortgage", "homeIns", "health", "rest"]) assert.deepEqual(guide[id].series, [], id);
+  for (const id of ["mortgage", "health", "rest"]) assert.deepEqual(guide[id].series, [], id);
 });
 
 test("car insurance and the employer premium are explained, not called missing", () => {

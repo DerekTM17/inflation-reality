@@ -60,7 +60,7 @@ const HEALTH_HELP =
 // Property taxes have no published national rate (they turn on your county and your
 // reassessment), so owners are told what is left out instead of being asked for a number.
 const LOCAL_HOME_COSTS =
-  "Property taxes are left out because they depend on where you live, and home insurance counts only if you add your renewal increase.";
+  "Property taxes are left out because they depend on where you live.";
 // The national rate counts what owners would pay to rent their own home; owners never
 // pay that in cash, so the panel compares them with prices other than housing instead.
 export const OWNER_YARDSTICK =
@@ -71,7 +71,7 @@ export const EXPLANATIONS = {
     mortgage:
       `A fixed-rate payment stays the same from year to year, so it adds nothing here. The official inflation rate leaves mortgage payments out too. ${LOCAL_HOME_COSTS} ${OWNER_YARDSTICK}`,
     owned:
-      `With no mortgage payment, your home costs here are repairs and insurance. ${LOCAL_HOME_COSTS} ${OWNER_YARDSTICK}`,
+      `With no mortgage payment, your home costs here are repairs. ${LOCAL_HOME_COSTS} ${OWNER_YARDSTICK}`,
   },
   car: { electric: "Most people charge at home, so we use the change in home electricity prices." },
   health: { work: HEALTH_HELP, own: HEALTH_HELP },
@@ -98,8 +98,6 @@ export const LINES = {
                about: "Rent for the home or apartment you live in, not counting utilities." },
   mortgage:  { label: "Mortgage payment", amount: 1900, note: "Fixed payment", because: "your fixed mortgage payment", family: "home",
                about: "A fixed-rate payment stays the same from year to year, so its price change is zero." },
-  homeIns:   { label: "Home insurance", amount: 140, renewal: true, because: "home insurance", family: "home",
-               about: "The premium for insuring your home, using the increase on your renewal notice." },
   upkeep:    { label: "Home repairs", amount: 130, note: "Estimate", because: "home repairs", family: "home",
                about: "Furniture, appliances and household services, the closest published prices to home repairs." },
   groceries: { label: "Groceries", amount: 620, because: "grocery prices", family: "food",

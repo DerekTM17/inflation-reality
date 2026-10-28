@@ -54,12 +54,19 @@ test("activeLines: common answers, mortgage, electric car, no car, heating inclu
   const mortgage = activeLines({ ...COMMON, home: "mortgage", car: "electric", heat: "included", health: "none" },
     { daycare: true, tuition: true });
   assert.deepEqual(mortgage, [
-    "mortgage", "homeIns", "upkeep", "groceries", "dining", "charging", "carIns", "carUpkeep",
+    "mortgage", "upkeep", "groceries", "dining", "charging", "carIns", "carUpkeep",
     "electric", "daycare", "tuition", "doctor", "clothing", "fun", "rest",
   ]);
   const noCar = activeLines({ ...COMMON, home: "owned", car: "none", heat: "oil" }, { daycare: false, tuition: false });
   assert.ok(noCar.includes("transit") && !noCar.includes("carIns") && noCar.includes("heatOil"));
-  assert.ok(!noCar.includes("rent") && noCar.includes("homeIns"));
+  assert.ok(!noCar.includes("rent") && noCar.includes("upkeep"));
+});
+
+test("mortgage and owned households have no home insurance line", () => {
+  for (const home of ["mortgage", "owned"]) {
+    assert.ok(!activeLines({ ...COMMON, home }, {}).includes("homeIns"), home);
+  }
+  assert.ok(!Object.hasOwn(LINES, "homeIns"));
 });
 
 test("defaultAmount nudges: hybrid gas, electric heat, buying your own insurance", () => {
@@ -76,10 +83,8 @@ test("lineRate: mortgage 0, renewal defaults and edits, charging uses electricit
   assert.deepEqual(lineRate("health", a, COMMON, data),
     { rate: 6, note: "Average for employer plans, change to yours", stale: false, missing: null });
   assert.equal(lineRate("health", a, { ...COMMON, health: "own" }, data).missing, "renewal");
-  assert.equal(lineRate("homeIns", a, COMMON, data).rate, null);
-  const edited = answersWith({ renewals: { health: 9.5, homeIns: null } });
+  const edited = answersWith({ renewals: { health: 9.5 } });
   assert.deepEqual(lineRate("health", edited, COMMON, data), { rate: 9.5, note: "", stale: false, missing: null });
-  assert.equal(lineRate("homeIns", edited, COMMON, data).missing, "renewal");
   assert.equal(lineRate("charging", a, COMMON, data).rate, 3.8);
   assert.equal(lineRate("rest", a, COMMON, data).rate, 2.014252);
   assert.equal(lineRate("rest", a, COMMON, data).note, "Estimated from the national rate");
@@ -106,11 +111,11 @@ test("computeResult: formula, negatives, excluded rows stay off the total", () =
   const result = computeResult([
     { id: "gasoline", monthly: 200, rate: 25 },
     { id: "carIns", monthly: 100, rate: -20 },
-    { id: "homeIns", monthly: 140, rate: null },
+    { id: "health", monthly: 140, rate: null },
   ]);
   // gas: annual 2400, yearAgo 1920, extra 480. carIns: annual 1200, yearAgo 1500, extra −300.
   assert.equal(result.lines.length, 2);
-  assert.equal(result.excluded[0].id, "homeIns");
+  assert.equal(result.excluded[0].id, "health");
   assert.equal(result.totalAnnual, 3600);
   assert.equal(result.totalYearAgo, 3420);
   assert.equal(result.totalExtra, 180);

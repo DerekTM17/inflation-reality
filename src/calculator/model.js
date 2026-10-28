@@ -27,8 +27,8 @@ export function effectiveChoices(answers) {
 export function activeLines(choices, also) {
   const ids = [];
   if (choices.home === "rent") ids.push("rent");
-  if (choices.home === "mortgage") ids.push("mortgage", "homeIns", "upkeep");
-  if (choices.home === "owned") ids.push("homeIns", "upkeep");
+  if (choices.home === "mortgage") ids.push("mortgage", "upkeep");
+  if (choices.home === "owned") ids.push("upkeep");
   ids.push("groceries", "dining");
   if (choices.car === "gas" || choices.car === "hybrid") ids.push("gasoline");
   if (choices.car === "electric") ids.push("charging");

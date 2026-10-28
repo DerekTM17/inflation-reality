@@ -47,7 +47,7 @@ test("families: every line and basket row has one, as in the spec table", () => 
   const byFamily = {};
   for (const [id, line] of Object.entries(LINES)) (byFamily[line.family] ??= []).push(id);
   assert.deepEqual(byFamily, {
-    home: ["rent", "mortgage", "homeIns", "upkeep"],
+    home: ["rent", "mortgage", "upkeep"],
     around: ["gasoline", "charging", "carIns", "carUpkeep", "transit"],
     food: ["groceries", "dining"],
     util: ["electric", "heatGas", "heatOil"],
@@ -129,18 +129,16 @@ test("average cards: fixed family order, basket rows as text, headings add up to
 });
 
 test("an empty renewal line stays out of the shares, the family rate and the totals, and says so", () => {
-  const { model, cards } = personal(answersWith({ answered: { home: "mortgage" } }));
-  const home = cards.find((c) => c.id === "home");
-  assert.deepEqual(home.rows.map((r) => r.id), ["mortgage", "homeIns", "upkeep"]);
-  const ins = home.rows.find((r) => r.id === "homeIns");
-  assert.equal(ins.dollars, null);
-  assert.equal(ins.addsYearText, "Add your renewal increase");
-  assert.equal(ins.renewal, true);
-  assert.equal(home.renewalMissing, true);
-  assert.equal(home.monthly, 2170, "You pay now counts every row: mortgage 1900 + insurance 140 + repairs 130");
-  assert.equal(home.pricedMonthly, 2030, "shares count priced rows only; insurance left out");
-  assert.equal(home.rateText, "+0.1%");
-  assert.equal(home.rows.find((r) => r.id === "mortgage").rateText, "0%");
+  const { model, cards } = personal(answersWith({ answered: { health: "own" } }));
+  const health = cards.find((c) => c.id === "health");
+  assert.deepEqual(health.rows.map((r) => r.id), ["health", "doctor"]);
+  const prem = health.rows.find((r) => r.id === "health");
+  assert.equal(prem.dollars, null);
+  assert.equal(prem.addsYearText, "Add your renewal increase");
+  assert.equal(prem.renewal, true);
+  assert.equal(health.renewalMissing, true);
+  assert.equal(health.monthly, 740, "You pay now counts every row: premium 650 + doctor 90");
+  assert.equal(health.pricedMonthly, 90, "shares count priced rows only; the premium is left out");
   assert.equal(sum(cards.map((c) => c.dollars ?? 0)), model.total);
 });
 
@@ -213,7 +211,7 @@ test("hover cards: an amount row and a family, in Personal and Average wording",
   assert.equal(familyHover(food, false).items[0][0], "Share of spending");
   assert.equal(rowHover(food.rows[0], "2026-08", false).items[1][0], "Average spending now");
   assert.equal(rowHover(food.rows[0], "2026-08", false).note, BASKET_ROWS.groceries.about);
-  const ins = personal(answersWith({ answered: { home: "mortgage" } })).cards[0].rows[1];
+  const ins = personal(answersWith({ answered: { health: "own" } })).cards.find((c) => c.id === "health").rows[0];
   assert.deepEqual(rowHover(ins, "2026-08", true).items.at(-1), ["Adds this year", "Add your renewal increase"]);
   for (const c of [card, fam]) assert.doesNotMatch(JSON.stringify(c), /\/yr|\/mo|·|—/);
 });

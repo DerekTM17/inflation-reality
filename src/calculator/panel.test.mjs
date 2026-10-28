@@ -41,14 +41,14 @@ test("average panel: title, answer, national line, every line + Everything else,
   assert.equal(shownSum(m), m.total);
 });
 
-test("personal panel with a mortgage: 0% line, home insurance off the total, basis, verdict", () => {
+test("personal panel with a mortgage: 0% line, no home insurance line, basis, verdict", () => {
   const m = personalModel(answersWith({ answered: { home: "mortgage" } }));
   assert.equal(m.title, "Your costs vs. August 2025");
   const mortgage = m.main.find((r) => r.id === "mortgage");
   assert.equal(mortgage.rateText, "0%");
   assert.equal(mortgage.note, "Fixed payment");
   assert.equal(mortgage.dollarText, "$0");
-  assert.ok(!m.main.some((r) => r.id === "homeIns"), "an empty renewal line is off the rows (its card row says so)");
+  assert.ok(!m.main.some((r) => r.id === "homeIns"), "home insurance is no longer a line");
   assert.equal(m.basis, "Based on 1 answer and 3 guesses. Monthly amounts are starting estimates.");
   assert.match(m.verdict, /prices other than housing/);
   assert.match(m.ratesLine, /^Your costs (rose|fell) \d+\.\d%\. Prices other than housing rose 3\.6%\.$/);

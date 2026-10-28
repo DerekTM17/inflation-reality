@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { emptyAnswers } from "./model.js";
+import { emptyAnswers, personalRows } from "./model.js";
+import { fakeData } from "./testdata.mjs";
 import {
   STORAGE_KEY, serializeAnswers, parseSaved, storageAvailable, loadAnswers, saveAnswers,
 } from "./storage.js";
@@ -25,7 +26,7 @@ test("round trip keeps answers, checkboxes, amount edits and renewal rates", () 
     answered: { home: "mortgage", health: "own" },
     also: { daycare: true, tuition: false },
     amounts: { mortgage: 2100, gasoline: 0 },
-    renewals: { health: 12.5, homeIns: null },
+    renewals: { health: 12.5 },
   };
   assert.deepEqual(parseSaved(serializeAnswers(answers)), answers);
 });
@@ -44,7 +45,7 @@ test("unknown ids, options and bad values are ignored one by one", () => {
     answered: { home: "castle", car: "none", pets: "dog" },
     also: { daycare: "yes", tuition: true, boat: true },
     amounts: { rent: 250000, doctor: "90", yacht: 5, ["__proto__"]: 1, groceries: -3 },
-    renewals: { health: 400, homeIns: "6", rent: 5 },
+    renewals: { health: 400, rent: 5 },
   });
   assert.deepEqual(parseSaved(raw), {
     answered: { car: "none" },
@@ -52,6 +53,16 @@ test("unknown ids, options and bad values are ignored one by one", () => {
     amounts: { rent: 100000, groceries: 0 },
     renewals: { health: 100 },
   });
+});
+
+test("an old saved home insurance renewal loads without error and has no effect", () => {
+  const raw = JSON.stringify({
+    version: 1, answered: { home: "mortgage" }, also: {}, amounts: { homeIns: 140 }, renewals: { homeIns: 6, health: 5 },
+  });
+  const loaded = parseSaved(raw);
+  assert.deepEqual(loaded.renewals, { health: 5 });
+  assert.deepEqual(loaded.amounts, {});
+  assert.ok(!personalRows(loaded, fakeData()).some((r) => r.id === "homeIns"));
 });
 
 test("saveAnswers stores personal answers and clears otherwise", () => {

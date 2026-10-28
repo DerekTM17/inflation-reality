@@ -26,7 +26,7 @@ test("quick starts: real options, edits on lines the household has, and every qu
 test("applyQuickStart replaces answers, checkboxes and edits, keeps renewal rates, and leaves the old answers alone", () => {
   const before = {
     answered: { home: "mortgage" }, also: { daycare: true, tuition: true },
-    amounts: { mortgage: 2400, rent: 900 }, renewals: { homeIns: 9, health: 4 },
+    amounts: { mortgage: 2400, rent: 900 }, renewals: { health: 4 },
   };
   const snapshot = JSON.parse(JSON.stringify(before));
   const commuter = QUICK_STARTS.find((q) => q.id === "commuter");
@@ -34,7 +34,7 @@ test("applyQuickStart replaces answers, checkboxes and edits, keeps renewal rate
   assert.deepEqual(after.answered, { home: "rent", car: "gas", heat: "electric", health: "work" });
   assert.deepEqual(after.also, { daycare: false, tuition: false });
   assert.deepEqual(after.amounts, { gasoline: 380, carUpkeep: 90 });
-  assert.deepEqual(after.renewals, { homeIns: 9, health: 4 });
+  assert.deepEqual(after.renewals, { health: 4 });
   assert.deepEqual(before, snapshot, "the answers Undo restores are untouched");
   after.amounts.gasoline = 1;
   after.renewals.health = 1;

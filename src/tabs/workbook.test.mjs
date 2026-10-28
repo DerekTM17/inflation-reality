@@ -55,7 +55,8 @@ test("estimate sheet: the math columns keep their precision", () => {
 test("estimate sheet: the yardstick is never a line; unfilled renewals say why they are left out", () => {
   const rows = estimateRows(mortgage, data);
   assert.ok(!rows.some((r) => r[0] === "Prices other than housing"));
-  const ins = rows.find((r) => r[0] === "Home insurance");
+  const own = estimateFor({ ...emptyAnswers(), answered: { home: "mortgage", health: "own" } }, data);
+  const ins = estimateRows(own, data).find((r) => r[0] === "Health insurance");
   assert.equal(ins[7], "Not counted until you add your renewal increase");
   assert.equal(ins[3], "");
 });

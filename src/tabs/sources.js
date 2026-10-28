@@ -149,12 +149,6 @@ const GUIDE_TEXT = {
     formula: "0%. A fixed-rate payment stays the same each year. The official inflation rate leaves mortgage payments out too.",
     start: `${start("mortgage")} a month. Shown when you have a fixed-rate mortgage.`,
   },
-  homeIns: {
-    series: [],
-    data: "Your own renewal notice. Premiums depend on where you live and who insures you.",
-    formula: "The increase you type in. Until you add one, this line is left out of the total. It is never counted as 0%.",
-    start: `${start("homeIns")} a month. Shown when you own your home, with or without a mortgage.`,
-  },
   upkeep: {
     series: lineSeries("upkeep"),
     data: index("upkeep", "It covers furniture, appliances and home services, the closest match to home repairs."),
@@ -299,7 +293,7 @@ export const METHOD = [
     heading: "Insurance",
     paragraphs: [
       "Car insurance has a price index of its own, so it uses that, like most lines.",
-      `Health and home insurance use the increase on your own renewal notice. For health insurance through work, we start at ${EMPLOYER_HEALTH_DEFAULT}%, the average rise for employer family plans in 2025.`,
+      `Health insurance uses the increase on your own renewal notice. For plans through work, we start at ${EMPLOYER_HEALTH_DEFAULT}%, the average rise for employer family plans in 2025.`,
       "We don't use the government's health insurance index. It tracks what insurers earn, not what you pay.",
     ],
   },
