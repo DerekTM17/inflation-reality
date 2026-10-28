@@ -29,8 +29,6 @@ Items we want to tackle in the near term but aren't started yet.
   It starts empty and only shows a prompt row asking for a renewal increase, which is homework most people skip; the same reasoning that kept property taxes out (2026-09-17 spec note) may apply to it. Alternative: keep it but drop the prompt row.
 - [ ] **[redesign]** Make the national comparison fair for people who own their home outright <!-- added 2026-09-24 -->
   The national rate includes owners' equivalent rent, which an outright owner does not pay in cash, so the verdict can read 'More than the national rate' right after they say they own outright, while their dollar total actually falls (3.92% on $2,310/mo vs 3.48% on $3,830/mo renting). Options: lead with dollars, soften or drop the comparison for owners, or explain the mismatch in one sentence. Needs a spec change to the verdict rule.
-- [ ] Restyle the new tabs with per-good colors, hover details and motion before Phase 2b merges <!-- added 2026-10-14 -->
-  Owner picked the Bolder mockup, wants quick-start households back and a compact two-column layout. Open: collapsible family cards on phones. Mockups in docs/superpowers/mockups/2026-10-02-color-study-*.html on branch redesign/phase2b; palette and plan in the 2026-10-14 handoff in docs/SESSIONS.md.
 - [ ] Make the dark-mode color check catch pale tinted backgrounds <!-- added 2026-10-18 -->
   scripts/audit/ui-audit.py lum() misreads Chrome's color(srgb …) values, so color-mix tints on .fam/.mrow can never fail the dark light-background check. Parse color(srgb r g b) as 0–1 floats. Found in the 2026-10-18 rev 4 final review.
 - [ ] Polish leftovers from the bolder look review <!-- added 2026-10-18 -->
