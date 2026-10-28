@@ -518,3 +518,5 @@ cd ~/projects/inflation-reality-phase2b
 git status -sb && git log --oneline -1     # expect head 4c8456a; " M docs/SESSIONS.md" is the other session's note
 npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 222, fail 0
 ```
+
+**Update 2026-10-27:** The owner reports that the revision 5 first screen passed with testers. The 5-second test gate is closed. Next is the merge (step 2 of the handoff above).
