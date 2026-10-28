@@ -520,3 +520,23 @@ npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 222, fail 0
 ```
 
 **Update 2026-10-27:** The owner reports that the revision 5 first screen passed with testers. The 5-second test gate is closed. Next is the merge (step 2 of the handoff above).
+## 2026-10-27
+
+### 2026-10-28T01:20:19+00:00 — session `5e9df078` on `main`
+
+```
+docs/BACKLOG-DONE.md |  4 ++++
+ docs/BACKLOG.md      |  1 -
+ docs/CHANGELOG.md    |  6 ++++++
+ docs/SESSIONS.md     | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 58 insertions(+), 1 deletion(-)
+```
+
+**Commits:**
+- ba4bcbe docs(sessions): revision 5 passed the 5-second test
+- b0ae13e docs(backlog): done via ledger — Owed before merging the redesign: the owner's 5-second test
+- 85db49a docs(sessions): handoff, revision 5 built and verified
+- 7fa8e2a docs(changelog): ship via ledger — The calculator now says its first number is the average, not
+
+**Last prompt:** give me full prompt to pick up, and the new visual works based on testers feedback
+
