@@ -28,7 +28,8 @@ export const CATEGORIES = [
   { id: "shelter",      label: "Rent / Housing",      seriesId: "CUUR0000SAH1",   code: "SAH1",   weight: 36.4, icon: "🏠", color: "#1B4965" },
   { id: "energy",       label: "Home Energy",         seriesId: "CUUR0000SAH21",  code: "SAH21",  weight: 3.2, icon: "💡", color: "#F4A261" },
   { id: "gas",          label: "Gasoline",            seriesId: "CUUR0000SETB01", code: "SETB01", weight: 3.0, icon: "⛽", color: "#E76F51" },
-  // FRED does not mirror the CPI motor-vehicle-insurance NSA series, so Car Insurance was dropped (2026-07-10).
+  // FRED does not mirror the CPI motor-vehicle-insurance NSA series, so Car Insurance was dropped from
+  // these old-dashboard categories (2026-07-10). The calculator has it: CALC_LINES carIns, from the BLS API.
   { id: "healthcare",   label: "Healthcare",          seriesId: "CPIMEDNS",       code: "SAM",    weight: 8.1, icon: "🏥", color: "#457B9D" },
   { id: "tuition",      label: "Tuition & Childcare", seriesId: "CUUR0000SEEB",   code: "SEEB",   weight: 3.0, icon: "🎓", color: "#6D597A" },
   { id: "apparel",      label: "Clothing",            seriesId: "CPIAPPNS",       code: "SAA",    weight: 2.5, icon: "👔", color: "#936639" },
@@ -93,8 +94,10 @@ export const WEEKLY_PRICES = [
 // The 12-month rate behind each line of the "Your costs" calculator. source "fred" series are
 // fetched with FRED_API_KEY like everything above. source "bls" series are NOT mirrored on FRED
 // (checked 2026-09-10/14) and come from the BLS Public Data API v2 with BLS_API_KEY.
-// Lines without a series (mortgage = 0%, insurance = the person's renewal increase, charging =
-// the electricity rate, everything else = the basket residual) are handled in the front end.
+// Lines without a series (mortgage = 0%, home and health insurance = the person's renewal
+// increase, charging = the electricity rate, everything else = the basket residual) are handled
+// in the front end. Car insurance is NOT one of them: it has its own series (carIns, BLS).
+// The Sources tab explains every line one by one (LINE_GUIDE in src/tabs/sources.js).
 export const CALC_LINES = [
   { id: "rent",      label: "Rent",                seriesId: "CUUR0000SEHA",   source: "fred" },
   { id: "upkeep",    label: "Home repairs",        seriesId: "CUUR0000SAH3",   source: "fred" },

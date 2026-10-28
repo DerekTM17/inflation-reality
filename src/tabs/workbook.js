@@ -8,7 +8,7 @@
 
 import { computeResult } from "../calculator/model.js";
 import { monthLabel, round1 } from "../calculator/format.js";
-import { METHOD, CAVEATS, NO_SERIES_LINES, SOURCE_LINKS, seriesGroups } from "./sources.js";
+import { METHOD, CAVEATS, LINE_GUIDE, LINE_GUIDE_INTRO, SOURCE_LINKS, seriesGroups } from "./sources.js";
 import { pctChange } from "./prices.js";
 import { trendMonth } from "./national.js";
 
@@ -82,8 +82,6 @@ function priceChangeRows(catalog, data) {
   for (const g of seriesGroups(catalog, data)) {
     for (const r of g.rows) out.push([g.title, r.name, r.seriesId, r.source, rate1(r.yoy), r.url]);
   }
-  out.push([], ["Lines without their own series"], ["Line", "How its rate is set"]);
-  for (const l of NO_SERIES_LINES) out.push([l.name, l.how]);
   return out;
 }
 
@@ -121,6 +119,20 @@ function howRows() {
     out.push([s.heading]);
     for (const p of s.paragraphs) out.push([p]);
     out.push([]);
+  }
+  // One block per line, one fact per row, matching the Sources tab's "Each line, one at a time".
+  out.push(["Each line, one at a time"]);
+  for (const p of LINE_GUIDE_INTRO) out.push([p]);
+  out.push([]);
+  for (const l of LINE_GUIDE) {
+    const series = l.series.map((s) => `${s.seriesId} (${s.source})`).join(", ");
+    out.push(
+      [l.name],
+      [`Price data: ${l.data}`, series],
+      [`How the rate is set: ${l.formula}`],
+      [`Starting amount: ${l.start}`],
+      [],
+    );
   }
   out.push(["Things to keep in mind"]);
   for (const c of CAVEATS) out.push([c]);
