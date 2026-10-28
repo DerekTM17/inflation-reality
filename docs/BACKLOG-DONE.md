@@ -4,6 +4,8 @@ Finished backlog items, moved here by `ledger done` and `ledger tidy`. Newest fi
 
 ## 2026-10-27
 
+- [x] **[feat]** Redesign the site around a calculator that shows how inflation hits you, using your own dollar amounts and situation <!-- added 2026-09-10 --> <!-- from Now -->
+  calculator-first redesign: "how inflation hits you" reframe, dollar inputs + household situation choices (housing, getting around, commute, heating, daycare, tuition, health insurance via your own renewal increase), non-generic visual identity, real buttons with pressed/focus states. Brainstorm in progress 2026-09-10; spec to docs/superpowers/specs/.
 - [x] **[redesign]** Phase 2b: rebuild National numbers, Price check and Sources, then delete src/views/LegacyDashboard.jsx. Also: move focus to <main> and set document.title on route change; add aria-controls to the 'Show all N items' toggle; extend the audit with a keyboard-only Start over -> Undo flow and a 'set an amount to 0' flow. <!-- added 2026-09-16 --> <!-- from Soon -->
 - [x] **[redesign]** Owed before merging the redesign: the owner's 5-second test (5 non-designers, first phone screen: 'What does this page do?' and 'Is that number yours?'; at least 4 of 5 answer both correctly). <!-- added 2026-09-16 --> <!-- from Soon -->
 
