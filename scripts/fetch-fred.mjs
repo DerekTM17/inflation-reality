@@ -13,7 +13,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 const OBSERVATION_START = "2019-01-01"; // enough history for trailing-12 YoY on any month
 
-const DEPLOYED_CPI_URL = "https://derektm17.github.io/inflation-reality/cpi.json";
+const DEPLOYED_CPI_URL = "https://inflation.translatingpolicy.com/cpi.json";
 
 // GitHub Actions annotation: shows on the run summary, not only in the log.
 const warn = (title, message) => console.log(`::warning title=${title}::${message}`);

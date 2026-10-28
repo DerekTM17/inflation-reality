@@ -2,6 +2,11 @@
 
 .wrap { max-width: 1080px; margin: 0 auto; padding-inline: 16px; padding-block: 0 48px; }
 
+/* Static link home, outside the React root so it shows before the app loads. */
+.home-bar { max-width: 1080px; margin: 0 auto; padding: 10px 16px 0; font-family: var(--font); }
+.home-link { font-size: 14px; font-weight: 600; color: var(--ink-2); text-decoration: none; }
+.home-link:hover, .home-link:focus-visible { color: var(--ink); text-decoration: underline; }
+
 .site {
   display: flex;
   flex-wrap: wrap;

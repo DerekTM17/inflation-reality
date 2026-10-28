@@ -31,11 +31,24 @@ Items we want to tackle in the near term but aren't started yet.
 - [ ] **[tech-debt]** Test the fallback layering order in scripts/fetch-fred.mjs ({...bundledFallback, ...deployed}): it decides which number is published when both sources have one, and fetch-fred.mjs has no tests at all. Extract the merge into a pure function and test it. Also: check-lines.mjs parses public/cpi.json unguarded, so a bad file gives a stack trace instead of an ::error:: annotation. <!-- added 2026-09-16 -->
 - [ ] **[data]** Sanity-check the large live rates against a second source before the calculator shows them: gasoline +27.4% and heating oil +52.0% year over year (August 2026). EIA weekly fuel is already in the payload (weeklyPrices) and makes a quick cross-check. <!-- added 2026-09-16 -->
 - [ ] **[redesign]** Phase 2b: rebuild National numbers, Price check and Sources, then delete src/views/LegacyDashboard.jsx. Also: move focus to <main> and set document.title on route change; add aria-controls to the 'Show all N items' toggle; extend the audit with a keyboard-only Start over -> Undo flow and a 'set an amount to 0' flow. <!-- added 2026-09-16 -->
-- [ ] **[redesign]** Owed before merging the redesign: the owner's 5-second test (5 non-designers, first phone screen: 'What does this page do?' and 'Is that number yours?'; at least 4 of 5 answer both correctly). <!-- added 2026-09-16 -->
 - [ ] **[redesign]** Decide whether to drop the Home insurance line <!-- added 2026-09-24 -->
   It starts empty and only shows a prompt row asking for a renewal increase, which is homework most people skip; the same reasoning that kept property taxes out (2026-09-17 spec note) may apply to it. Alternative: keep it but drop the prompt row.
 - [ ] **[redesign]** Make the national comparison fair for people who own their home outright <!-- added 2026-09-24 -->
   The national rate includes owners' equivalent rent, which an outright owner does not pay in cash, so the verdict can read 'More than the national rate' right after they say they own outright, while their dollar total actually falls (3.92% on $2,310/mo vs 3.48% on $3,830/mo renting). Options: lead with dollars, soften or drop the comparison for owners, or explain the mismatch in one sentence. Needs a spec change to the verdict rule.
+- [ ] Restyle the new tabs with per-good colors, hover details and motion before Phase 2b merges <!-- added 2026-10-14 -->
+  Owner picked the Bolder mockup, wants quick-start households back and a compact two-column layout. Open: collapsible family cards on phones. Mockups in docs/superpowers/mockups/2026-10-02-color-study-*.html on branch redesign/phase2b; palette and plan in the 2026-10-14 handoff in docs/SESSIONS.md.
+- [ ] Make the dark-mode color check catch pale tinted backgrounds <!-- added 2026-10-18 -->
+  scripts/audit/ui-audit.py lum() misreads Chrome's color(srgb …) values, so color-mix tints on .fam/.mrow can never fail the dark light-background check. Parse color(srgb r g b) as 0–1 floats. Found in the 2026-10-18 rev 4 final review.
+- [ ] Polish leftovers from the bolder look review <!-- added 2026-10-18 -->
+  Parked 2026-10-18: card folds and drops focus when crossing 600px with focus inside (FamilyCards narrow flip); .lg.hl bold reflows legend; tiny shares draw ≤1px slices (min-width); trend EndLabel clips past ~6 chars (right margin 48); useHover dismissed key clears only on pointerleave; dedupe useReducedMotion/MINUS/'around'.
+- [ ] Point the price-data script at the new address <!-- added 2026-10-26 -->
+  scripts/fetch-fred.mjs:16 still fetches derektm17.github.io/inflation-reality/cpi.json; works via 301 redirect. Switch to https://inflation.translatingpolicy.com/cpi.json.
+- [ ] Base the calculator's starting dollar amounts on government spending surveys <!-- added 2026-10-27 -->
+  None of the 21 defaults has a source (rent 1650, hybrid x0.55, +80 electric heat, 650 own insurance...). Sources page now calls them example numbers. Spec 2026-09-10 planned Consumer Expenditure tenure tables. Found by the methodology rewrite, branch docs/methodology-update.
+- [ ] Check the health insurance through work default against what workers actually pay <!-- added 2026-10-27 -->
+  Default applies KFF 2025's 6% family-premium rise to the worker's own share, which may grow differently; the 180 a month start matches no KFF figure. KFF also publishes single-plan and worker-contribution numbers.
+- [ ] Stop Everything else from double counting lines people already entered <!-- added 2026-10-27 -->
+  Personal Everything else uses the average household's leftover rate, which includes cars, car insurance, fares, tuition that the user may have entered separately. Disclosed as an estimate; not corrected.
 
 ## Someday
 

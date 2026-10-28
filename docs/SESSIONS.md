@@ -208,3 +208,335 @@ git status -sb                      # expect main ahead of origin by 2 (docs onl
 npm test                            # expect 133/133
 npx vite build && npx vite preview --port 4719 --strictPort   # then open /inflation-reality/
 ```
+
+## 2026-10-14
+
+#### Handoff — Phase 2b built and reviewed; owner wants the Bolder color treatment before merge (supersedes all earlier handoffs)
+
+**Goal:** Fix the rounding sign flip, settle the two owner questions, write and run the Phase 2b plan, then merge after the owner's 5-second test. The 5-second test turned into a visual redesign request, which is where things stand.
+
+**Done (all verified):**
+- `8ecfa42` rounding fix (`allocateRounded` re-checks sign safety before every step; a seeded 5,000-household property test also caught an adding-side flip). `ef81ff2` owners (mortgage and owned) are compared with "Prices other than housing" (CPI-U all items less shelter, `CUUR0000SA0L2`, catalog `CALC_LINES` entry `exShelter`, `yardstick: true`); renters keep the national rate. Home insurance stays as-is. Both are **LIVE**: pushed `main` at `5adc80d`, deploy run `36939661044` green, `55/55 series live`, live cpi.json has `exShelter` 3.590982, Python Playwright check on the live site showed rent 3.5% vs National 3.4%, owned 3.9% vs "Outside housing" 3.6%, mortgage 2.1% vs 3.6%, zero console errors.
+- Phase 2b plan `docs/superpowers/plans/2026-10-01-calculator-phase2b-other-tabs.md`, executed subagent-driven on branch **`redesign/phase2b`** in worktree **`~/projects/inflation-reality-phase2b`** (a worktree because other sessions run ledger commits in the main checkout). 12 tasks + a final-review fix wave, each with a task review; final whole-branch review verdict "ready after fixes", fixes re-reviewed clean. Commits `b2c493a`..`1319b8e`, plus `53c8fd1` (mockups). Branch head on GitHub is `1319b8e` (pushed during the gap by someone else, not by this session; a branch push does not deploy). `53c8fd1` is local only.
+- Branch state verified: `npm test` 184/184; `npx vite build` ok; `scripts/audit/ui-audit.py` 0 FAIL (127 checks) against `vite preview`, and it fails on injected faults.
+- SDD ledger with every ruling and every deferred minor: `~/projects/inflation-reality-phase2b/.superpowers/sdd/2026-10-01-calculator-phase2b-other-tabs/progress.md` (gitignored; read it before touching the branch).
+
+**Owner's 5-second test result:** the owner felt down about the new tabs. They miss the original's per-good colors, hover details and animation. Three clickable mockups were made (copies committed on the branch in `docs/superpowers/mockups/2026-10-02-color-study-*.html`):
+- Your costs panel: https://claude.ai/artifact/JVd3KnL8NVPBN4PFBMwfyP
+- National numbers: https://claude.ai/artifact/9EDzFvkHYt6EyXfBuXL1n5
+- Spending mix (answers + amounts): https://claude.ai/artifact/K1bqKshUY117QCUU6Em7Ng
+
+**Decisions the owner made (2026-10-02):**
+- **Bolder treatment**: color by *kind of spending* (Your costs, Price check) and by *publisher* (National numbers measures); tinted cards and rows, thicker bars, shaded area under the trend line; hover cards on rows, chart crosshair with arrow keys, bars grow in, line draws in, numbers count up; all motion off under prefers-reduced-motion. Color never means good/bad; rises/falls shown by sign and bar side.
+- **Quick-start households come back** (Young renter, Family with kids, Commuter, Retiree). This reverses spec revision 2's "no profiles"; record it in the spec.
+- **Less scrolling**: compact two-column layout (result beside the spending-mix bar; kinds of spending as two columns of tinted cards; one tight row per amount; questions fold to a one-line summary with "Change answers" after a quick start). Measured to end of amounts, Commuter household: desktop 2,812px -> 1,347px; phone 3,252px -> 2,379px.
+- Dollars, not percentage shares, for amounts (no auto-normalizing); the mix bar shows the percentages.
+
+**Validated palette** (dataviz validator: lightness, chroma, color-blind separation, normal-vision floor; amber gets a contrast WARN in light mode, relieved by text labels). Families in this fixed order: Home, Getting around, Food, Utilities, Clothing and fun, Health, Kids and school; Everything else is gray.
+- Light (on `#F3F5F4`): `#2F6DB5, #D2602E, #1A9473, #C48A12, #C9638C, #3E7D2E, #5A4AA8`, rest `#87919A`
+- Dark (on `#161A1E`): `#4C8BD6, #DE6A35, #2AAA85, #B98312, #CB668F, #5C9A45, #9085E9`, rest `#7A858F`
+- Publishers on National numbers: Labor Dept = home blue, Commerce = food green, Cleveland Fed = kids violet, Atlanta Fed = utilities amber, Dallas Fed = fun rose.
+- The original's palette FAILED the validator (too dull; plum vs steel blue ΔE 10.4). Don't go back to it.
+
+**Next (in this order):**
+1. Re-show the owner the exact message below and get the one open answer: **collapsible family cards on phones, yes or no?**
+2. Write spec revision 4 into `docs/superpowers/specs/2026-09-10-calculator-first-redesign-design.md` (on the branch): visual system (family + publisher colors with the palette above, Bolder treatment, hover and motion rules, reduced motion), quick starts back, compact layout, the phone-collapse answer. Get the owner's review of the written spec.
+3. Write a plan for it (writing-plans), execute on `redesign/phase2b` (subagent-driven worked well), re-run tests + audit (the audit's design rules must be updated: it currently enforces one accent / gray bars / at most one raised surface).
+4. Owner's 5-second test again, then merge to `main` from `~/projects/inflation-reality` and push **only on the owner's word**, then run the audit with `--base-url https://derektm17.github.io/inflation-reality/`, then Task 13 of the Phase 2b plan (handoff, `ledger ship`, `ledger done` for Phase 2b / route focus / Show all aria-controls / legacy dark mode, `ledger idea` follow-ups).
+
+**Deferred items from the Phase 2b reviews worth folding into the restyle:** uneven y-axis ticks on the trend chart (0/2/5%); fuel `.help` paragraphs run together on Price check; the audit doesn't check the personal state of Your costs in dark/1280, checks banned strings only inside `main`, and has a dead cpi.json console filter. Full list in the SDD ledger.
+
+**Gotchas:**
+- Use Python Playwright, not the Playwright MCP (shared browser). Kill preview servers by PID only; a broad `pkill -f "vite preview"` has killed agents' own shells. A stray preview once held port 4720 for days.
+- `vite preview` has no `public/cpi.json`, so it falls back to `src/data/fallback.json` (expected).
+- Artifact mockups need the page wrapped in `<!doctype html>…<body>` to screenshot locally; they're published without one.
+
+**The exact message to bring back up (owner asked for it verbatim):**
+
+> I updated the spending-mix mockup (same link): **https://claude.ai/artifact/K1bqKshUY117QCUU6Em7Ng**. Open it on **Bolder** and tap a quick start such as **Commuter**.
+>
+> **How much shorter it is,** measured from the top of the page to the end of the amounts, for the Commuter household:
+>
+> | Screen | In between | Bolder, compact | Saved |
+> |---|---|---|---|
+> | Desktop (1280px) | 2,812px | **1,347px** | about half |
+> | Phone (390px) | 3,252px | **2,379px** | about a quarter |
+>
+> **What made the difference:**
+> - **Desktop:** the result sits next to the spending mix bar. The kinds of spending fill two columns of tinted cards, like the old grid.
+> - **Each amount is one tight row:** name, price change, what it adds a year (for example "+$980/yr"), the dollar box, and a slider just under it.
+> - **The questions fold away:** a quick start collapses them to one line ("Rent · Gas car · Heat: electric · …") with a **Change answers** button.
+>
+> **Phone is still the long one,** since everything has to stack into one column. To shorten it further, I'd make each tinted card collapsible on phones. Each card would show only its name and total, like "Getting around +$930/yr", and you'd tap to open its sliders. That would cut the phone version roughly in half again. The catch is one extra tap to reach a slider. Do you want that?
+>
+> So far you've decided:
+> - The **Bolder** treatment, with the family colors.
+> - **Quick-start households come back.**
+> - **Less scrolling**, using the compact two-column layout.
+>
+> Once you've answered the phone question, I'll write these into the spec as a revision covering all three tabs, then plan the work onto this branch before merging. This session has also gotten long. When the spec is approved, I'd write a handoff so a fresh session can build it cheaply.
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality-phase2b          # the branch worktree (redesign/phase2b)
+git status -sb && git log --oneline -3           # expect clean, head 53c8fd1 (1 ahead of origin: mockups)
+npm test                                         # expect 184/184
+npx vite build && npx vite preview --port 4730 --strictPort --host   # owner can open http://localhost:4730/inflation-reality/
+# main checkout: ~/projects/inflation-reality is clean on main at 5adc80d plus this handoff commit
+```
+
+### 2026-10-17
+
+#### Handoff — Spec revision 4 approved and its build plan written (supersedes all earlier handoffs)
+
+**Goal:** Turn the owner's Bolder decisions into an approved spec and a reviewed build plan for `redesign/phase2b`, ready to build in a fresh session.
+
+**Done (all on branch `redesign/phase2b`, worktree `~/projects/inflation-reality-phase2b`; branch NOT pushed; nothing merged or deployed):**
+- `478d7ca` added hover detail cards, linked highlights and phone fold-up cards to the spending-mix mockup, published at https://claude.ai/artifact/K1bqKshUY117QCUU6Em7Ng. Checked with Python Playwright at 1280 and 390: zero console errors, no sideways scroll, and at 390 the Commuter page ended at 1,828px with one card open.
+- The owner said yes to cards that fold on phones (2026-10-16). They also said the Bolder hover plus the line-chart crosshair "covers" the hover they were missing.
+- **Spec revision 4** is in `docs/superpowers/specs/2026-09-10-calculator-first-redesign-design.md`, section "Revision 4 — Bolder look, quick starts, compact layout". Commits: `1d0f55e` written, `d1b8c63` approved by the owner 2026-10-17 ("this looks good"). A fresh reviewer checked it against the code first. It found 3 blockers, now fixed: Average rows had no family mapping, Average cards were undefined, and `--ink-3` text on tints was too faint. Rendered: https://claude.ai/artifact/HjDnVtGkcictTE8CU6yZ6f
+- **Plan** `docs/superpowers/plans/2026-10-17-calculator-rev4-bolder.md` (`9112bad`, 11 tasks, about 5,300 lines). How it was checked:
+  - The drafter applied every code block to a scratch copy of `d1b8c63`: 221 tests pass, `vite build` ok, audit 223/223 at a random seed and at `--seed 1`.
+  - The audit still fails on an injected fault.
+  - An independent reviewer found no blockers and re-ran Tasks 1–3: 206 tests, matching the plan.
+  - The review's fixes were applied and re-validated.
+  - The plan also added a "Plan decisions (2026-10-17)" note to the spec.
+  - Rendered: https://claude.ai/artifact/QqPg3sH9xYW6h3very4keQ
+- The branch itself is unchanged apart from docs and mockups: 184/184 tests (run 2026-10-14 this session).
+
+**Next:**
+1. The owner reviews the plan and picks an execution method. Recommend **subagent-driven**: 11 tasks with heavy interface coupling across tasks (`cards.js`, `useHover` and the CSS classes the audit selects). Phase 2b ran subagent-driven successfully.
+2. Execute on `redesign/phase2b` in the worktree (superpowers:subagent-driven-development). Task 11 includes an audit run with `--real-fonts`, which needs network access to Google Fonts. The page-height limits (≤ 1,500px at 1280, ≤ 2,000px at 390, Commuter household) must pass with real fonts before the 5-second test. With fallback fonts the plan measured 1,423 and 1,793.
+3. The owner runs the 5-second test again. Merge to `main` from `~/projects/inflation-reality` and push only on the owner's word, then run the audit with `--base-url https://derektm17.github.io/inflation-reality/`, then the ledger steps in Task 11.
+
+**Decisions (don't re-litigate):**
+- Bolder look, quick starts back, compact layout, cards fold on phones under 600px, hover cards. The "Where the extra money goes" list, Show all and the phone dock are removed. The family cards and the sticky result strip replace them.
+- A quick start counts all four answers as answered. It shows a "Filled in as {household}. [Undo]" toast and never shows a selected state.
+- Average-state hover wording stays neutral ("Share of spending"), for the "Is that number yours?" test.
+- Measure blurbs show as visible text under each row on phones, and in the hover card at 600px and wider.
+- Big-number text stays `--ink`; color goes on the marks only.
+- A card whose target has focus stays open when the page scrolls. This deviates from the spec on purpose, because Tab scrolls the page.
+- Recharts is pinned to exactly 2.15.4. The trend chart starts on the latest month through the internal `accessibilityManager.setIndex()`. The arrow-key audit check would catch it if that breaks.
+
+**Gotchas:**
+- Use Python Playwright, never the Playwright MCP (it's a shared browser). Kill preview servers by PID only.
+- `vite preview` falls back to `src/data/fallback.json`.
+- Chrome re-sends pointer events after a scroll, so park the mouse in the margin before running focus checks.
+- The main checkout gets ledger commits from other sessions. Build only in the worktree.
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality-phase2b
+git status -sb && git log --oneline -3   # expect clean, head 9112bad, ahead of origin
+npm test                                 # expect 184/184 before Task 1
+# then: superpowers:subagent-driven-development on docs/superpowers/plans/2026-10-17-calculator-rev4-bolder.md
+```
+
+### 2026-10-18
+
+#### Handoff — Revision 4 built, reviewed and verified on `redesign/phase2b`; waiting on the owner's 5-second test (supersedes all earlier handoffs)
+
+**Goal:** Build the approved revision 4 plan (`docs/superpowers/plans/2026-10-17-calculator-rev4-bolder.md`, Tasks 1–10, plus Task 11's controller checks) subagent-driven in the worktree.
+
+**Done (branch `redesign/phase2b`, worktree `~/projects/inflation-reality-phase2b`; NOT pushed, NOT merged, nothing deployed):**
+- Tasks 1–10, one commit each, `9ffcde9` … `94fc255`. Each was built by a fresh implementer and passed a task review (spec and quality) with no open Critical or Important findings.
+- A final whole-branch review (Opus) said "with fixes": 0 critical, 3 important, 12 minor. One fix wave followed (`120ba15`, `252014d`, `33f62ed`), and a scoped re-review found all 10 targeted findings fixed with nothing broken. What the wave fixed:
+  - The trend-chart card now closes on Escape and when focus leaves the chart, and the audit checks both.
+  - The audit's reduced-motion "bars full width on first paint" check reloads the page and fails when it finds no bars. It was proved to fail when the reduced-motion rule is removed.
+  - The dark-mode light-background check now exempts only the marks.
+  - Hover: an Escape-closed card stays closed, a keyboard-opened card comes back after the mouse passes over another target, and hint text is read once.
+  - The renewal box gets `aria-describedby`; focusable rows get names.
+  - Undo after a quick start restores the returning lede.
+  - The slider has hover and pressed states.
+- Verified at the branch tip `33f62ed` (2026-10-18, by the controller):
+  - `npm test`: tests 221, pass 221, fail 0.
+  - `vite build` ok.
+  - No literal colors; the dark token blocks are identical.
+  - The audit with the fixture passed at seed 236974 and at `--seed 1`.
+  - The audit with `--real-fonts` passed, and Libre Franklin 400/800 was confirmed loaded.
+  - Page heights with Commuter: 1,423px at 1280 (limit 1,500) and 1,793px at 390 with every card folded (limit 2,000). They are the same as with fallback fonts because fixed control heights dominate.
+  - The fault injection (a `.fam` border) makes the audit exit 1.
+- Screenshots for the spec walk-through and the 5-second test (20 of them: 390/1280 × light/dark × Average, Commuter and three tabs) are at `/tmp/ir-rev4-*.png`. The phone first screen is `/tmp/ir-rev4-390-light-first-screen.png`. I checked the phone first screen by eye. The other 19 have NOT been compared against the mockups yet. `/tmp` may be wiped; Task 11 Step 3 has the script to regenerate them.
+
+**Next:**
+1. The owner runs the 5-second test (Task 11 Step 4): 5 non-designers see the first phone screen and are asked "What does this page do?" and "Is that number yours?". Pass is at least 4 of 5 answering both correctly. Use the first-screen image above, or serve the preview to the LAN with `--host 0.0.0.0`; the command is in Task 11 Step 4. Record the result here. Do not merge without it.
+2. Optional before the test: compare the 20 screenshots with the Bolder mockups (`docs/superpowers/mockups/2026-10-02-color-study-*.html`, `data-v="c"`) and list any differences that aren't spec-wins cases as owner questions.
+3. On the owner's word only: merge per Task 11 Step 5 (read `git log redesign/phase2b..main` first; `main` has new docs and ledger commits, so expect a merge commit, not a fast-forward). Then push, run the audit against `https://derektm17.github.io/inflation-reality/` with and without `--live-data` (Step 6), and run the ledger steps (Step 7): `ledger ship`, then `ledger done` for the "owner's 5-second test" and "Phase 2b: rebuild National numbers" items. Add one `ledger idea` per plan open question the owner leaves unsettled. `ledger ship` was deliberately NOT run yet, because nothing is live.
+
+**Decisions this session (controller rulings; each lists its cost if wrong):**
+- The changed-row flash tints the row's background at 13% (`color-mix(... var(--c) 13% ...)`), not the text color. This satisfies both the spec's "flashes its family color" and "family colors are for marks only". Cost if wrong: a softer flash, one keyframe to change.
+- `.line-note` was re-added to `tabs.css`. Task 5's rewrite of `calculator.css` had dropped its only definition while Price check still uses it.
+- A mouse click pins a hover card (Escape or a click elsewhere unpins it). Cost: if unwanted, gate the pin to touch only.
+- Plan-mandated duplication was left in place: `useReducedMotion` is re-implemented in YourCosts, `MINUS` is declared twice, and `"around"` is hard-coded in `sources.js`. Cost: a small cleanup.
+- Measure and price-change list rows got `aria-labelledby` but not `role="group"`, because that role on an `li` breaks list semantics.
+- Parked (real, not blocking):
+  - Crossing 600px while focus is inside a card folds it and drops focus. This is rare and happens on rotation.
+  - `.lg.hl` bold text makes the legend reflow.
+  - Very small shares can draw slices 1px wide or less.
+  - The end label can clip at about −10.5%.
+  - The audit's `lum()` misreads Chrome `color(srgb …)` values, so a pale tint in dark mode can't fail the light-background check.
+  - The useHover `dismissed` key clears only on pointer leave.
+- For the owner (spec choices the final reviewer declined to judge):
+  - Hover cards close on pointer leave, so they aren't hoverable (WCAG 1.4.13).
+  - Dimmed rows, legend items and slices sit below contrast while another is highlighted.
+  - The sticky phone strip takes a big share of the screen while the on-screen keyboard is up.
+  - Decision 9 adds many tab stops.
+
+**Gotchas:**
+- The preview procedure's `echo $! > /tmp/ir-preview.pid` after `setsid … &` often records the wrong PID (setsid forks). Get the real listener from `ss -ltnp | grep 4719` and kill that PID only.
+- Use Python Playwright, never the Playwright MCP.
+- The main checkout gets ledger and doc commits from other sessions. Build only in the worktree.
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality-phase2b
+git status -sb && git log --oneline -1     # expect clean, head 33f62ed, ahead of origin
+npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 221, fail 0
+# preview: npm run build && setsid node node_modules/vite/bin/vite.js preview --port 4719 --strictPort </dev/null >/tmp/ir-preview.log 2>&1 & disown; ss -ltnp | grep 4719
+# then: Task 11 Step 4 (owner's 5-second test) → Step 5 merge only on the owner's word
+```
+
+#### Handoff — 5-second test FAILED on "Is that number yours?"; merge on hold; methodology branch built (supersedes all earlier handoffs)
+
+**5-second test result (Task 11 Step 4, 2026-10-27):** FAIL. The owner showed the first phone screen (artifact https://claude.ai/artifact/Rnw4XP2uZz3VTxkxgKB1aZ, the image `/tmp/ir-rev4-390-light-first-screen.png`) to 5 non-designers. People looked at it longer than 5 seconds, which makes the test easier, not harder.
+- "What does this page do?": 5 of 5 right. Person 1 said "Shows additional cost compared to last year." Person 2 said "an amount of money Americans are paying more for essential items on average over a period of time I didn't catch, maybe 2026 over 2025."
+- "Is that number yours?": not answered correctly. Person 1 said "I don't know if it is me or not." Person 2 said "No numbers look familiar to me." That is a no based on whether the number looked familiar, not on reading "average household". The owner said the other 3 answered "essentially the same as the first ones."
+- So it was about 1 of 5 at best on both questions, against a pass mark of 4.
+- The diagnosis: the big "About $2,250 more a year" gets read, and the small label "The average U.S. household vs. August 2025" doesn't. Nobody mentioned answering the questions to get their own number.
+
+**Also built (not merged):** branch `docs/methodology-update` (`233c574`, stacked on `redesign/phase2b` 33f62ed) answers outside feedback that the Sources page was out of date. It says car insurance is left out, and it describes an older model. The branch adds per-line entries for all 21 lines (source, formula, default) and a reading-level test on the Sources copy. Tests: 226 pass, 0 fail. Open owner questions: the starting amounts have no source (they are now labeled as example numbers); KFF's 6% rise is for the whole family premium, but it is applied to the worker's share; "Everything else" overlaps lines the user has already entered. Worktree: `.claude/worktrees/agent-af0d23f23ef1dee60`.
+
+**Next:**
+1. The owner picks the copy fix for "whose number is this". Per the plan, a copy change goes through the spec first, then gets built on `redesign/phase2b`, then is re-tested with 5 new people.
+2. After a pass: merge `redesign/phase2b`, then `docs/methodology-update`, per Task 11 Step 5. Both go only on the owner's word.
+
+**Gotchas:** the LAN preview on :4719 may still be running. Find the PID with `ss -ltnp | grep 4719` and kill that PID only.
+
+#### Handoff — Spec revision 5 approved ("whose number is this" fix); build it next (supersedes all earlier handoffs)
+
+**Goal:** Fix the failed 5-second test (2026-10-27: 5 of 5 knew what the page does, 0 of 5 could tell whether the number was theirs) with the owner's pick, option 3 layout B. Then re-test and merge.
+
+**Done (on `redesign/phase2b`, worktree `~/projects/inflation-reality-phase2b`, not pushed):**
+- `4fafbab` + `43e5ba3`: spec revision 5 in `docs/superpowers/specs/2026-09-10-calculator-first-redesign-design.md`, section "## Revision 5 — Say whose number it is". **The owner approved it on 2026-10-27.**
+  - A fresh agent checked it against the code before approval, and its 9 findings were folded in.
+  - Approved page: https://claude.ai/artifact/5EzyNsNYRpJpRwNsTwZdVr
+  - Mockup: https://claude.ai/artifact/9CCZbYqNX1DgyN2FLo74Bp
+- The test result and the methodology branch (`docs/methodology-update`, `233c574`, stacked on phase2b 33f62ed) are recorded in the handoff above. Main commit `8e1664a`.
+- No code has changed yet. The build has not started.
+
+**Next:**
+1. **Build revision 5** on `redesign/phase2b` in the worktree, following the spec section exactly. It is small enough to do inline or with one implementer. Touch points:
+   - `src/calculator/panel.js`:
+     - The Average title becomes "Compared with {month}".
+     - `answerLead` is added.
+     - `model.answer` becomes the full sentence "The average U.S. household pays about $X more a year".
+     - `answerSentence` gets a lowercase option.
+   - `src/components/ResultStrip.jsx`:
+     - The lead-in is a static span with a literal space before the amount, both inside `p.answer`.
+     - CountUp formats the lowercase amount when not personal.
+     - A pointer button uses `.text-btn` plus an accent, weight-700 modifier, placed after the answer, with `onClick={onAnswerQuestions}`.
+     - The old `action` button is removed.
+     - The lead-in and pointer show only when `model.total != null`.
+   - CSS for `.answer-lead` (800 weight, `clamp(17px, 4.6vw, 22px)`, line-height 1.15) and the modifier.
+   - Tests: update `panel.test.mjs` and `src/tabs/estimate.test.mjs`.
+   - Audit: `scripts/audit/ui-audit.py`:
+     - the Average-title checks around :256 and :358,
+     - `answer_total` at :147-154 (accept the lead-in and a lowercase "about"),
+     - the `.strip-more .btn` check at :259, which becomes a pointer-in-`.strip` check at 390 and 1280.
+2. **Verify:**
+   - `npm test`: all pass. The baseline is 221; report the new count.
+   - `vite build`.
+   - The audit with the fixture, at `--seed 1`, and with `--real-fonts`.
+   - Page heights: at most 1,500px at 1280 and at most 2,000px at 390 with the cards folded.
+   - **Manual:** a 390×844 light screenshot of the Average state, where the answer, the pointer and the mix bar are all visible without scrolling.
+   - Regenerate the first-screen image (Task 11 Step 3 script in `docs/superpowers/plans/2026-10-17-calculator-rev4-bolder.md`) and republish the test page artifact https://claude.ai/artifact/Rnw4XP2uZz3VTxkxgKB1aZ with the new image. To do that, rebuild `five-second-test.html`: an inline base64 PNG, the same two questions, and the pass line.
+3. **The owner re-runs the 5-second test** with 5 NEW people. The same two questions, and a pass is at least 4 of 5 answering both.
+4. **On a pass, and only on the owner's word: merge.** First carry over main's domain changes (see Gotchas). Then merge `redesign/phase2b`, then `docs/methodology-update`. Then Task 11 Steps 5–7: push, run the live audit, run ledger.
+
+**Decisions:**
+- Layout B (a bold lead-in above the number) over A (the whole sentence in big type), because A pushed the mix bar off the first phone screen.
+- `model.answer` stays a full sentence, so the LiveRegion announcement and the .xlsx stay whole without changes.
+- The pointer keeps today's focus target, `#questions` (the container), not the first question.
+- The sticky phone band grows by about 70px. This was accepted and is stated in the spec.
+
+**Gotchas:**
+- **The merge will break the live site unless main's domain move comes over first.** Main now serves from https://inflation.translatingpolicy.com (commit ba1c9ad): `vite.config.js` `base: "/"`, `public/CNAME`, `test/domain.test.js`, plus a "← Translating Policy" back-link. Phase2b still has `base: "/inflation-reality/"`. Merge main into phase2b first, or apply the same changes. The audit's `/inflation-reality/` paths need updating too.
+- The worktree has an **uncommitted note in `docs/SESSIONS.md`** from another session (2026-10-26) about that domain move. It isn't ours; leave it, or fold it in when merging main.
+- The LAN preview may still be running on :4719. Find the PID with `ss -ltnp | grep 4719` and kill that PID only.
+- Use Python Playwright, not the Playwright MCP.
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality-phase2b
+git status -sb && git log --oneline -1     # expect head 43e5ba3; " M docs/SESSIONS.md" is the other session's note
+npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 221, fail 0 before the build
+awk '/^## Revision 5/,/^## Visual system/' docs/superpowers/specs/2026-09-10-calculator-first-redesign-design.md
+```
+
+#### Handoff — Revision 5 built and verified on `redesign/phase2b`; waiting on the owner's new 5-second test (supersedes all earlier handoffs)
+
+**Goal:** Build spec revision 5 ("Say whose number it is"), then re-test and merge.
+
+**Done (on `redesign/phase2b`, worktree `~/projects/inflation-reality-phase2b`, not pushed):**
+- `4c8456a` builds revision 5 exactly as the spec section says:
+  - The Average title is now "Compared with August 2025".
+  - The answer reads "The average U.S. household pays" (the lead-in) over "about $2,250 more a year".
+  - The pointer button "That's the average. Answer four questions to see yours." replaces the Answer the questions button.
+  - `model.answer` stays the full sentence, and the audit was updated.
+- **Verified:**
+  - `npm test`: pass 222, fail 0 (221 before, plus one new lowercase `answerSentence` test).
+  - `vite build`: OK.
+  - Audit `--seed 1`: passed. Audit `--seed 1 --real-fonts`: passed. Both include the new pointer checks at 390 and 1280 (inside the strip, next Tab stop after the answer, focus ring visible).
+  - Heights: 1,423px at 1280 (limit 1,500) and 1,793px at 390 with the cards folded (limit 2,000).
+  - **Manual first screen**, 390×844, light, Libre Franklin loaded:
+    - Answer: 483–579px.
+    - Pointer: 580–627px.
+    - Mix bar: 691–713px.
+    - So all three sit above the fold. The legend runs past the fold, which the spec allows.
+    - The screenshot matches layout B in the mockup.
+- Test page republished with the new image (version 2): https://claude.ai/artifact/Rnw4XP2uZz3VTxkxgKB1aZ. It has the same two questions and the same pass line.
+- Ledger: shipped "The calculator now says its first number is the average, not yours".
+
+**Next:**
+1. **The owner re-runs the 5-second test** with 5 NEW people (none from the 2026-10-27 test). Use the test page above. The questions are "What does this page do?" and "Is that number yours?". A pass is at least 4 of 5 answering both.
+2. **On a pass, and only on the owner's word: merge.**
+   - First bring main's domain move into phase2b. Main serves from inflation.translatingpolicy.com: `base: "/"`, `public/CNAME`, `test/domain.test.js`, and the back-link. Phase2b still has `/inflation-reality/`, and so do the audit's default base URL and paths.
+   - Then merge `redesign/phase2b`, then `docs/methodology-update` (`233c574`).
+   - Then push, run the live audit, run `ledger done inflation-reality "owner's 5-second test"` and the Phase 2b done item.
+3. **On a fail:** record what testers said in this file, and go back to the mockup with the owner before changing code.
+
+**Decisions:** All decisions are in the spec, and none were reopened. One small choice: the lead-in inherits the answer's -0.02em letter-spacing, since the spec gives none.
+
+**Gotchas:**
+- The worktree still has the other session's uncommitted note in `docs/SESSIONS.md`. Leave it.
+- The LAN preview is still running on :4719 (pid 62805, serving the worktree's `dist/`). It now shows revision 5. Kill only that PID when done.
+- When republishing the test page, the file saved by `Artifact read` has a publish-time wrapper on line 1 and `</body></html>` at the end. Strip both before republishing. The current source is at `/tmp/claude-1000/-home-dynomatic/5e9df078-2ad7-44c6-8bca-993f02a864e6/scratchpad/five-second-test.html` (scratch, may be gone).
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality-phase2b
+git status -sb && git log --oneline -1     # expect head 4c8456a; " M docs/SESSIONS.md" is the other session's note
+npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 222, fail 0
+```
+
+**Update 2026-10-27:** The owner reports that the revision 5 first screen passed with testers. The 5-second test gate is closed. Next is the merge (step 2 of the handoff above).
+## 2026-10-27
+
+### 2026-10-28T01:20:19+00:00 — session `5e9df078` on `main`
+
+```
+docs/BACKLOG-DONE.md |  4 ++++
+ docs/BACKLOG.md      |  1 -
+ docs/CHANGELOG.md    |  6 ++++++
+ docs/SESSIONS.md     | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 58 insertions(+), 1 deletion(-)
+```
+
+**Commits:**
+- ba4bcbe docs(sessions): revision 5 passed the 5-second test
+- b0ae13e docs(backlog): done via ledger — Owed before merging the redesign: the owner's 5-second test
+- 85db49a docs(sessions): handoff, revision 5 built and verified
+- 7fa8e2a docs(changelog): ship via ledger — The calculator now says its first number is the average, not
+
+**Last prompt:** give me full prompt to pick up, and the new visual works based on testers feedback
+
