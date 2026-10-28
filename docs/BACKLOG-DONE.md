@@ -2,6 +2,10 @@
 
 Finished backlog items, moved here by `ledger done` and `ledger tidy`. Newest first.
 
+## 2026-10-28
+
+- [x] **[bug]** Biggest Movers bar colors can land on the wrong bars — the Cell color list is built from a list that does not drop null-yoy items, so indices drift from the chart data. Fix in the redesign. <!-- added 2026-09-10 --> <!-- from Soon -->
+
 ## 2026-10-27
 
 - [x] **[feat]** Redesign the site around a calculator that shows how inflation hits you, using your own dollar amounts and situation <!-- added 2026-09-10 --> <!-- from Now -->
