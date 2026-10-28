@@ -579,3 +579,138 @@ cd ~/projects/inflation-reality
 git status -sb && git log --oneline -1    # main, in sync with origin after the docs push
 npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 230, fail 0
 ```
+## 2026-10-28
+
+### 2026-10-28T17:48:53+00:00 — session `abafc163` on `main`
+
+```
+README.md                                                            |   42 +-
+ docs/BACKLOG-DONE.md                                                 |    3 +
+ docs/BACKLOG.md                                                      |    3 -
+ docs/CHANGELOG.md                                                    |    4 +
+ docs/SESSIONS.md                                                     |   59 +
+ .../superpowers/mockups/2026-10-02-color-study-national-numbers.html |  346 ++
+ docs/superpowers/mockups/2026-10-02-color-study-spending-mix.html    |  547 +++
+ docs/superpowers/mockups/2026-10-02-color-study-your-costs.html      |  444 +++
+ docs/superpowers/plans/2026-10-17-calculator-rev4-bolder.md          | 5299 ++++++++++++++++++++++++++++++
+ .../superpowers/specs/2026-09-10-calculator-first-redesign-design.md |  229 +-
+ index.html                                                           |   11 +
+ package-lock.json                                                    |    2 +-
+ package.json                                                         |    5 +-
+ public/og-image.png                                                  |  Bin 0 -> 40271 bytes
+ scripts/audit/fixture-cpi.json                                       |  295 ++
+ scripts/audit/ui-audit.py                                            |  715 ++++
+ scripts/og/link-preview.test.mjs                                     |   33 +
+ scripts/og/og-image.html                                             |   36 +
+ scripts/og/render-og.py                                              |   25 +
+ src/App.jsx                                                          |   32 +-
+ src/calculator/cards.js                                              |  204 ++
+ src/calculator/cards.test.mjs                                        |  234 ++
+ src/calculator/config.js                                             |  138 +-
+ src/calculator/model.js                                              |   14 +
+ src/calculator/motion.js                                             |   14 +
+ src/calculator/motion.test.mjs                                       |   28 +
+ src/calculator/panel.js                                              |   60 +-
+ src/calculator/panel.test.mjs                                        |   46 +-
+ src/calculator/quickstart.test.mjs                                   |   50 +
+ src/calculator/visit.js                                              |   28 +
+ src/calculator/visit.test.mjs                                        |   27 +
+ src/components/Amounts.jsx                                           |   89 -
+ src/components/BarList.jsx                                           |   42 +
+ src/components/CountUp.jsx                                           |   36 +
+ src/components/Dock.jsx                                              |   14 -
+ src/components/FamilyCards.jsx                                       |  195 ++
+ src/components/HoverCard.jsx                                         |   65 +
+ src/components/MeasureList.jsx                                       |   63 +
+ src/components/QuickStarts.jsx                                       |   18 +
+ src/components/ResultPanel.jsx                                       |   91 -
+ src/components/ResultStrip.jsx                                       |  112 +
+ src/components/Toast.jsx                                             |    6 +-
+ src/components/TrendChart.jsx                                        |  105 +
+ src/components/placeCard.js                                          |   12 +
+ src/components/placeCard.test.mjs                                    |   20 +
+ src/components/useHover.js                                           |  106 +
+ src/components/useMedia.js                                           |   20 +
+ src/components/useMotion.js                                          |   33 +
+ src/data/catalog.js                                                  |   31 +-
+ src/data/catalog.test.mjs                                            |   12 +
+ src/main.jsx                                                         |    2 +
+ src/routes.js                                                        |    9 +
+ src/routes.test.mjs                                                  |   10 +-
+ src/shell.test.mjs                                                   |   47 +
+ src/styles/calculator.css                                            |  309 +-
+ src/styles/controls.css                                              |   24 +-
+ src/styles/marks.css                                                 |   90 +
+ src/styles/tabs.css                                                  |  154 +
+ src/styles/tokens.css                                                |   48 +-
+ src/styles/tokens.test.mjs                                           |   77 +-
+ src/tabs/download.js                                                 |    9 +
+ src/tabs/estimate.js                                                 |   32 +
+ src/tabs/estimate.test.mjs                                           |   44 +
+ src/tabs/national.js                                                 |  265 ++
+ src/tabs/national.test.mjs                                           |  165 +
+ src/tabs/notes.js                                                    |   16 +
+ src/tabs/notes.test.mjs                                              |   20 +
+ src/tabs/prices.js                                                   |  136 +
+ src/tabs/prices.test.mjs                                             |   91 +
+ src/tabs/sources.js                                                  |  345 ++
+ src/tabs/sources.test.mjs                                            |  158 +
+ src/tabs/testdata.mjs                                                |   69 +
+ src/tabs/workbook.js                                                 |  164 +
+ src/tabs/workbook.test.mjs                                           |  132 +
+ src/views/LegacyDashboard.jsx                                        | 1074 ------
+ src/views/NationalNumbers.jsx                                        |  119 +
+ src/views/PriceCheck.jsx                                             |   97 +
+ src/views/Sources.jsx                                                |  123 +
+ src/views/YourCosts.jsx                                              |  206 +-
+ src/views/YourCostsIntro.jsx                                         |    2 +-
+ 80 files changed, 12443 insertions(+), 1637 deletions(-)
+```
+
+**Commits:**
+- ce3de65 docs(sessions): handoff, redesign merged and live
+- 0cba1e4 docs(changelog): ship via ledger — The redesigned calculator is now live for everyone
+- 4c18df2 docs(backlog): done via ledger — Redesign the site around a calculator that shows how inflati
+- 3a0a993 docs(backlog): done via ledger — Phase 2b: rebuild National numbers, Price check and Sources,
+- 928424c Merge branch 'docs/methodology-update' into redesign/phase2b
+- ac41279 fix(domain): link previews and audit default point at inflation.translatingpolicy.com
+- af82ca9 Merge branch 'main' into redesign/phase2b
+- ee9ffec docs(sessions): record stub from prior session
+- 4c8456a feat(calculator): revision 5, say whose number it is
+- 43e5ba3 docs(spec): revision 5 fixes from the code check
+- 4fafbab docs(spec): revision 5, the Average strip says whose number it is
+- 233c574 docs(sources): explain every Your costs line one by one
+- 33f62ed fix(a11y): Escape-dismissed cards stay closed, focused card returns after hover, single hint read, renewal box and focusable rows named, quick-start Undo restores the returning lede, slider hover and pressed states
+- 252014d test(audit): reduced-motion bar check reloads for a true first view and fails on no bars; dark check exempts only family-colored marks
+- 120ba15 fix(national): trend chart card closes on Escape and when focus leaves the chart; audit checks both
+- 94fc255 test(audit): revision 4 flows, reduced-motion numbers plus one motion pass, page height, hover and keyboard checks
+- 5645781 feat(price-check): movers in family colors with hover cards; separate fuel notes; family dots on Sources
+- 7588a5e feat(national): trend crosshair with keyboard steps, tinted big numbers, publisher-colored measures
+- 4aceb5f feat(motion): bars grow, the answer counts, changed rows flash; off under reduced motion
+- b0f4ca3 feat(your-costs): family cards with dollar sliders, renewal boxes and phone fold-up
+- 1c8fdb3 feat(your-costs): sticky result strip with the spending mix; drop the dock, panel list and prompt rows
+- bc0faec feat(ui): shared hover card, hover state hook and family marks
+- 29861d9 feat(your-costs): quick-start households with Undo; questions stay folded for the visit
+- d1de47a feat(calculator): families, about text and the family-cards model
+- 9ffcde9 feat(tokens): family, publisher and track tokens with tint contrast checks
+- 9112bad docs(plan): calculator revision 4 (Bolder look) implementation plan
+- d1b8c63 docs(spec): revision 4 approved
+- 1d0f55e docs(spec): revision 4, Bolder look, quick starts, compact layout, hover cards
+- 478d7ca docs(mockups): hover cards and phone fold-up on the spending-mix study
+- 53c8fd1 docs(mockups): color and motion studies for the Bolder treatment
+- 1319b8e Fix final-review findings: trend chart label clipping, price decimals, sources title, audit docstring
+- ce84f37 test: commit the UI audit (flows, design rules, random amounts, both themes)
+- b606e95 feat: link previews with an og image
+- dd1b875 refactor: delete the legacy dashboard; every tab is rebuilt
+- 973b8d8 feat(sources): new Sources tab with every series and the spreadsheet download
+- abea679 feat(tabs): spreadsheet built from the saved estimate and every series
+- 0f31ccd feat(tabs): Sources model: every series with its link, method and caveats
+- 34b1e9b feat(price-check): new Price check tab replaces the legacy view
+- 36043e4 feat(tabs): Price check model
+- 34e7f66 feat(national-numbers): new National numbers tab replaces the legacy view
+- 0eccc74 feat(tabs): National numbers model
+- 10868a5 feat(tabs): plain-language measure and fuel copy, shared notes and test data
+- b2c493a feat(shell): tab titles, focus the heading on route change, Show all aria-controls
+
+**Last prompt:** okay, give me prompt to pick up and give me link to active site. i'll continue doing whatever work we need to after the clear
+
