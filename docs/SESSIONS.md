@@ -540,3 +540,42 @@ docs/BACKLOG-DONE.md |  4 ++++
 
 **Last prompt:** give me full prompt to pick up, and the new visual works based on testers feedback
 
+
+#### Handoff — Redesign merged and live (supersedes all earlier handoffs)
+
+**Goal:** Merge the redesign after revision 5 passed the 5-second test.
+
+**Done:**
+- `af82ca9` merged main into `redesign/phase2b`. It brought in the domain move and the "← Translating Policy" back-link, with no conflicts.
+- `ac41279` points the link-preview tags (`og:url`, `og:image`), their test, and the audit's default URL at inflation.translatingpolicy.com. Before this they used the old `/inflation-reality/` path.
+- `928424c` merged `docs/methodology-update` (the line-by-line Sources explanations), with no conflicts.
+- Main was fast-forwarded to `928424c`. The owner pushed main and `redesign/phase2b`.
+- **Verified:**
+  - Local: `npm test` gave pass 230, fail 0. `vite build` was OK. Audit `--seed 1` passed, with and without `--real-fonts`.
+  - First screen at 390×844: the back-link bar adds 35px. The answer sits at 517–614, the pointer at 615–662, and the mix bar starts at 726. All are above the fold.
+  - The "Deploy to GitHub Pages" run 40615352887 succeeded. The live HTML has the new `og:url` and the back-link.
+  - The live audit (`--base-url https://inflation.translatingpolicy.com/ --live-data --real-fonts`) passed.
+- Ledger:
+  - Done: "Phase 2b: rebuild National numbers…".
+  - Done: "Redesign the site around a calculator…".
+  - Shipped: "The redesigned calculator is now live for everyone".
+
+**Next:** The redesign has no open work. Choose the next item from the backlog. Items to check first:
+- The "Biggest Movers bar colors" bug and the "BLS Default 3.9% vs 3.4%" bug both say "fixed by the redesign". Check each on the live site, then run `ledger done` or fix it.
+- "Decide whether to drop the Home insurance line".
+- "Make the national comparison fair for people who own their home outright".
+
+**Gotchas:**
+- Cleanup is owed, and the owner decides:
+  - Remove the worktrees `~/projects/inflation-reality-phase2b` and `.claude/worktrees/agent-af0d23f23ef1dee60` (both are fully merged).
+  - Delete the merged branches `redesign/phase2b` and `docs/methodology-update`.
+  - Drop the git stash tagged "domain-move note". It holds another session's reminder to merge main first, and it is now obsolete. Auto mode refused the drop.
+- The LAN preview on :4719 serves the phase2b worktree's `dist/`. Kill it before removing that worktree.
+- The routes test still uses `/inflation-reality/` as an example base on purpose. It only checks how a base path gets joined.
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality
+git status -sb && git log --oneline -1    # main, in sync with origin after the docs push
+npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 230, fail 0
+```
