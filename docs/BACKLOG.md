@@ -41,6 +41,8 @@ Items we want to tackle in the near term but aren't started yet.
   Default applies KFF 2025's 6% family-premium rise to the worker's own share, which may grow differently; the 180 a month start matches no KFF figure. KFF also publishes single-plan and worker-contribution numbers.
 - [ ] Stop Everything else from double counting lines people already entered <!-- added 2026-10-27 -->
   Personal Everything else uses the average household's leftover rate, which includes cars, car insurance, fares, tuition that the user may have entered separately. Disclosed as an estimate; not corrected.
+- [ ] Count the home costs owners pay locally: property taxes and home insurance <!-- added 2026-10-28 -->
+  Owners now compare with prices other than housing, but neither side counts property taxes, which can rise every year. CPI has no property-tax series. The Home insurance line was dropped on 2026-10-28 because its renewal prompt was homework most people skip. Revisit both together: possible sources are Census or Tax Foundation local tax data, or a simple 'my tax bill went up by' input.
 
 ## Someday
 
