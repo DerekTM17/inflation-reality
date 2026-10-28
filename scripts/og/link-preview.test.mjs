@@ -16,8 +16,8 @@ test("index.html carries the spec's link preview tags", () => {
   assert.equal(meta("property", "og:site_name"), "Inflation Reality");
   assert.equal(meta("property", "og:title"), "How much more are you paying than a year ago?");
   assert.equal(meta("property", "og:description"), DESCRIPTION);
-  assert.equal(meta("property", "og:url"), "https://derektm17.github.io/inflation-reality/");
-  assert.equal(meta("property", "og:image"), "https://derektm17.github.io/inflation-reality/og-image.png");
+  assert.equal(meta("property", "og:url"), "https://inflation.translatingpolicy.com/");
+  assert.equal(meta("property", "og:image"), "https://inflation.translatingpolicy.com/og-image.png");
   assert.equal(meta("property", "og:image:width"), "1200");
   assert.equal(meta("property", "og:image:height"), "630");
   assert.ok(meta("property", "og:image:alt"));

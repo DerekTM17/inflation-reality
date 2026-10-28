@@ -11,7 +11,7 @@ Local, against the built site (the default base URL):
     npm run build && node node_modules/vite/bin/vite.js preview --port 4719 --strictPort   # in another shell
     python3 scripts/audit/ui-audit.py
 Live site, with the real cpi.json (the merge gate's "production data live" run):
-    python3 scripts/audit/ui-audit.py --base-url https://derektm17.github.io/inflation-reality/ --live-data
+    python3 scripts/audit/ui-audit.py --base-url https://inflation.translatingpolicy.com/ --live-data
 --live-data is for the live site only: vite preview has no cpi.json, and every console error counts
 (the audit stops if --live-data is given a localhost URL). --real-fonts loads Libre Franklin from Google
 Fonts instead of stubbing it (needs the network), for the page-height gates with the real type.
@@ -687,7 +687,7 @@ def matrix(browser, args, base):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--base-url", default="http://localhost:4719/inflation-reality/")
+    parser.add_argument("--base-url", default="http://localhost:4719/")
     parser.add_argument("--live-data", action="store_true", help="use the site's real cpi.json (live site only)")
     parser.add_argument("--real-fonts", action="store_true", help="load the real web fonts instead of stubbing them (needs the network)")
     parser.add_argument("--seed", type=int, default=random.randrange(1_000_000), help="random-amounts seed (printed)")
@@ -696,7 +696,7 @@ def main():
     base = args.base_url if args.base_url.endswith("/") else args.base_url + "/"
     if args.live_data and re.match(r"https?://(localhost|127\.0\.0\.1|0\.0\.0\.0)[:/]", base):
         sys.exit("--live-data needs the live site: vite preview has no cpi.json, so it logs a 404 and every console "
-                 "error counts. Drop --live-data, or pass --base-url https://derektm17.github.io/inflation-reality/.")
+                 "error counts. Drop --live-data, or pass --base-url https://inflation.translatingpolicy.com/.")
     print(f"auditing {base} with {'live data' if args.live_data else 'the fixture'}")
     seen = {}
     with sync_playwright() as p:
