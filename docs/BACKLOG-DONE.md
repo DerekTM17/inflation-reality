@@ -4,6 +4,8 @@ Finished backlog items, moved here by `ledger done` and `ledger tidy`. Newest fi
 
 ## 2026-10-28
 
+- [x] **[bug]** The "BLS Default" spending profile shows 3.9%, not the 3.4% headline, and wrongly calls an average household 0.5 points above it <!-- added 2026-09-10 --> <!-- from Now -->
+  live site: the "BLS Default" spending profile shows 3.9% vs the 3.4% headline and labels an average household "+0.5 above headline" — the 10 CATEGORIES cover only ~79% of CPI relative importance, so default weights cannot reproduce the headline. Fixed by the redesign (derived "Everything else" residual, see 2026-09-10 spec); if the redesign slips, relabel or hide the delta for the default profile.
 - [x] **[bug]** Biggest Movers bar colors can land on the wrong bars — the Cell color list is built from a list that does not drop null-yoy items, so indices drift from the chart data. Fix in the redesign. <!-- added 2026-09-10 --> <!-- from Soon -->
 
 ## 2026-10-27

@@ -7,8 +7,6 @@ domain. Markdown checkboxes; edit by hand. Shipped items go to
 ## Now
 
 Items we're actively working on or planning to do imminently.
-- [ ] **[bug]** The "BLS Default" spending profile shows 3.9%, not the 3.4% headline, and wrongly calls an average household 0.5 points above it <!-- added 2026-09-10 -->
-  live site: the "BLS Default" spending profile shows 3.9% vs the 3.4% headline and labels an average household "+0.5 above headline" — the 10 CATEGORIES cover only ~79% of CPI relative importance, so default weights cannot reproduce the headline. Fixed by the redesign (derived "Everything else" residual, see 2026-09-10 spec); if the redesign slips, relabel or hide the delta for the default profile.
 
 ## Soon
 
