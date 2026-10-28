@@ -2,6 +2,10 @@
 
 Finished backlog items, moved here by `ledger done` and `ledger tidy`. Newest first.
 
+## 2026-10-27
+
+- [x] **[redesign]** Owed before merging the redesign: the owner's 5-second test (5 non-designers, first phone screen: 'What does this page do?' and 'Is that number yours?'; at least 4 of 5 answer both correctly). <!-- added 2026-09-16 --> <!-- from Soon -->
+
 ## 2026-09-28
 
 - [x] **[redesign]** Fix before merging redesign/calculator-first: allocateRounded (src/calculator/format.js) can still flip a small positive line negative when leftover steps are removed (k<0). Repros with real totals: [-300,8,-40] -> [-300,-10,-40]; [-1069,0,0,5,-11] -> [-1070,0,0,-10,-20]. Fix: in the k<0 branch take steps from negative-valued eligible entries first (removing never flips them), then positive entries with at least 2 units; mirror the headroom check for k>0; add both repros plus [104,7,12] as tests. <!-- added 2026-09-16 --> <!-- from Soon -->
