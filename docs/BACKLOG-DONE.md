@@ -4,6 +4,7 @@ Finished backlog items, moved here by `ledger done` and `ledger tidy`. Newest fi
 
 ## 2026-10-27
 
+- [x] **[redesign]** Phase 2b: rebuild National numbers, Price check and Sources, then delete src/views/LegacyDashboard.jsx. Also: move focus to <main> and set document.title on route change; add aria-controls to the 'Show all N items' toggle; extend the audit with a keyboard-only Start over -> Undo flow and a 'set an amount to 0' flow. <!-- added 2026-09-16 --> <!-- from Soon -->
 - [x] **[redesign]** Owed before merging the redesign: the owner's 5-second test (5 non-designers, first phone screen: 'What does this page do?' and 'Is that number yours?'; at least 4 of 5 answer both correctly). <!-- added 2026-09-16 --> <!-- from Soon -->
 
 ## 2026-09-28
