@@ -8,6 +8,10 @@ Curated, not exhaustive — `git log` has every commit.
 
 ## 2026-10-27
 
+### The redesigned calculator is now live for everyone
+
+**Why:** Visitors now see what the average household pays first, then answer four questions to see their own number. Every price line on Sources now explains where it comes from. Testers understood the page within 5 seconds.
+
 ### The calculator now says its first number is the average, not yours
 
 **Why:** In the last 5-second test, nobody could tell whether the big number was theirs. Now it starts with the words the average household pays, and a link right under it says to answer four questions to see your own. It waits on a new test before going live.
