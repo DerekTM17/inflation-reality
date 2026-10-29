@@ -4,6 +4,8 @@ Finished backlog items, moved here by `ledger done` and `ledger tidy`. Newest fi
 
 ## 2026-10-28
 
+- [x] **[redesign]** Decide whether to drop the Home insurance line <!-- added 2026-09-24 --> <!-- from Soon -->
+  It starts empty and only shows a prompt row asking for a renewal increase, which is homework most people skip; the same reasoning that kept property taxes out (2026-09-17 spec note) may apply to it. Alternative: keep it but drop the prompt row.
 - [x] Restyle the new tabs with per-good colors, hover details and motion before Phase 2b merges <!-- added 2026-10-14 --> <!-- from Soon -->
   Owner picked the Bolder mockup, wants quick-start households back and a compact two-column layout. Open: collapsible family cards on phones. Mockups in docs/superpowers/mockups/2026-10-02-color-study-*.html on branch redesign/phase2b; palette and plan in the 2026-10-14 handoff in docs/SESSIONS.md.
 - [x] **[bug]** The "BLS Default" spending profile shows 3.9%, not the 3.4% headline, and wrongly calls an average household 0.5 points above it <!-- added 2026-09-10 --> <!-- from Now -->
