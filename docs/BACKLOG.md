@@ -27,8 +27,6 @@ Items we want to tackle in the near term but aren't started yet.
 - [ ] **[data]** Sanity-check the large live rates against a second source before the calculator shows them: gasoline +27.4% and heating oil +52.0% year over year (August 2026). EIA weekly fuel is already in the payload (weeklyPrices) and makes a quick cross-check. <!-- added 2026-09-16 -->
 - [ ] **[redesign]** Decide whether to drop the Home insurance line <!-- added 2026-09-24 -->
   It starts empty and only shows a prompt row asking for a renewal increase, which is homework most people skip; the same reasoning that kept property taxes out (2026-09-17 spec note) may apply to it. Alternative: keep it but drop the prompt row.
-- [ ] **[redesign]** Make the national comparison fair for people who own their home outright <!-- added 2026-09-24 -->
-  The national rate includes owners' equivalent rent, which an outright owner does not pay in cash, so the verdict can read 'More than the national rate' right after they say they own outright, while their dollar total actually falls (3.92% on $2,310/mo vs 3.48% on $3,830/mo renting). Options: lead with dollars, soften or drop the comparison for owners, or explain the mismatch in one sentence. Needs a spec change to the verdict rule.
 - [ ] Make the dark-mode color check catch pale tinted backgrounds <!-- added 2026-10-18 -->
   scripts/audit/ui-audit.py lum() misreads Chrome's color(srgb …) values, so color-mix tints on .fam/.mrow can never fail the dark light-background check. Parse color(srgb r g b) as 0–1 floats. Found in the 2026-10-18 rev 4 final review.
 - [ ] Polish leftovers from the bolder look review <!-- added 2026-10-18 -->
@@ -41,13 +39,17 @@ Items we want to tackle in the near term but aren't started yet.
   Default applies KFF 2025's 6% family-premium rise to the worker's own share, which may grow differently; the 180 a month start matches no KFF figure. KFF also publishes single-plan and worker-contribution numbers.
 - [ ] Stop Everything else from double counting lines people already entered <!-- added 2026-10-27 -->
   Personal Everything else uses the average household's leftover rate, which includes cars, car insurance, fares, tuition that the user may have entered separately. Disclosed as an estimate; not corrected.
-- [ ] Count the home costs owners pay locally: property taxes and home insurance <!-- added 2026-10-28 -->
-  Owners now compare with prices other than housing, but neither side counts property taxes, which can rise every year. CPI has no property-tax series. The Home insurance line was dropped on 2026-10-28 because its renewal prompt was homework most people skip. Revisit both together: possible sources are Census or Tax Foundation local tax data, or a simple 'my tax bill went up by' input.
 
 ## Someday
 
 Latent items captured for future-when-they-bite. Not blocking anything now.
 
 <!-- Suggested tags: bug, feat, perf, tech-debt, docs, ops, security, strategic. Use whatever fits. -->
+- [ ] **[redesign]** Make the national comparison fair for people who own their home outright <!-- added 2026-09-24 -->
+  The national rate includes owners' equivalent rent, which an outright owner does not pay in cash, so the verdict can read 'More than the national rate' right after they say they own outright, while their dollar total actually falls (3.92% on $2,310/mo vs 3.48% on $3,830/mo renting). Options: lead with dollars, soften or drop the comparison for owners, or explain the mismatch in one sentence. Needs a spec change to the verdict rule.
+  Not urgent (owner, 2026-10-28): the redesign already compares owners with prices other than housing. What is left is property taxes, tracked in the next item.
+- [ ] Count the home costs owners pay locally: property taxes and home insurance <!-- added 2026-10-28 -->
+  Owners now compare with prices other than housing, but neither side counts property taxes, which can rise every year. CPI has no property-tax series. The Home insurance line was dropped on 2026-10-28 because its renewal prompt was homework most people skip. Revisit both together: possible sources are Census or Tax Foundation local tax data, or a simple 'my tax bill went up by' input.
+  Not urgent (owner, 2026-10-28): no need to come back to this soon.
 - [ ] **[feat]** build a custom price-panel scraper for basket items — retail scraping is ToS-prohibited and brittle across sites; credible path requires public datasets (e.g., Bureau of Labor Statistics detail files, FRED linked data) + custom basket/weighting methodology (the hard part). Research and prototype alongside any future local price comparisons <!-- added 2026-07-13 -->
 - [ ] **[feat]** refresh CPI-U data — values are hardcoded as of BLS March 2026; consider a script or BLS/FRED API pull instead of manual edits <!-- added 2026-05-21 -->
