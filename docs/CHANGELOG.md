@@ -6,6 +6,12 @@ also include **Tradeoffs / Alternatives considered**.
 
 Curated, not exhaustive — `git log` has every commit.
 
+## 2026-10-28
+
+### Homeowners no longer see a Home insurance line that asked for homework
+
+**Why:** The line started empty and only counted if you looked up your renewal notice, which most people skip. Homeowners now see a simpler estimate. We plan to revisit home insurance along with property taxes later.
+
 ## 2026-10-27
 
 ### The redesigned calculator is now live for everyone
