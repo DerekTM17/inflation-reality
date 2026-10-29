@@ -714,3 +714,51 @@ README.md                                                            |   42 +-
 
 **Last prompt:** okay, give me prompt to pick up and give me link to active site. i'll continue doing whatever work we need to after the clear
 
+
+#### Handoff — Two redesign bugs confirmed fixed live; Home insurance line dropped (supersedes all earlier handoffs)
+
+**Goal:** Check the two "fixed by the redesign" bugs on the live site, then pick and do the next backlog item.
+
+**Done:**
+- **Biggest Movers colors bug: confirmed fixed live, closed in ledger.**
+  - Checked with Python Playwright (not the shared MCP browser). All 10 live bars and their dots match their family color token, with 0 mismatches.
+  - Colors now come from each row's own `data-family`, so there is no parallel index list to drift.
+  - Live data had no null-yoy items on 2026-10-28. The unit test fixture covers that case (diesel missing in `prices.test.mjs`).
+- **"BLS Default 3.9% vs 3.4%" bug: confirmed fixed live, closed.**
+  - The profile no longer exists.
+  - The real model (`averageRows` + `computeResult`) run on the live `cpi.json` gives 3.7377, against `headlineYoy` 3.737685. The page shows 3.7% with no delta.
+  - The headline is 3.7% now, for September 2026.
+- **Home insurance line dropped.**
+  - Commit `1994edc`: removed `homeIns` from `LINES`, `activeLines`, the Sources guide and the methodology text.
+  - Old saved `renewals.homeIns` is ignored, because `storage.js` already drops unknown ids. A new test covers this.
+  - Verified: `npm test` gave pass 232, fail 0. `vite build` OK.
+  - Verified live after the gh-pages publish: no "Home insurance" text for the owned or mortgage answers, or on Sources.
+  - Ledger: done "Decide whether to drop the Home insurance line". Shipped "Homeowners no longer see a Home insurance line…".
+- **Restyle-before-Phase-2b item closed.** The owner may still tweak styling.
+- **New backlog item:** "Count the home costs owners pay locally: property taxes and home insurance".
+- **Parked in Someday** at the owner's request, each with a "not urgent" note:
+  - That new item.
+  - "Make the national comparison fair for people who own their home outright".
+- **Cleanup:** deleted the merged `drop-home-insurance` branch and the leftover `worktree-agent-af0d23f23ef1dee60` branch. Only `main` is left locally. It is pushed and in sync.
+
+**Decisions:**
+- The owner item stays open for one reason. The owner said it is fine only if property taxes are accounted for, and they are not. CPI has no property-tax series, so neither "your costs" nor "prices other than housing" includes them.
+- Home insurance was dropped rather than kept without its prompt. The reason is the same one that kept property taxes out: an empty line asking for homework. Revisit insurance together with property taxes, which is the Someday item.
+
+**Next:** Nothing is in flight. Pick from Soon. I suggest these, but I did not inspect them this session:
+1. "Point the price-data script at the new address". A data refresh pointed at the old URL could fail quietly.
+2. "Stop Everything else from double counting lines people already entered". This is a correctness issue.
+3. "Sanity-check the large live rates". Diesel shows +69.7% and gasoline +34.2% live.
+
+**Gotchas:**
+- A green "Deploy to GitHub Pages" run is not the live update. The separate `pages-build-deployment` run on gh-pages publishes about 30 seconds later, and the HTML has `max-age=600`. Check the live `assets/index-*.js` name against `dist/` before you verify.
+- Local preview uses the bundled fallback data (August, 3.4%), not live data.
+- In a full-page Playwright screenshot at 390px, the sticky result panel leaves a blank gap above it. That is a screenshot artifact and it is the same on live.
+- `ledger edit` won't take an EDITOR value that has arguments; use a wrapper script. It does not commit, so commit the BACKLOG change yourself.
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality
+git status -sb && git log --oneline -1    # main, in sync with origin
+npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 232, fail 0
+```
