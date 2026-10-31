@@ -2,6 +2,11 @@
 
 Finished backlog items, moved here by `ledger done` and `ledger tidy`. Newest first.
 
+## 2026-10-30
+
+- [x] Point the price-data script at the new address <!-- added 2026-10-26 --> <!-- from Soon -->
+  scripts/fetch-fred.mjs:16 still fetches derektm17.github.io/inflation-reality/cpi.json; works via 301 redirect. Switch to https://inflation.translatingpolicy.com/cpi.json.
+
 ## 2026-10-28
 
 - [x] **[redesign]** Decide whether to drop the Home insurance line <!-- added 2026-09-24 --> <!-- from Soon -->
