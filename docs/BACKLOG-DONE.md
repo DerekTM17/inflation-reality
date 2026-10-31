@@ -4,6 +4,7 @@ Finished backlog items, moved here by `ledger done` and `ledger tidy`. Newest fi
 
 ## 2026-10-30
 
+- [x] **[data]** Sanity-check the large live rates against a second source before the calculator shows them: gasoline +27.4% and heating oil +52.0% year over year (August 2026). EIA weekly fuel is already in the payload (weeklyPrices) and makes a quick cross-check. <!-- added 2026-09-16 --> <!-- from Soon -->
 - [x] Point the price-data script at the new address <!-- added 2026-10-26 --> <!-- from Soon -->
   scripts/fetch-fred.mjs:16 still fetches derektm17.github.io/inflation-reality/cpi.json; works via 301 redirect. Switch to https://inflation.translatingpolicy.com/cpi.json.
 
