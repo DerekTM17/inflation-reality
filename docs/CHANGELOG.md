@@ -6,6 +6,12 @@ also include **Tradeoffs / Alternatives considered**.
 
 Curated, not exhaustive — `git log` has every commit.
 
+## 2026-11-02
+
+### Search engines can now find and read the calculator page
+
+**Why:** The page now tells search engines where it lives and what it is about. Shared links on X now show the full preview.
+
 ## 2026-11-01
 
 ### Everything else no longer double counts costs you enter yourself
