@@ -146,6 +146,17 @@ export const BASKET = {
     { id: "clothing",  label: "Clothing",        seriesId: "CPIAPPNS",       riDec: 2.368 },
     { id: "fun",       label: "Entertainment",   seriesId: "CPIRECNS",       riDec: 5.137 },
   ],
+  // Calculator lines whose spending sits inside Everything else (same table, same column). A
+  // personal household's Everything else leaves these out, since the calculator asks about each
+  // one; series come from CALC_LINES by id (personalRest in scripts/assemble.mjs).
+  insideRest: [
+    { id: "upkeep",    riDec: 4.298 },  // household furnishings and operations
+    { id: "carIns",    riDec: 2.754 },  // motor vehicle insurance
+    { id: "carUpkeep", riDec: 1.039 },  // motor vehicle maintenance and repair
+    { id: "transit",   riDec: 0.355 },  // intracity transportation
+    { id: "daycare",   riDec: 0.699 },  // day care and preschool
+    { id: "tuition",   riDec: 1.351 },  // college tuition and fees
+  ],
   // Consumer Expenditure Survey 2024: $78,535 average annual expenditures minus $9,797 personal
   // insurance and pensions = $68,738 a year, rounded to $5,750 a month.
   ceYear: 2024,

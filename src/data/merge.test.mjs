@@ -146,6 +146,8 @@ test("buildViewData forwards the basket as ordered items plus the residual", () 
   assert.equal(housing.rate, dynamic.basket.rates.housing);
   assert.equal(view.basket.restWeight, 28.137887);                 // literal, production fixture
   assert.equal(view.basket.residualYoy, dynamic.basket.residualYoy);
+  assert.equal(view.basket.personalRestYoy, 2.902806);                // literal, production fixture
+  assert.equal(view.basket.personalRestStale, false);
   assert.equal(view.basket.headlineYoy, dynamic.basket.headlineYoy);
   assert.equal(view.basket.month, dynamic.basket.month);
   assert.equal(view.basket.stale, false);

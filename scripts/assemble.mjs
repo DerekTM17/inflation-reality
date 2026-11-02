@@ -91,7 +91,7 @@ export function assemblePayload({ observationsBySeries, catalog, fallback, gener
   const lines = (catalog.CALC_LINES || catalog.CALC_COMBOS)
     ? calculatorLines(obs, catalog, refDate, fb.lines)
     : null;
-  const basket = catalog.BASKET ? averageBasket(obs, catalog.BASKET, refDate, headObs, fb.basket) : null;
+  const basket = catalog.BASKET ? averageBasket(obs, catalog.BASKET, refDate, headObs, fb.basket, catalog.CALC_LINES) : null;
 
   return {
     generatedAt,
@@ -152,30 +152,57 @@ function calculatorLines(obs, catalog, refDate, fbLines) {
 
 const mapValues = (o, f) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, f(v)]));
 
-function averageBasket(obs, basket, refDate, headObs, fbBasket) {
+function averageBasket(obs, basket, refDate, headObs, fbBasket, calcLines = []) {
   if (refDate) {
     const decDate = `${basket.riYear}-12-01`;
-    const weights = rolledWeights(
-      basket.visible.map((v) => ({
+    const all = { allDec: valueAt(headObs, decDate), allT: valueAt(headObs, refDate) };
+    const roll = (items) => rolledWeights(
+      items.map((v) => ({
         key: v.id,
         riDec: v.riDec,
         levelDec: valueAt(obs(v.seriesId), decDate),
         levelT: valueAt(obs(v.seriesId), refDate),
       })),
-      { allDec: valueAt(headObs, decDate), allT: valueAt(headObs, refDate) },
+      all,
     );
-    const rates = Object.fromEntries(basket.visible.map((v) => [v.id, yoyAt(obs(v.seriesId), refDate)]));
+    const ratesOf = (items) => Object.fromEntries(items.map((v) => [v.id, yoyAt(obs(v.seriesId), refDate)]));
+    const total = (w) => Object.values(w).reduce((s, x) => s + x, 0);
+    const weights = roll(basket.visible);
+    const rates = ratesOf(basket.visible);
     const headlineYoy = yoyAt(headObs, refDate);
     const residualYoy = weights && headlineYoy != null ? residualRate(headlineYoy, weights, rates) : null;
+    // Everything else for a personal household. The calculator asks about some spending that sits
+    // inside the average household's Everything else (car insurance, daycare, ...), so a person's
+    // own Everything else must leave those out or they are counted twice. Same solver, with those
+    // lines added as known pieces; each uses its calculator line's own series, so the two always
+    // agree. A missing piece keeps the basket fresh and carries the last known personal rate.
+    function personalRest() {
+      const items = basket.insideRest.map((r) => ({ ...r, seriesId: calcLines.find((l) => l.id === r.id)?.seriesId }));
+      const insideWeights = items.every((i) => i.seriesId) ? roll(items) : null;
+      const yoy = insideWeights
+        ? residualRate(headlineYoy, { ...weights, ...insideWeights }, { ...rates, ...ratesOf(items) })
+        : null;
+      if (yoy == null) {
+        return {
+          personalRestWeight: fbBasket?.personalRestWeight ?? null,
+          personalRestYoy: fbBasket?.personalRestYoy ?? null,
+          personalRestStale: true,
+        };
+      }
+      return {
+        personalRestWeight: round6(100 - total(weights) - total(insideWeights)),
+        personalRestYoy: round6(yoy),
+      };
+    }
     if (residualYoy != null) {
-      const visibleTotal = Object.values(weights).reduce((s, w) => s + w, 0);
       return {
         month: refDate.slice(0, 7),
         weights: mapValues(weights, round6),
         rates: mapValues(rates, round6),
-        restWeight: round6(100 - visibleTotal),
+        restWeight: round6(100 - total(weights)),
         residualYoy: round6(residualYoy),
         headlineYoy: round6(headlineYoy),
+        ...(basket.insideRest ? personalRest() : {}),
       };
     }
   }
@@ -232,6 +259,9 @@ export function calculatorWarnings(payload, catalog, observationsBySeries, maxRe
     );
   } else if (Math.abs(b.residualYoy - b.headlineYoy) > maxResidualGap) {
     out.push(`Everything else rate ${b.residualYoy.toFixed(2)}% is more than ${maxResidualGap} points from the headline ${b.headlineYoy.toFixed(2)}%`);
+  }
+  if (b && !b.stale && b.personalRestStale) {
+    out.push("The personal Everything else rate fell back to a last known value (a calculator line inside it is unreadable)");
   }
   return out;
 }

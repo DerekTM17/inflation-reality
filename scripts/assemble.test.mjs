@@ -194,6 +194,7 @@ const calcCatalog = {
       { id: "gasoline", label: "Gas for the car", seriesId: "CUUR0000SETB01", riDec: 20 },
       { id: "housing", label: "Housing", seriesId: "CUUR0000SEHA", riDec: 40 },
     ],
+    insideRest: [{ id: "carIns", riDec: 10 }],
     ceMonthlyMean: 5750,
   },
 };
@@ -247,6 +248,47 @@ test("basket: rolled weights and a residual that reproduces the headline exactly
   assert.equal(b.stale, undefined);
 });
 
+test("basket: personal Everything else leaves out the calculator's own lines and still reproduces the headline", () => {
+  const p = assemblePayload({ observationsBySeries: calcObs, catalog: calcCatalog, fallback: null, generatedAt: "T" });
+  const b = p.basket;
+  const allMove = 103.9 / 103.0;
+  const carInsWeight = 10 * (287 / 290) / allMove;                // SETE Mar 2026 ÷ Dec 2025
+  near(b.personalRestWeight, b.restWeight - carInsWeight);
+  const inverse = (b.weights.gasoline / 100) / (1 + b.rates.gasoline / 100)
+    + (b.weights.housing / 100) / (1 + b.rates.housing / 100)
+    + (carInsWeight / 100) / (1 + p.lines.carIns.yoy / 100)
+    + (b.personalRestWeight / 100) / (1 + b.personalRestYoy / 100);
+  near(1 / inverse - 1, b.headlineYoy / 100, 1e-5);
+  // car insurance is falling, so taking it out raises what is left
+  assert.ok(b.personalRestYoy > b.residualYoy);
+  assert.equal(b.personalRestStale, undefined);
+});
+
+test("basket: an unreadable inside-rest series keeps the basket fresh but marks personal Everything else stale", () => {
+  const fallback = { basket: { residualYoy: 2.2, personalRestYoy: 3.3, personalRestWeight: 17.1 } };
+  const p = assemblePayload({
+    observationsBySeries: { ...calcObs, CUUR0000SETE: [] }, catalog: calcCatalog, fallback, generatedAt: "T",
+  });
+  assert.equal(p.basket.stale, undefined);
+  assert.equal(p.basket.personalRestYoy, 3.3);
+  assert.equal(p.basket.personalRestWeight, 17.1);
+  assert.equal(p.basket.personalRestStale, true);
+  const none = assemblePayload({
+    observationsBySeries: { ...calcObs, CUUR0000SETE: [] }, catalog: calcCatalog, fallback: null, generatedAt: "T",
+  });
+  assert.equal(none.basket.personalRestYoy, null);
+  assert.equal(none.basket.personalRestStale, true);
+});
+
+test("basket: a catalog without insideRest publishes no personal Everything else", () => {
+  const { insideRest, ...plainBasket } = calcCatalog.BASKET;
+  const p = assemblePayload({
+    observationsBySeries: calcObs, catalog: { ...calcCatalog, BASKET: plainBasket }, fallback: null, generatedAt: "T",
+  });
+  assert.equal("personalRestYoy" in p.basket, false);
+  assert.equal("personalRestStale" in p.basket, false);
+});
+
 test("stale lines and basket carry last known values from the fallback", () => {
   const fallback = { lines: { carIns: { yoy: -1.5 } }, basket: { residualYoy: 2.2, headlineYoy: 3.1 } };
   const p = assemblePayload({
@@ -293,6 +335,9 @@ test("calculatorWarnings: stale lines, a stale basket, an implausible residual",
   assert.match(w[0], /carIns/);
   assert.match(w[1], /basket/);
   assert.match(calculatorWarnings({ lines: {}, basket: { residualYoy: 7.5, headlineYoy: 3.4 } })[0], /more than 3 points/);
+  const personal = calculatorWarnings({ lines: {}, basket: { residualYoy: 3, headlineYoy: 3.4, personalRestStale: true } });
+  assert.equal(personal.length, 1);
+  assert.match(personal[0], /personal Everything else/);
 });
 
 test("calculatorWarnings: given catalog + observations, names the series that broke the basket", () => {

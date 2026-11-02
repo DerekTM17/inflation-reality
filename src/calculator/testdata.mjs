@@ -33,6 +33,7 @@ export function fakeData({ lines = {}, basket = {}, headline = 3.4, yoyGap = nul
     lines: viewLines,
     basket: {
       month: "2026-08", stale: false, restWeight: 28.137887, residualYoy: 2.014252, headlineYoy: 3.396548,
+      personalRestWeight: 17.962784, personalRestYoy: 2.902806, personalRestStale: false,
       items: BASKET_ITEMS.map((i) => ({ ...i })),
       ...basket,
     },

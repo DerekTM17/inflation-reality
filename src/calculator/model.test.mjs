@@ -76,7 +76,7 @@ test("defaultAmount nudges: hybrid gas, electric heat, buying your own insurance
   assert.equal(defaultAmount("rent", COMMON), 1650);
 });
 
-test("lineRate: mortgage 0, renewal defaults and edits, charging uses electricity, rest uses the residual", () => {
+test("lineRate: mortgage 0, renewal defaults and edits, charging uses electricity, rest leaves out the calculator's lines", () => {
   const data = fakeData();
   const a = emptyAnswers();
   assert.deepEqual(lineRate("mortgage", a, COMMON, data), { rate: 0, note: "Fixed payment", stale: false, missing: null });
@@ -86,8 +86,19 @@ test("lineRate: mortgage 0, renewal defaults and edits, charging uses electricit
   const edited = answersWith({ renewals: { health: 9.5 } });
   assert.deepEqual(lineRate("health", edited, COMMON, data), { rate: 9.5, note: "", stale: false, missing: null });
   assert.equal(lineRate("charging", a, COMMON, data).rate, 3.8);
-  assert.equal(lineRate("rest", a, COMMON, data).rate, 2.014252);
+  assert.equal(lineRate("rest", a, COMMON, data).rate, 2.902806);
+  assert.equal(lineRate("rest", a, COMMON, data).stale, false);
   assert.equal(lineRate("rest", a, COMMON, data).note, "Estimated from the national rate");
+});
+
+test("lineRate: personal Everything else falls back to the household residual, marked stale", () => {
+  const a = emptyAnswers();
+  const stalePersonal = fakeData({ basket: { personalRestYoy: 2.9, personalRestStale: true } });
+  assert.deepEqual(lineRate("rest", a, COMMON, stalePersonal),
+    { rate: 2.9, note: "Estimated from the national rate", stale: true, missing: null });
+  const noPersonal = fakeData({ basket: { personalRestYoy: null, personalRestStale: true } });
+  assert.deepEqual(lineRate("rest", a, COMMON, noPersonal),
+    { rate: 2.014252, note: "Estimated from the national rate", stale: true, missing: null });
 });
 
 test("lineRate: missing series is null (never 0); stale is carried", () => {
@@ -95,7 +106,7 @@ test("lineRate: missing series is null (never 0); stale is carried", () => {
   const a = emptyAnswers();
   assert.deepEqual(lineRate("carIns", a, COMMON, data), { rate: -5.1, note: "", stale: true, missing: null });
   assert.deepEqual(lineRate("daycare", a, COMMON, data), { rate: null, note: "", stale: false, missing: "data" });
-  const bare = fakeData({ basket: { residualYoy: null, stale: true } });
+  const bare = fakeData({ basket: { residualYoy: null, personalRestYoy: null, stale: true } });
   assert.equal(lineRate("rest", a, COMMON, bare).rate, null);
   assert.equal(lineRate("rest", a, COMMON, bare).missing, "data");
 });

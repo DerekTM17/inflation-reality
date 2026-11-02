@@ -69,6 +69,9 @@ export function buildViewData(catalog, dynamic) {
     })),
     restWeight: b.restWeight ?? null,
     residualYoy: b.residualYoy ?? null,
+    personalRestWeight: b.personalRestWeight ?? null,
+    personalRestYoy: b.personalRestYoy ?? null,
+    personalRestStale: b.personalRestStale ?? false,
     headlineYoy: b.headlineYoy ?? null,
     stale: b.stale ?? false,
   };

@@ -254,7 +254,7 @@ const GUIDE_TEXT = {
   rest: {
     series: [],
     data: "No index of its own. We work it out from the national rate and the lines we show for the average household.",
-    formula: "The rate that makes the average household's total match the national rate. Your Everything else line uses the same rate, so it is an estimate.",
+    formula: "For the average household, it is the rate that makes the total match the national rate. Yours leaves out the costs we ask about, like car insurance and daycare, so they are not counted twice. It is an estimate.",
     start: `${start("rest")} a month.`,
   },
 };
@@ -307,7 +307,7 @@ export const METHOD = [
   {
     heading: "Everything else",
     paragraphs: [
-      "The lines we show don't cover all spending. Everything else gets the rate that makes the average household's total match the national rate. Your Everything else line uses the same rate, so it is an estimate.",
+      "The lines we show don't cover all spending. For the average household, Everything else gets the rate that makes the total match the national rate. Your own Everything else leaves out the costs we ask you about, like car insurance, daycare and home repairs, so they are not counted twice. It is still an estimate.",
     ],
   },
   {

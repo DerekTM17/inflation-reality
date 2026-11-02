@@ -75,7 +75,7 @@ export function lineRate(id, answers, choices, data) {
   }
   let node;
   if (id === "charging") node = data.lines.electric;
-  else if (id === "rest") node = { yoy: data.basket.residualYoy, stale: data.basket.stale };
+  else if (id === "rest") node = personalRestNode(data.basket);
   else node = data.lines[id];
   const rate = node?.yoy ?? null;
   return {
@@ -84,6 +84,16 @@ export function lineRate(id, answers, choices, data) {
     stale: rate != null && node.stale === true,
     missing: rate == null ? "data" : null,
   };
+}
+
+/**
+ * A person's Everything else: the household leftover minus the lines the calculator asks about
+ * (so they are not counted twice). When that rate is unreadable, the full household leftover
+ * stands in, marked stale.
+ */
+function personalRestNode(b) {
+  if (b.personalRestYoy != null) return { yoy: b.personalRestYoy, stale: b.stale || b.personalRestStale };
+  return { yoy: b.residualYoy, stale: b.stale || b.residualYoy != null };
 }
 
 /** Rows for a personal household: { id, label, monthly, rate, note, stale, missing }. */
