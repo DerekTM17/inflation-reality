@@ -6,6 +6,12 @@ also include **Tradeoffs / Alternatives considered**.
 
 Curated, not exhaustive — `git log` has every commit.
 
+## 2026-11-01
+
+### Everything else no longer double counts costs you enter yourself
+
+**Why:** Your own Everything else used to include car insurance, daycare and other costs you already entered. Now it leaves them out, so each cost counts once. It rose from 2.2% to 3.1% this month.
+
 ## 2026-10-28
 
 ### Homeowners no longer see a Home insurance line that asked for homework
