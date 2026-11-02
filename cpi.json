@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-31T01:19:22.269Z",
+  "generatedAt": "2026-11-02T02:09:44.222Z",
   "referenceMonth": "2026-09",
   "referenceMonthLabel": "September 2026",
   "headline": {
@@ -289,6 +289,8 @@
     },
     "restWeight": 28.06669,
     "residualYoy": 2.182183,
-    "headlineYoy": 3.737685
+    "headlineYoy": 3.737685,
+    "personalRestWeight": 17.909439,
+    "personalRestYoy": 3.100063
   }
 }
