@@ -15,6 +15,11 @@
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Inflation Reality. How much more are you paying than a year ago?" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="How much more are you paying than a year ago?" />
+    <meta name="twitter:description" content="See how much prices rose for a household like yours, in dollars, using government price data." />
+    <meta name="twitter:image" content="https://inflation.translatingpolicy.com/og-image.png" />
+    <meta name="twitter:image:alt" content="Inflation Reality. How much more are you paying than a year ago?" />
+    <link rel="canonical" href="https://inflation.translatingpolicy.com/" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400..800&display=swap" />
@@ -23,6 +28,17 @@
   </head>
   <body>
     <div class="home-bar"><a class="home-link" href="https://translatingpolicy.com">← Translating Policy</a></div>
+    <!--
+      Raw-HTML heading and intro for crawlers, link previews and readers without
+      JavaScript. A <noscript> block, not markup inside #root: the app renders its
+      own h1 below the header and section nav, so static text in #root would sit
+      in a different place and jump when React mounts. With JavaScript on, the
+      browser never renders this, so there is no flash and no second h1.
+    -->
+    <noscript>
+      <h1>How much more are you paying than a year ago?</h1>
+      <p>Inflation Reality shows how much prices rose for a household like yours, in dollars, using government price data. The calculator needs JavaScript turned on.</p>
+    </noscript>
     <div id="root"></div>
   </body>
 </html>
