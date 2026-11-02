@@ -2,6 +2,11 @@
 
 Finished backlog items, moved here by `ledger done` and `ledger tidy`. Newest first.
 
+## 2026-11-01
+
+- [x] Stop Everything else from double counting lines people already entered <!-- added 2026-10-27 --> <!-- from Soon -->
+  Personal Everything else uses the average household's leftover rate, which includes cars, car insurance, fares, tuition that the user may have entered separately. Disclosed as an estimate; not corrected.
+
 ## 2026-10-30
 
 - [x] **[data]** Sanity-check the large live rates against a second source before the calculator shows them: gasoline +27.4% and heating oil +52.0% year over year (August 2026). EIA weekly fuel is already in the payload (weeklyPrices) and makes a quick cross-check. <!-- added 2026-09-16 --> <!-- from Soon -->
