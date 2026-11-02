@@ -2,6 +2,11 @@
 
 Finished backlog items, moved here by `ledger done` and `ledger tidy`. Newest first.
 
+## 2026-11-02
+
+- [x] Help search engines find the calculator and read its page <!-- added 2026-11-01 --> <!-- from Soon -->
+  SEO audit 2026-11-01: no robots.txt, sitemap or canonical; twitter tags incomplete (card only); raw HTML has no h1 and about 5 words of text.
+
 ## 2026-11-01
 
 - [x] Stop Everything else from double counting lines people already entered <!-- added 2026-10-27 --> <!-- from Soon -->

@@ -32,8 +32,6 @@ Items we want to tackle in the near term but aren't started yet.
   None of the 21 defaults has a source (rent 1650, hybrid x0.55, +80 electric heat, 650 own insurance...). Sources page now calls them example numbers. Spec 2026-09-10 planned Consumer Expenditure tenure tables. Found by the methodology rewrite, branch docs/methodology-update.
 - [ ] Check the health insurance through work default against what workers actually pay <!-- added 2026-10-27 -->
   Default applies KFF 2025's 6% family-premium rise to the worker's own share, which may grow differently; the 180 a month start matches no KFF figure. KFF also publishes single-plan and worker-contribution numbers.
-- [ ] Help search engines find the calculator and read its page <!-- added 2026-11-01 -->
-  SEO audit 2026-11-01: no robots.txt, sitemap or canonical; twitter tags incomplete (card only); raw HTML has no h1 and about 5 words of text.
 
 ## Someday
 
