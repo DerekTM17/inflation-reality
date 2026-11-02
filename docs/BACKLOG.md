@@ -34,6 +34,8 @@ Items we want to tackle in the near term but aren't started yet.
   Default applies KFF 2025's 6% family-premium rise to the worker's own share, which may grow differently; the 180 a month start matches no KFF figure. KFF also publishes single-plan and worker-contribution numbers.
 - [ ] Stop Everything else from double counting lines people already entered <!-- added 2026-10-27 -->
   Personal Everything else uses the average household's leftover rate, which includes cars, car insurance, fares, tuition that the user may have entered separately. Disclosed as an estimate; not corrected.
+- [ ] Help search engines find the calculator and read its page <!-- added 2026-11-01 -->
+  SEO audit 2026-11-01: no robots.txt, sitemap or canonical; twitter tags incomplete (card only); raw HTML has no h1 and about 5 words of text.
 
 ## Someday
 
