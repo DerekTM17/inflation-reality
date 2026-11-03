@@ -32,6 +32,8 @@ Items we want to tackle in the near term but aren't started yet.
   None of the 21 defaults has a source (rent 1650, hybrid x0.55, +80 electric heat, 650 own insurance...). Sources page now calls them example numbers. Spec 2026-09-10 planned Consumer Expenditure tenure tables. Found by the methodology rewrite, branch docs/methodology-update.
 - [ ] Check the health insurance through work default against what workers actually pay <!-- added 2026-10-27 -->
   Default applies KFF 2025's 6% family-premium rise to the worker's own share, which may grow differently; the 180 a month start matches no KFF figure. KFF also publishes single-plan and worker-contribution numbers.
+- [ ] Include the six new Everything else weights in the yearly weights update <!-- added 2026-11-02 -->
+  BASKET.insideRest in src/data/catalog.js (upkeep, carIns, carUpkeep, transit, daycare, tuition) uses Dec 2025 relative importance, first column of the BLS table. Update it with the visible riDec values each February, then regenerate the personalRest values in fallback.json.
 
 ## Someday
 
