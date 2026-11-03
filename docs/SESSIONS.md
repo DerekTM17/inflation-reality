@@ -762,3 +762,53 @@ cd ~/projects/inflation-reality
 git status -sb && git log --oneline -1    # main, in sync with origin
 npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 232, fail 0
 ```
+
+### 2026-11-02
+
+#### Handoff — Everything else no longer double counts; fuel rates checked (supersedes all earlier handoffs)
+
+**Goal:** Work through the handoff's suggested Soon items: the price-data address, the large fuel rates, and Everything else double counting.
+
+**Done:**
+- **Price-data address: was already done.** Commit `80f4d81` (2026-10-26) had switched it. Checked that the new address returns 200, then closed the item in ledger.
+- **Large live fuel rates: confirmed correct, closed.** I checked the September 2026 vs September 2025 figures against the primary sources, not our payload.
+  - Gasoline CPI: FRED gives 383.182 / 285.595, which is +34.17%. That is an exact match. The BLS average pump price, all grades, is also +34.2%.
+  - Heating oil CPI: the BLS API gives 606.829 / 348.399, which is +74.18%. Exact match.
+  - Diesel: the BLS average price is +69.7%. The separate EIA weekly survey gives +70.8%.
+  - Cause: crude oil (WTI) averaged about $64 in September 2025 and $97 in September 2026. October 2025 is "-" in BLS data because of the shutdown gap.
+- **Everything else double counting: fixed and live.** Commit `b3569c1`, fast-forwarded to main and pushed.
+  - The household leftover is about 28% of spending. It includes 6 costs the calculator asks about on their own lines: home repairs, car insurance, car repairs, bus and train fares, daycare and tuition.
+  - The data script (`averageBasket` in `scripts/assemble.mjs`) now solves a second residual with those 6 as known pieces. It publishes `basket.personalRestWeight` and `basket.personalRestYoy`. When a piece is unreadable, it publishes `personalRestStale: true` plus the last known value.
+  - Weights live in `BASKET.insideRest` in `src/data/catalog.js`. They are Dec 2025 relative importance from the BLS 2025 table, first column. The series come from `CALC_LINES` by id.
+  - A person's Everything else (`personalRestNode` in `src/calculator/model.js`) uses the new rate. If it is missing, it falls back to the household residual, marked stale. The average-household view is unchanged.
+  - `fallback.json` got the August values: weight 17.962784, rate 2.902806. I computed them with the repo's own functions from public FRED and BLS levels.
+  - Sources wording was updated. Flesch-Kincaid grades are 6.1 and 7.2, using the attractor `fk_grade`.
+  - Verified: `npm test` gave pass 236, fail 0. The CI deploy is green.
+  - Live `cpi.json`: personalRestYoy 3.100063, weight 17.909439. The old residual was 2.182183.
+  - Live page, Python Playwright: "Family with kids" shows Everything else +3.1%. The live JS name `index-FHFbaPre.js` matches `dist/`. The new Sources sentence is in the live bundle.
+- **Ledger:** done for all 3 items, plus shipped "Everything else no longer double counts costs you enter yourself". New idea: "Include the six new Everything else weights in the yearly weights update".
+
+**Decisions:**
+- One narrowed rate for everyone (owner chose option A). We do not subtract only the lines a person entered. The calculator asks about each of the 6, so someone who did not enter one (no car) does not buy it. Per-person subtraction would blend car insurance into a non-driver's Everything else.
+- Fallback order for a person's Everything else: fresh narrowed rate, then last known narrowed rate (stale), then household residual (stale).
+
+**Next:** Nothing is in flight. (A parallel session shipped the SEO item, commit `0ea0572`.) Pick from Soon. I suggest, in order:
+1. **"Check the health insurance through work default against what workers actually pay"**. This is correctness, and small.
+   - The default applies the KFF 2025 6% family-premium rise to the worker's share.
+   - The $180 a month starting amount matches no KFF figure.
+   - Start at `EMPLOYER_HEALTH_DEFAULT` in `src/calculator/` (grep it). Use the KFF Employer Health Benefits Survey for single vs family worker contributions.
+2. **"Base the calculator's starting dollar amounts on government spending surveys"**. This is bigger. Brainstorm it first, because it needs a source for each of the 21 defaults.
+
+**Gotchas:**
+- `fallback.json` is still the August 2026 snapshot. Live is September. Tests assert literal fallback values (restWeight 28.137887, personalRestYoy 2.902806), so refreshing the snapshot means updating those literals.
+- No API keys exist locally, so the data script can't be run here. FRED `fredgraph.csv?id=` and BLS `publicAPI/v1` work without keys for spot checks.
+- `pkill -f "http.server 3077"` kills the shell running it, because the pattern matches its own command line. Use `kill $(lsof -t -i:3077)`.
+- The reading-level checker lives in `~/projects/attractor/scripts/reading-level.py`. Import `fk_grade` from it with `python3 -I`.
+- Earlier gotchas still apply. Pages publishes about 30 seconds after the green deploy run, and HTML has max-age=600, so add a `?nc=` cache-buster and compare the asset name against `dist/`. Local preview uses the August fallback.
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality
+git status -sb && git log --oneline -1    # main, in sync with origin
+npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 240, fail 0 (236 + 4 SEO tests)
+```
