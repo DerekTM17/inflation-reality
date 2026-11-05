@@ -32,6 +32,8 @@ Items we want to tackle in the near term but aren't started yet.
   None of the 21 defaults has a source (rent 1650, hybrid x0.55, +80 electric heat, 650 own insurance...). Sources page now calls them example numbers. Spec 2026-09-10 planned Consumer Expenditure tenure tables. Found by the methodology rewrite, branch docs/methodology-update.
 - [ ] Include the six new Everything else weights in the yearly weights update <!-- added 2026-11-02 -->
   BASKET.insideRest in src/data/catalog.js (upkeep, carIns, carUpkeep, transit, daycare, tuition) uses Dec 2025 relative importance, first column of the BLS table. Update it with the visible riDec values each February, then regenerate the personalRest values in fallback.json.
+- [ ] Give the Family with kids starting point family-plan health insurance numbers <!-- added 2026-11-04 -->
+  Quick start presets (QUICK_STARTS in src/calculator/config.js) can set amounts and renewals. Family with kids still gets the single-plan default (120, +5.3%) and its note. KFF 2025 family worker share: 6850 a year (571 a month), +8.8% from 6296.
 
 ## Someday
 
