@@ -6,6 +6,12 @@ also include **Tradeoffs / Alternatives considered**.
 
 Curated, not exhaustive — `git log` has every commit.
 
+## 2026-11-04
+
+### Health insurance through work now starts from what workers really pay
+
+**Why:** The calculator used to start at 180 dollars a month and a 6% rise taken from total family premiums. It now uses what workers pay for a single plan: 120 dollars a month, up 5.3%. Families paid more and should enter their own.
+
 ## 2026-11-02
 
 ### Search engines can now find and read the calculator page
