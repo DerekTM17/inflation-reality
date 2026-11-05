@@ -50,8 +50,12 @@ export const ALSO = [
 /** Common answers, shown as guesses for unanswered questions. */
 export const COMMON = { home: "rent", car: "gas", heat: "gas", health: "work" };
 
-/** KFF 2025 average employer family premium increase, percent. */
-export const EMPLOYER_HEALTH_DEFAULT = 6;
+/**
+ * Rise in what a worker pays for a single plan through work, percent: KFF Employer Health
+ * Benefits Survey, $1,368 a year (2024) to $1,440 (2025). Single, because the calculator
+ * doesn't ask who is on the plan; family plans rose more (+8.8%, $6,296 to $6,850).
+ */
+export const EMPLOYER_HEALTH_DEFAULT = 5.3;
 
 const HEALTH_HELP =
   "Use the increase from your renewal notice. The government's health insurance index measures insurance company earnings instead of premiums, so we don't use it.";
@@ -124,7 +128,7 @@ export const LINES = {
                about: "Daycare and preschool." },
   tuition:   { label: "College tuition", amount: 900, because: "college tuition", family: "kids",
                about: "College tuition and fees." },
-  health:    { label: "Health insurance", amount: 180, renewal: true, because: "health insurance", family: "health",
+  health:    { label: "Health insurance", amount: 120, renewal: true, because: "health insurance", family: "health",
                about: "Your health insurance premium, using the increase on your renewal notice." },
   doctor:    { label: "Doctor and pharmacy", amount: 90, because: "doctor and pharmacy costs", family: "health",
                about: "Doctor visits and prescription drugs." },
@@ -171,7 +175,7 @@ export const BASKET_ROWS = {
 };
 
 /** The note on a health line that is still using EMPLOYER_HEALTH_DEFAULT. */
-export const EMPLOYER_DEFAULT_NOTE = "Average for employer plans, change to yours";
+export const EMPLOYER_DEFAULT_NOTE = "Average for a single plan through work, change to yours";
 
 /**
  * Quick-start households (spec "Quick starts"). Tapping one replaces every answer,

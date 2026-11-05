@@ -129,5 +129,5 @@ test("How it works lists each line's price data, formula and starting amount", (
   assert.equal(how[at + 1][1], "CUUR0000SETE (BLS)");
   assert.match(how[at + 2][0], /^How the rate is set: /);
   assert.match(how[at + 3][0], /^Starting amount: \$160 a month/);
-  assert.ok(how.some((r) => /^How the rate is set: The increase you type in\. Through work, it starts at 6%/.test(r[0] ?? "")));
+  assert.ok(how.some((r) => /^How the rate is set: The increase you type in\. Through work, it starts at 5\.3%/.test(r[0] ?? "")));
 });

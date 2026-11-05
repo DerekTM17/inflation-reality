@@ -230,7 +230,7 @@ const GUIDE_TEXT = {
   health: {
     series: [],
     data: "Your own renewal notice. For plans through work, we start with the KFF 2025 Employer Health Benefits Survey. We don't use the BLS health insurance index. It tracks what insurers earn, not what you pay.",
-    formula: `The increase you type in. Through work, it starts at ${EMPLOYER_HEALTH_DEFAULT}%, the average rise for employer family plans in 2025, until you change it. If you buy your own, the line is left out until you add your increase.`,
+    formula: `The increase you type in. Through work, it starts at ${EMPLOYER_HEALTH_DEFAULT}%, the 2025 rise in what workers pay for a single plan, until you change it. Family plans rose more, about 9%. If you buy your own, the line is left out until you add your increase.`,
     start: `${start("health")} a month through work, or ${start("health", { health: "own" })} if you buy your own. Not shown if you don't pay a premium.`,
   },
   doctor: {
@@ -293,7 +293,7 @@ export const METHOD = [
     heading: "Insurance",
     paragraphs: [
       "Car insurance has a price index of its own, so it uses that, like most lines.",
-      `Health insurance uses the increase on your own renewal notice. For plans through work, we start at ${EMPLOYER_HEALTH_DEFAULT}%, the average rise for employer family plans in 2025.`,
+      `Health insurance uses the increase on your own renewal notice. For plans through work, we start at ${EMPLOYER_HEALTH_DEFAULT}%, the 2025 rise in what workers pay for a single plan. Family plans rose more, about 9%, so use your own number.`,
       "We don't use the government's health insurance index. It tracks what insurers earn, not what you pay.",
     ],
   },

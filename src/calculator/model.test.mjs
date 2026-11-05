@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import * as catalog from "../data/catalog.js";
 import { buildViewData } from "../data/merge.js";
-import { QUESTIONS, COMMON, LINES, EXPLANATIONS } from "./config.js";
+import { QUESTIONS, COMMON, LINES, EXPLANATIONS, EMPLOYER_HEALTH_DEFAULT } from "./config.js";
 import {
   emptyAnswers, isPersonal, effectiveChoices, activeLines, defaultAmount, lineRate,
   personalRows, averageRows, monthlyTotal, computeResult, verdict, basis,
@@ -81,7 +81,7 @@ test("lineRate: mortgage 0, renewal defaults and edits, charging uses electricit
   const a = emptyAnswers();
   assert.deepEqual(lineRate("mortgage", a, COMMON, data), { rate: 0, note: "Fixed payment", stale: false, missing: null });
   assert.deepEqual(lineRate("health", a, COMMON, data),
-    { rate: 6, note: "Average for employer plans, change to yours", stale: false, missing: null });
+    { rate: 5.3, note: "Average for a single plan through work, change to yours", stale: false, missing: null });
   assert.equal(lineRate("health", a, { ...COMMON, health: "own" }, data).missing, "renewal");
   const edited = answersWith({ renewals: { health: 9.5 } });
   assert.deepEqual(lineRate("health", edited, COMMON, data), { rate: 9.5, note: "", stale: false, missing: null });
@@ -207,4 +207,10 @@ test("basis wording", () => {
     "Based on 3 answers and 1 guess.");
   assert.equal(basis(answersWith({ answered: { home: "rent", car: "gas", heat: "gas", health: "none" }, amounts: { rent: 1 } })),
     "Based on your answers.");
+});
+
+test("employer health default is KFF's single-plan worker share: its rise and its monthly amount", () => {
+  // KFF Employer Health Benefits Survey: workers paid $1,368 (2024) and $1,440 (2025) a year.
+  assert.equal(EMPLOYER_HEALTH_DEFAULT, Math.round((1440 / 1368 - 1) * 1000) / 10);
+  assert.equal(defaultAmount("health", COMMON), 1440 / 12);
 });

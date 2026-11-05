@@ -119,7 +119,9 @@ test("car insurance and the employer premium are explained, not called missing",
   assert.equal(guide.carIns.series[0].source, "BLS");
   assert.match(guide.health.formula, new RegExp(`starts at ${EMPLOYER_HEALTH_DEFAULT}%`));
   assert.match(guide.health.data, /KFF 2025 Employer Health Benefits Survey/);
-  assert.match(guide.health.start, /\$180 a month through work, or \$650 if you buy your own/);
+  assert.match(guide.health.formula, /single plan/);
+  assert.doesNotMatch(guide.health.formula, /family plans/);
+  assert.match(guide.health.start, /\$120 a month through work, or \$650 if you buy your own/);
   assert.match(guide.gasoline.start, /A hybrid starts at \$105/);
   assert.match(guide.electric.start, /With electric heat it starts at \$190/);
   assert.match(guide.mortgage.formula, /^0%/);
