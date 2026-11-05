@@ -812,3 +812,70 @@ cd ~/projects/inflation-reality
 git status -sb && git log --oneline -1    # main, in sync with origin
 npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 240, fail 0 (236 + 4 SEO tests)
 ```
+## 2026-11-04
+
+### 2026-11-05T02:05:32+00:00 — session `7abb302d` on `main`
+
+```
+docs/BACKLOG-DONE.md          |  5 +++++
+ docs/BACKLOG.md               |  4 ++--
+ docs/CHANGELOG.md             |  6 ++++++
+ src/calculator/config.js      | 12 ++++++++----
+ src/calculator/model.test.mjs | 10 ++++++++--
+ src/tabs/sources.js           |  4 ++--
+ src/tabs/sources.test.mjs     |  4 +++-
+ src/tabs/workbook.test.mjs    |  2 +-
+ 8 files changed, 35 insertions(+), 12 deletions(-)
+```
+
+**Commits:**
+- 3456e11 docs(backlog): add item via ledger (Soon)
+- e36ad1c docs(changelog): ship via ledger — Health insurance through work now starts from what workers r
+- 953f52c docs(backlog): done via ledger — Check the health insurance through work default against what
+- 33575ac fix(calculator): health insurance through work starts from KFF's single-plan worker share
+
+
+### 2026-11-05
+
+#### Handoff — Health insurance default now KFF single-plan worker share (supersedes all earlier handoffs)
+
+**Goal:** Fix the health-insurance-through-work default. It used numbers that don't match what workers pay.
+
+**Done:**
+- Commit `33575ac`, merged to main and pushed.
+  - `EMPLOYER_HEALTH_DEFAULT` went from 6 to **5.3**, and `LINES.health.amount` went from 180 to **120**.
+  - The note now says "Average for a single plan through work, change to yours".
+  - The Sources wording now says family plans rose about 9%, so families should use their own number. Flesch-Kincaid grades are 3.1 and 5.2.
+- Source: the KFF Employer Health Benefits Survey worker contribution for single coverage, $1,368 a year in 2024 and $1,440 in 2025. That is +5.26%, which rounds to 5.3, or $120 a month. The family figure is $6,296 → $6,850, which is +8.8%, or $571 a month. The earlier 6% was the rise in the *total* family premium, not the worker's share.
+- Verified:
+  - `npm test` gave pass 241, fail 0. A new test pins the default to the KFF figures.
+  - Local Playwright at 390px: the Health card fits, and the note wraps to 3 lines.
+  - The CI deploy is green. The live `index-DYYWcBvX.js` matches `dist/` and contains the new text.
+- Ledger: done "Check the health insurance through work default…". Shipped "Health insurance through work now starts from what workers really pay". New idea: the family preset item below.
+- Earlier the same session (see the 2026-11-02 handoff): the Everything else double counting fix (`b3569c1`) and the fuel-rate check. Both are live.
+
+**Decisions:**
+- Use single-plan figures (owner chose them). The calculator doesn't ask who is on the plan. The alternative was a new "Just me / Me + family" question, which was rejected as an extra question.
+
+**Next:**
+1. **"Give the Family with kids starting point family-plan health insurance numbers"** (Soon, logged this session).
+   - The `QUICK_STARTS` presets in `src/calculator/config.js` can set `amounts` and `renewals`.
+   - Give "Family with kids" `amounts.health: 571` and `renewals.health: 8.8`.
+   - Then check which note shows. If `renewals` is set, `lineRate` treats it as edited and shows no note. Decide whether that is fine, or whether the preset should show "Average for a family plan through work".
+   - Check `quickstart.test.mjs`, and the panel test that asserts "About $3,950 a month" for that preset.
+2. **"Base the calculator's starting dollar amounts on government spending surveys"**. This is bigger. Brainstorm it first.
+3. **"Include the six new Everything else weights in the yearly weights update"**. This is due in February.
+
+**Gotchas:**
+- At phone width the family cards are folded. Click the family heading (e.g. `get_by_text("Health", exact=True).last`) before looking for a line's text.
+- `pkill -f "http.server 3077"` kills its own shell. Use `kill $(lsof -t -i:3077)`.
+- `fallback.json` is still the August snapshot. Tests assert its literal values.
+- The reading-level checker is `~/projects/attractor/scripts/reading-level.py`. Import `fk_grade` from it with `python3 -I`.
+- Pages publishes about 30 seconds after the green deploy run, and HTML has max-age=600. Add a `?nc=` cache-buster and compare the asset name against `dist/`.
+
+**Resume:**
+```bash
+cd ~/projects/inflation-reality
+git status -sb && git log --oneline -1    # main, in sync with origin
+npm test 2>&1 | grep -E "^ℹ (pass|fail)"  # expect pass 241, fail 0
+```
