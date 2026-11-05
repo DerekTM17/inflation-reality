@@ -2,6 +2,11 @@
 
 Finished backlog items, moved here by `ledger done` and `ledger tidy`. Newest first.
 
+## 2026-11-04
+
+- [x] Check the health insurance through work default against what workers actually pay <!-- added 2026-10-27 --> <!-- from Soon -->
+  Default applies KFF 2025's 6% family-premium rise to the worker's own share, which may grow differently; the 180 a month start matches no KFF figure. KFF also publishes single-plan and worker-contribution numbers.
+
 ## 2026-11-02
 
 - [x] Help search engines find the calculator and read its page <!-- added 2026-11-01 --> <!-- from Soon -->
