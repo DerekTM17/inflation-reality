@@ -1,7 +1,12 @@
 {
-  "generatedAt": "2026-11-05T18:27:38.655Z",
+  "generatedAt": "2026-11-13T20:45:55.907Z",
   "referenceMonth": "2026-09",
   "referenceMonthLabel": "September 2026",
+  "yoyGap": {
+    "latestMonth": "2026-10",
+    "latestMonthLabel": "October 2026",
+    "missingMonthLabel": "October 2025"
+  },
   "headline": {
     "yoy": 3.7,
     "mom": 0.6,
@@ -135,13 +140,13 @@
       "yoy": 3.1
     },
     "medianCpi": {
-      "yoy": 2.6
+      "yoy": 2.8
     },
     "trimmedCpi": {
-      "yoy": 2.7
+      "yoy": 2.9
     },
     "stickyCpi": {
-      "yoy": 2.8
+      "yoy": 3.1
     },
     "trimmedPce": {
       "yoy": 2.3
@@ -149,16 +154,16 @@
   },
   "weeklyPrices": {
     "gasoline": {
-      "current": 4.153,
-      "yearAgo": 3.019,
-      "asOf": "2026-11-02",
-      "asOfLabel": "Nov 2, 2026"
+      "current": 3.995,
+      "yearAgo": 3.056,
+      "asOf": "2026-11-09",
+      "asOfLabel": "Nov 9, 2026"
     },
     "diesel": {
-      "current": 6.292,
-      "yearAgo": 3.753,
-      "asOf": "2026-11-02",
-      "asOfLabel": "Nov 2, 2026"
+      "current": 6.127,
+      "yearAgo": 3.837,
+      "asOf": "2026-11-09",
+      "asOfLabel": "Nov 9, 2026"
     }
   },
   "trend": [
